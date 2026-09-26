@@ -70,6 +70,26 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertEqual(probe["names"][:2], ["ranchu", "virt"])
 
 
+    def test_qemu_machine_probe_ignores_launcher_noise(self):
+        result = type("Result", (), {
+            "stdout": (
+                "INFO         | qt_main: arg: help\n"
+                "Supported machines are:\n"
+                "ranchu Android/ARM ranchu (default)\n"
+                "virt QEMU ARM Virtual Machine\n"
+                "WARNING      | QEMU main loop exits abnormally\n"
+                "Use -machine help to list supported machines\n"
+            ),
+            "stderr": "",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result):
+            qemu.is_file.return_value = True
+            qemu.__str__.return_value = r"C:\Android\Sdk\emulator\qemu\windows-x86_64\qemu-system-aarch64.exe"
+            probe = arm64.qemu_machine_probe()
+        self.assertEqual(probe["names"], ["ranchu", "virt"])
+
     def test_qemu_probe_enters_passthrough_mode(self):
         result = type("Result", (), {
             "stdout": "Supported machines are:\\nvirt ARM Virtual Machine\\n",
