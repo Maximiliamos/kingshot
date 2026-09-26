@@ -377,13 +377,29 @@ def start_direct(*, window=False, wipe=False, wait=True):
     return proc.pid
 
 
-def _qemu_log_tail(lines=80):
+def _qemu_log_tail(lines=120):
     log_path = runtime_paths()["stdout"]
     if not log_path.is_file():
         return ""
     return "\n".join(
         log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-lines:]
     )
+
+
+def _qemu_critical_lines():
+    log_path = runtime_paths()["stdout"]
+    if not log_path.is_file():
+        return ""
+    needles = (
+        "panic", "fatal", "error", "unsupported", "not supported",
+        "arm64", "x86_64", "accelerat", "qemu2", "exit", "abort",
+    )
+    hits = []
+    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        lower = line.lower()
+        if any(needle in lower for needle in needles):
+            hits.append(line)
+    return "\n".join(hits[-120:])
 
 
 def wait_for_boot(timeout=1200, process=None):
@@ -395,6 +411,7 @@ def wait_for_boot(timeout=1200, process=None):
             if code is not None:
                 raise RuntimeError(
                     f"ARM64 QEMU exited before Android boot; exit_code={code}\n"
+                    f"QEMU critical lines:\n{_qemu_critical_lines()}\n\n"
                     f"QEMU log tail:\n{_qemu_log_tail()}"
                 )
         state = run([ADB, "-s", SERIAL, "get-state"], timeout=10, check=False)
