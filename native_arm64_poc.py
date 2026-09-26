@@ -125,7 +125,7 @@ def qemu_machine_probe() -> dict[str, object]:
     if not QEMU_ARM64.is_file():
         return {"returncode": None, "output": "", "names": []}
     result = run(
-        [QEMU_ARM64, "-machine", "help"],
+        [QEMU_ARM64, "-qemu", "-machine", "help"],
         timeout=30,
         check=False,
         env=qemu_environment(),
@@ -135,13 +135,14 @@ def qemu_machine_probe() -> dict[str, object]:
     # "no ARM64 machines".
     output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     names: list[str] = []
-    for raw in output.splitlines():
-        line = raw.strip()
-        if not line or line.lower().startswith("supported machines"):
-            continue
-        first = line.split()[0]
-        if first and first[0].isalnum() and first not in names:
-            names.append(first)
+    if result.returncode == 0:
+        for raw in output.splitlines():
+            line = raw.strip()
+            if not line or line.lower().startswith("supported machines"):
+                continue
+            first = line.split()[0]
+            if first and first[0].isalnum() and first not in names:
+                names.append(first)
     return {
         "returncode": result.returncode,
         "output": output.strip(),
@@ -302,6 +303,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     machine = choose_machine()
     cmd = [
         str(QEMU_ARM64),
+        "-qemu",
         "-cpu", CPU_MODEL,
         "-machine", f"type={machine}",
         "-accel", "tcg,thread=multi",
