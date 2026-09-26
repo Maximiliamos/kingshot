@@ -12,7 +12,7 @@ import numpy as np
 
 
 ADB = r"C:\platform-tools\adb.exe"
-ROOT = r"C:\warbot"
+ROOT = os.path.dirname(os.path.abspath(__file__))
 TPL = os.path.join(ROOT, "templates")
 LOG_DIR = os.path.join(ROOT, "logs")
 UNKNOWN_DIR = os.path.join(ROOT, "unknown")
