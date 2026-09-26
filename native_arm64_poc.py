@@ -136,10 +136,17 @@ def qemu_machine_probe() -> dict[str, object]:
     output = "\n".join(part for part in (result.stdout, result.stderr) if part)
     names: list[str] = []
     if result.returncode == 0:
+        in_machine_list = False
         for raw in output.splitlines():
             line = raw.strip()
-            if not line or line.lower().startswith("supported machines"):
+            if not in_machine_list:
+                if line.lower().startswith("supported machines"):
+                    in_machine_list = True
                 continue
+            if not line:
+                continue
+            if line.startswith(("INFO", "WARNING")) or line.startswith(str(QEMU_ARM64)):
+                break
             first = line.split()[0]
             if first and first[0].isalnum() and first not in names:
                 names.append(first)
