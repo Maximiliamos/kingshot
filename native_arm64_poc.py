@@ -307,43 +307,47 @@ def prepare_runtime(wipe=False):
 
 def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     inv, paths = prepare_runtime(wipe=wipe)
+    image_dir = package_dir()
     machine = choose_machine()
+
+    # Use the Android emulator's own image/config plumbing for the first boot.
+    # Passing raw -drive/-device topology by hand is brittle for ranchu images:
+    # the Android launcher already knows how to wire system/vendor/userdata,
+    # console/ADB and the Android-specific virtual hardware.
     cmd = [
         str(QEMU_ARM64),
-        "-qemu",
-        "-cpu", CPU_MODEL,
-        "-machine", f"type={machine}",
-        "-accel", "tcg,thread=multi",
-        "-smp", str(CPU_CORES),
-        "-m", str(RAM_MB),
-        "-append",
-        (
-            "console=ttyAMA0,38400 keep_bootcon earlyprintk=ttyAMA0 "
-            "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64"
-        ),
+        "-sysdir", str(image_dir),
+        "-datadir", str(RUNTIME_ROOT),
         "-kernel", inv["kernel"],
-        "-initrd", inv["ramdisk"],
-        "-drive", f"index=0,id=system,file={inv['system']},format=raw,readonly=on",
-        "-device", "virtio-blk-device,drive=system",
-        "-drive", f"index=2,id=userdata,file={paths['userdata']},format=raw",
-        "-device", "virtio-blk-device,drive=userdata",
+        "-ramdisk", inv["ramdisk"],
+        "-system", inv["system"],
+        "-initdata", str(image_dir / "userdata.img"),
+        "-data", str(paths["userdata"]),
+        "-memory", str(RAM_MB),
+        "-cores", str(CPU_CORES),
+        "-ports", f"{CONSOLE_PORT},{ADB_PORT}",
+        "-accel", "off",
+        "-no-audio",
+        "-no-snapshot",
+        "-no-cache",
+        "-gpu", "off",
+        "-show-kernel",
     ]
     if "vendor" in inv:
-        cmd += [
-            "-drive", f"index=3,id=vendor,file={inv['vendor']},format=raw,readonly=on",
-            "-device", "virtio-blk-device,drive=vendor",
-        ]
-    cmd += [
-        "-netdev", "user,id=mynet",
-        "-device", "virtio-net-device,netdev=mynet",
-        "-android-ports", f"{CONSOLE_PORT},{ADB_PORT}",
-        "-android-hw", str(paths["hw"]),
-        "-L", str(SDK_ROOT / "emulator" / "pc-bios"),
-    ]
+        cmd += ["-vendor", inv["vendor"]]
+    if "encryptionkey" in inv:
+        cmd += ["-encryption-key", inv["encryptionkey"]]
     if not window:
-        cmd += ["-display", "none"]
-    return cmd
+        cmd.append("-no-window")
 
+    # QEMU-specific options must follow -qemu and be last. Keep the machine and
+    # CPU explicit so this PoC cannot silently fall back to an x86 guest.
+    cmd += [
+        "-qemu",
+        "-machine", f"type={machine}",
+        "-cpu", CPU_MODEL,
+    ]
+    return cmd
 
 def start_direct(*, window=False, wipe=False, wait=True):
     _, paths = prepare_runtime(wipe=wipe)
