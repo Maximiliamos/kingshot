@@ -86,6 +86,15 @@ def load_state():
             old = json.load(f)
         s = dict(DEFAULT_STATE)
         s.update(old)
+
+        # Migration from the v4 runtime state captured before the intro logic
+        # existed.  The real device was still inside the opening cinematic.
+        if s.get("phase") == "tutorial_new_character" and s.get("step") == "tutorial_scroll":
+            s["step"] = "tutorial_intro"
+            s["step_started_at"] = 0.0
+            save_state(s)
+            log("Миграция состояния: tutorial_scroll -> tutorial_intro")
+
         return s
     except Exception:
         return dict(DEFAULT_STATE)
@@ -332,12 +341,18 @@ def handle_tutorial(phone, state):
             log("Туториал: загрузочный экран, жду.")
             return "wait"
 
-        # At this phase the top-right button is the game's own «Пропустить».
-        # Its position was confirmed on the real Magic V3 capture.
-        log("Туториал: загрузка закончилась. Нажимаю «Пропустить».")
-        tap_norm(0.81, 0.10)
-        set_step(state, "tutorial_wait_scroll")
-        return "acted"
+        skip = match(phone, tpl("tutorial_skip.png"), 0.88)
+        if skip:
+            debug(phone, skip, "tutorial_skip")
+            log("Туториал: найдено «Пропустить». Пропускаю вступление.")
+            tap_match(phone, skip)
+            set_step(state, "tutorial_wait_scroll")
+            return "acted"
+
+        # We no longer click a hard-coded top-right coordinate here.
+        # If neither loading nor the real Skip button is visible, save the
+        # screen as unknown instead of guessing.
+        return False
 
     if step in ("tutorial_scroll", "tutorial_wait_scroll"):
         # If the governor avatar becomes available, the mandatory tutorial has
@@ -347,6 +362,15 @@ def handle_tutorial(phone, state):
             log("Туториал: меню губернатора доступно — обязательная часть завершена.")
             set_phase(state, "tutorial_complete", "governor_available")
             return "wait"
+
+        # Some cinematic pages can remain after the first skip request.
+        # Retry only when the actual Skip template is still visible.
+        skip = match(phone, tpl("tutorial_skip.png"), 0.88)
+        if skip:
+            debug(phone, skip, "tutorial_skip_retry")
+            log("Туториал: «Пропустить» всё ещё видно. Нажимаю ещё раз.")
+            tap_match(phone, skip)
+            return "acted"
 
         hit = match(phone, tpl("task_scroll.png"), 0.88)
         if not hit:
