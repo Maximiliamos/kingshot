@@ -333,7 +333,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         # Android Emulator 37.x may still try to initialize Lavapipe/Vulkan
         # when GPU is "off". Use SwiftShader explicitly for GLES and disable
         # Vulkan host emulation for this first ARM64 boot gate.
-        "-gpu", "swiftshader_indirect",
+        "-gpu", "swiftshader",
         "-feature", "-Vulkan",
         "-feature", "-VulkanSnapshots",
         "-no-metrics",
@@ -346,13 +346,15 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     if not window:
         cmd.append("-no-window")
 
-    # QEMU-specific options must follow -qemu and be last. Keep the machine and
-    # CPU explicit so this PoC cannot silently fall back to an x86 guest.
-    cmd += [
-        "-qemu",
-        "-machine", f"type={machine}",
-        "-cpu", CPU_MODEL,
-    ]
+    # Do not append raw -qemu/-machine/-cpu options for the real boot.
+    # This executable is already qemu-system-aarch64, so the guest cannot
+    # silently become x86. The Android ranchu launcher must remain free to
+    # construct the machine/CPU/device topology that matches this system image.
+    # We keep machine discovery as a probe gate only.
+    if machine != "ranchu":
+        raise RuntimeError(
+            f"ARM64 boot requires Android ranchu machine; selected={machine!r}"
+        )
     return cmd
 
 def start_direct(*, window=False, wipe=False, wait=True):
