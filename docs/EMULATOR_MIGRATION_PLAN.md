@@ -74,16 +74,26 @@ Tutorial не должен знать, какой backend используетс
   несовместимость защитного/упаковочного слоя игры с официальным ARM DBT.
   Библиотеки APK не модифицируются; основной backend остаётся physical/scrcpy.
 
+## BlueStacks result
+
+Stock BlueStacks 5 Android 11 Rvc64 was tested with the Google Play ARM64 split.
+The game starts and reaches its loading flow, but the process exits
+reproducibly with SIGSEGV in `/system/lib64/libhoudini.so`. Native tombstones
+show an x86_64 process executing the ARM64 app through Houdini.
+
+This closes BlueStacks as the primary path for the current build without
+patching the game or its translation layer.
+
 ## Следующий Windows-only backend
 
-Официальный Android Emulator считается исследованным и закрытым для этой
-сборки игры на G2. Следующий разрешённый PoC — stock BlueStacks 5 без патча APK,
-root, emulator masking или обхода Play Integrity.
+The active PoC is now a full ARM64 guest under
+`qemu-system-aarch64` software emulation (TCG). The key gate is not merely
+that an ARM64 APK installs: Android itself must report `arm64-v8a` with no x86
+ABI and no `ro.dalvik.vm.native.bridge`.
 
-BlueStacks PoC обязан сначала установить `com.got.globalru` через Google Play
-в Android 11 64-bit instance с ARM64-совместимым ABI, затем снять фактические
-splits/ABI и только после этого проверять запуск. См.
-`docs/BLUESTACKS_POC_PLAN.md`.
+This path intentionally trades speed for compatibility and removes Houdini /
+libndk_translation from the execution path. See
+`docs/NATIVE_ARM64_EMULATOR_PLAN.md`.
 
 ## Данные и безопасность
 
