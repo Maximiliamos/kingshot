@@ -314,7 +314,7 @@ def handle_create_step(phone, state):
         debug(phone, hit, "state3_modal")
         log("Подтверждён диалог «создать в государстве #3». Нажимаю его Confirm.")
         tap_norm(0.710, 0.612)
-        set_phase(state, "tutorial_new_character", "tutorial_scroll")
+        set_phase(state, "tutorial_new_character", "tutorial_intro")
         return True
 
     return False
@@ -323,7 +323,31 @@ def handle_create_step(phone, state):
 def handle_tutorial(phone, state):
     step = state["step"]
 
+    # Immediately after creating a character the game first shows its loading
+    # screen and then a skippable intro/cinematic.  Do not look for the task
+    # scroll before that intro is gone.
+    if step == "tutorial_intro":
+        loading = match(phone, tpl("loading_logo.png"), 0.82)
+        if loading:
+            log("Туториал: загрузочный экран, жду.")
+            return "wait"
+
+        # At this phase the top-right button is the game's own «Пропустить».
+        # Its position was confirmed on the real Magic V3 capture.
+        log("Туториал: загрузка закончилась. Нажимаю «Пропустить».")
+        tap_norm(0.81, 0.10)
+        set_step(state, "tutorial_wait_scroll")
+        return "acted"
+
     if step in ("tutorial_scroll", "tutorial_wait_scroll"):
+        # If the governor avatar becomes available, the mandatory tutorial has
+        # reached the point required by the workflow.
+        governor = match(phone, tpl("governor_avatar.png"), 0.91)
+        if governor:
+            log("Туториал: меню губернатора доступно — обязательная часть завершена.")
+            set_phase(state, "tutorial_complete", "governor_available")
+            return "wait"
+
         hit = match(phone, tpl("task_scroll.png"), 0.88)
         if not hit:
             return False
@@ -331,7 +355,7 @@ def handle_tutorial(phone, state):
         log("Туториал: найден свиток задания. Нажимаю свиток.")
         tap_match(phone, hit)
         set_step(state, "tutorial_building")
-        return True
+        return "acted"
 
     if step == "tutorial_building":
         hit = match(phone, tpl("upgrade_button.png"), 0.90)
@@ -341,7 +365,7 @@ def handle_tutorial(phone, state):
         log("Туториал: найдено «Улучшить». Нажимаю один раз.")
         tap_match(phone, hit)
         set_step(state, "tutorial_wait_scroll")
-        return True
+        return "acted"
 
     return False
 
@@ -434,7 +458,13 @@ def main():
             elif state["phase"] == "create_character":
                 acted = handle_create_step(phone, state)
             elif state["phase"] == "tutorial_new_character":
-                acted = handle_tutorial(phone, state)
+                tutorial_result = handle_tutorial(phone, state)
+                if tutorial_result == "acted":
+                    acted = True
+                elif tutorial_result == "wait":
+                    unknown_since = None
+                    time.sleep(1.5)
+                    continue
 
             if acted:
                 blocked_until = time.time() + STREAM_LAG
