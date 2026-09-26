@@ -365,14 +365,30 @@ def start_direct(*, window=False, wipe=False, wait=True):
     print(f"Native ARM64 QEMU started: PID {proc.pid}")
     print(f"Log: {paths['stdout']}")
     if wait:
-        wait_for_boot()
+        wait_for_boot(process=proc)
     return proc.pid
 
 
-def wait_for_boot(timeout=1200):
+def _qemu_log_tail(lines=80):
+    log_path = runtime_paths()["stdout"]
+    if not log_path.is_file():
+        return ""
+    return "\n".join(
+        log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-lines:]
+    )
+
+
+def wait_for_boot(timeout=1200, process=None):
     deadline = time.monotonic() + timeout
     last_state = ""
     while time.monotonic() < deadline:
+        if process is not None:
+            code = process.poll()
+            if code is not None:
+                raise RuntimeError(
+                    f"ARM64 QEMU exited before Android boot; exit_code={code}\n"
+                    f"QEMU log tail:\n{_qemu_log_tail()}"
+                )
         state = run([ADB, "-s", SERIAL, "get-state"], timeout=10, check=False)
         last_state = state.stdout.strip()
         if last_state == "device":
@@ -383,15 +399,9 @@ def wait_for_boot(timeout=1200):
                 print(f"ARM64 Android booted: {SERIAL}")
                 return
         time.sleep(3)
-    log_path = runtime_paths()["stdout"]
-    tail = ""
-    if log_path.is_file():
-        tail = "\n".join(
-            log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-80:]
-        )
     raise TimeoutError(
         f"ARM64 guest did not boot; adb_state={last_state!r}\n"
-        f"QEMU log tail:\n{tail}"
+        f"QEMU log tail:\n{_qemu_log_tail()}"
     )
 
 
