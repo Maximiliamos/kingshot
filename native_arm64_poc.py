@@ -96,17 +96,31 @@ def image_inventory(image_dir: Path) -> dict[str, str]:
     return result
 
 
-def qemu_machine_names() -> list[str]:
+def qemu_machine_probe() -> dict[str, object]:
     if not QEMU_ARM64.is_file():
-        return []
+        return {"returncode": None, "output": "", "names": []}
     result = run([QEMU_ARM64, "-machine", "help"], timeout=30, check=False)
-    names = []
-    for line in result.stdout.splitlines():
-        line = line.strip()
+    # QEMU builds on Windows are inconsistent about whether help goes to
+    # stdout or stderr. Parse both so an empty stdout is not mistaken for
+    # "no ARM64 machines".
+    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    names: list[str] = []
+    for raw in output.splitlines():
+        line = raw.strip()
         if not line or line.lower().startswith("supported machines"):
             continue
-        names.append(line.split()[0])
-    return names
+        first = line.split()[0]
+        if first and first[0].isalnum() and first not in names:
+            names.append(first)
+    return {
+        "returncode": result.returncode,
+        "output": output.strip(),
+        "names": names,
+    }
+
+
+def qemu_machine_names() -> list[str]:
+    return list(qemu_machine_probe()["names"])
 
 
 def choose_machine(names: list[str] | None = None) -> str:
@@ -123,7 +137,8 @@ def choose_machine(names: list[str] | None = None) -> str:
 def probe() -> dict[str, object]:
     image_dir = package_dir()
     inventory = image_inventory(image_dir)
-    machines = qemu_machine_names()
+    machine_probe = qemu_machine_probe()
+    machines = list(machine_probe["names"])
     return {
         "host": {
             "system": platform.system(),
@@ -145,6 +160,8 @@ def probe() -> dict[str, object]:
         "qemu": {
             "machines": machines,
             "selected_machine": choose_machine(machines) if machines else "",
+            "machine_help_returncode": machine_probe["returncode"],
+            "machine_help_output": machine_probe["output"],
             "tcg": True,
             "hardware_acceleration": False,
         },
