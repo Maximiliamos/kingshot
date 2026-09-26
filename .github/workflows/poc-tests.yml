@@ -5,10 +5,12 @@ on:
     branches:
       - feature/emulator-poc
       - feature/bluestacks-poc
+      - feature/native-arm64-emulator
   pull_request:
     branches:
       - feature/emulator-poc
       - main
+      - feature/native-arm64-emulator
 
 jobs:
   windows-poc:
@@ -19,6 +21,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile PoC modules
-        run: python -m py_compile emulator_poc.py bluestacks_poc.py
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py
       - name: Run PoC unit tests
-        run: python -m unittest tests.test_emulator_poc tests.test_bluestacks_poc -v
+        run: python -m unittest tests.test_emulator_poc tests.test_bluestacks_poc tests.test_native_arm64_poc -v
