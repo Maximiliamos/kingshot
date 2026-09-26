@@ -1,0 +1,25 @@
+# Runtime state
+state.json
+state.json.tmp
+logs/
+unknown/
+debug/
+
+# Captures / local diagnostics
+fullscreen.png
+phone_view.png
+honor_screen*.png
+game_screen*.png
+contact.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
