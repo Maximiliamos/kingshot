@@ -194,7 +194,7 @@ def validate_templates():
     names = [
         "governor_avatar.png", "profile_settings.png", "settings_characters.png",
         "create_plus.png", "select_kingdom_title.png", "state3_modal.png",
-        "loading_logo.png", "tutorial_skip.png", "task_scroll.png",
+        "loading_logo.png", "task_scroll.png",
         "upgrade_button.png", "newbie_offer_context.png", "offline_confirm.png",
         "invasion_title.png",
     ]
@@ -204,8 +204,15 @@ def validate_templates():
         if os.path.isfile(p) and tpl(name) is None:
             bad.append(name)
     if bad:
-        raise RuntimeError("Повреждены PNG-шаблоны: " + ", ".join(bad))
-    log(f"Шаблоны проверены: {len(names)-len(bad)} позиций.")
+        raise RuntimeError("Повреждены обязательные PNG-шаблоны: " + ", ".join(bad))
+
+    # tutorial_skip.png in the current repository history is known to be
+    # corrupted. Treat it as optional until a clean real-device crop replaces
+    # it; this keeps the bot fail-closed instead of preventing startup.
+    skip_path = os.path.join(TPL, "tutorial_skip.png")
+    if os.path.isfile(skip_path) and tpl("tutorial_skip.png") is None:
+        log("ВНИМАНИЕ: tutorial_skip.png повреждён — Skip временно отключён.")
+    log(f"Обязательные шаблоны проверены: {len(names)-len(bad)} позиций.")
 
 
 def match(phone, image, threshold):
