@@ -1,0 +1,429 @@
+import json
+import os
+import sys
+from datetime import datetime
+
+import cv2
+from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Qt
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import (
+    QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout,
+    QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton,
+    QSpinBox, QStackedWidget, QVBoxLayout, QWidget,
+)
+
+import bot
+
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+CONTROL_FILE = os.path.join(ROOT, "control.json")
+GUI_CONFIG_FILE = os.path.join(ROOT, "gui_config.json")
+LOG_FILE = os.path.join(ROOT, "logs", "bot.log")
+PID_FILE = os.path.join(ROOT, "bot.pid")
+
+PHASE_NAMES = {
+    "rename_governor": "Переименование губернатора",
+    "create_character": "Создание персонажа",
+    "tutorial_new_character": "Обучение нового персонажа",
+}
+
+
+def atomic_json(path, value):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as stream:
+        json.dump(value, stream, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+def read_json(path, default):
+    try:
+        with open(path, "r", encoding="utf-8") as stream:
+            value = json.load(stream)
+        return value if isinstance(value, dict) else default
+    except (OSError, ValueError):
+        return default
+
+
+def bot_pid():
+    try:
+        with open(PID_FILE, "r", encoding="ascii") as stream:
+            pid = int(stream.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+class Card(QFrame):
+    def __init__(self, title):
+        super().__init__()
+        self.setObjectName("card")
+        self.layout = QVBoxLayout(self)
+        label = QLabel(title)
+        label.setObjectName("cardTitle")
+        self.layout.addWidget(label)
+
+
+class WarBotWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("WAR BOT — Центр управления")
+        self.resize(1240, 780)
+        self.process = QProcess(self)
+        self.process.setProcessChannelMode(QProcess.MergedChannels)
+        self.process.readyReadStandardOutput.connect(self.read_process_output)
+        self.process.finished.connect(self.process_finished)
+        self.capture = None
+        self.last_log_size = 0
+        self.paused = False
+        self.build_ui()
+        self.load_config()
+        self.apply_style()
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.refresh)
+        self.timer.start(500)
+
+    def build_ui(self):
+        root = QWidget()
+        self.setCentralWidget(root)
+        outer = QVBoxLayout(root)
+
+        header = QHBoxLayout()
+        brand = QLabel("WAR BOT")
+        brand.setObjectName("brand")
+        header.addWidget(brand)
+        self.device_status = QLabel("● Проверка подключения…")
+        self.device_status.setObjectName("muted")
+        header.addWidget(self.device_status)
+        header.addStretch()
+        self.start_button = QPushButton("▶  ЗАПУСТИТЬ")
+        self.pause_button = QPushButton("Ⅱ  ПАУЗА")
+        self.stop_button = QPushButton("■  ОСТАНОВИТЬ")
+        self.start_button.setObjectName("primary")
+        self.stop_button.setObjectName("danger")
+        self.start_button.clicked.connect(self.start_bot)
+        self.pause_button.clicked.connect(self.toggle_pause)
+        self.stop_button.clicked.connect(self.stop_bot)
+        header.addWidget(self.start_button)
+        header.addWidget(self.pause_button)
+        header.addWidget(self.stop_button)
+        outer.addLayout(header)
+
+        body = QHBoxLayout()
+        self.menu = QListWidget()
+        self.menu.setFixedWidth(190)
+        self.menu.addItems([
+            "Обзор", "Регистрация", "Строительство", "Исследования",
+            "Тренировка войск", "Журнал", "Настройки",
+        ])
+        self.menu.currentRowChanged.connect(self.change_page)
+        body.addWidget(self.menu)
+        self.pages = QStackedWidget()
+        body.addWidget(self.pages, 1)
+        outer.addLayout(body, 1)
+
+        self.pages.addWidget(self.overview_page())
+        self.pages.addWidget(self.registration_page())
+        for title, text in (
+            ("Строительство", "Очереди и приоритеты построек появятся в следующем модуле."),
+            ("Исследования", "Здесь будут ветки университета, приоритеты и лимиты ресурсов."),
+            ("Тренировка войск", "Здесь будут очереди пехоты, стрелков и кавалерии."),
+        ):
+            self.pages.addWidget(self.placeholder_page(title, text))
+        self.pages.addWidget(self.log_page())
+        self.pages.addWidget(self.settings_page())
+        self.menu.setCurrentRow(0)
+
+    def overview_page(self):
+        page = QWidget()
+        layout = QHBoxLayout(page)
+        preview_card = Card("ЭКРАН ТЕЛЕФОНА")
+        self.preview = QLabel("Откройте окно scrcpy FCP-AN10")
+        self.preview.setAlignment(Qt.AlignCenter)
+        self.preview.setMinimumSize(430, 600)
+        self.preview.setObjectName("preview")
+        preview_card.layout.addWidget(self.preview, 1)
+        layout.addWidget(preview_card, 3)
+
+        side = QVBoxLayout()
+        state_card = Card("ТЕКУЩЕЕ СОСТОЯНИЕ")
+        grid = QGridLayout()
+        self.phase_value = QLabel("—")
+        self.step_value = QLabel("—")
+        self.name_value = QLabel("—")
+        self.created_value = QLabel("0")
+        for row, (name, widget) in enumerate((
+            ("Режим", self.phase_value), ("Шаг", self.step_value),
+            ("Следующее имя", self.name_value), ("Создано", self.created_value),
+        )):
+            caption = QLabel(name)
+            caption.setObjectName("muted")
+            grid.addWidget(caption, row, 0)
+            grid.addWidget(widget, row, 1)
+        state_card.layout.addLayout(grid)
+        side.addWidget(state_card)
+
+        action_card = Card("ПОСЛЕДНИЕ ДЕЙСТВИЯ")
+        self.mini_log = QListWidget()
+        action_card.layout.addWidget(self.mini_log)
+        side.addWidget(action_card, 1)
+        layout.addLayout(side, 2)
+        return page
+
+    def registration_page(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        card = Card("ЦИКЛ РЕГИСТРАЦИИ")
+        form = QGridLayout()
+        self.name_prefix = QLineEdit("Тугарин")
+        self.name_prefix.setReadOnly(True)
+        self.next_number = QSpinBox()
+        self.next_number.setRange(1, 999999)
+        self.target_state = QSpinBox()
+        self.target_state.setRange(3, 3)
+        self.target_state.setValue(3)
+        self.infinite_cycle = QCheckBox("Повторять цикл непрерывно")
+        self.infinite_cycle.setChecked(True)
+        self.auto_tutorial = QCheckBox("Проходить обязательное обучение")
+        self.auto_tutorial.setChecked(True)
+        fields = (
+            ("Шаблон имени", self.name_prefix),
+            ("Следующий номер", self.next_number),
+            ("Государство", self.target_state),
+        )
+        for row, (label, widget) in enumerate(fields):
+            form.addWidget(QLabel(label), row, 0)
+            form.addWidget(widget, row, 1)
+        form.addWidget(self.infinite_cycle, 3, 0, 1, 2)
+        form.addWidget(self.auto_tutorial, 4, 0, 1, 2)
+        card.layout.addLayout(form)
+        save = QPushButton("Сохранить настройки")
+        save.setObjectName("primary")
+        save.clicked.connect(self.save_config)
+        card.layout.addWidget(save)
+        layout.addWidget(card)
+        note = QLabel("MVP поддерживает проверенный сценарий государства №3. Другие государства потребуют отдельной проверки экрана подтверждения.")
+        note.setWordWrap(True)
+        note.setObjectName("muted")
+        layout.addWidget(note)
+        layout.addStretch()
+        return page
+
+    def log_page(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        card = Card("ЖУРНАЛ ДВИЖКА")
+        self.full_log = QListWidget()
+        card.layout.addWidget(self.full_log)
+        layout.addWidget(card)
+        return page
+
+    def settings_page(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        card = Card("ПОДКЛЮЧЕНИЕ")
+        grid = QGridLayout()
+        self.window_title = QLineEdit(bot.SCRCPY_VIDEO_TITLE)
+        self.python_path = QLineEdit(sys.executable)
+        grid.addWidget(QLabel("Заголовок scrcpy"), 0, 0)
+        grid.addWidget(self.window_title, 0, 1)
+        grid.addWidget(QLabel("Python"), 1, 0)
+        grid.addWidget(self.python_path, 1, 1)
+        card.layout.addLayout(grid)
+        layout.addWidget(card)
+        layout.addStretch()
+        return page
+
+    def placeholder_page(self, title, text):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        card = Card(title.upper())
+        label = QLabel(text)
+        label.setWordWrap(True)
+        card.layout.addWidget(label)
+        layout.addWidget(card)
+        layout.addStretch()
+        return page
+
+    def change_page(self, index):
+        if index >= 0:
+            self.pages.setCurrentIndex(index)
+
+    def write_control(self, paused=False, stop=False):
+        atomic_json(CONTROL_FILE, {"paused": paused, "stop": stop})
+
+    def start_bot(self):
+        self.save_config(show_message=False)
+        self.write_control(False, False)
+        if self.process.state() != QProcess.NotRunning:
+            self.paused = False
+            self.pause_button.setText("Ⅱ  ПАУЗА")
+            return
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("PYTHONIOENCODING", "utf-8")
+        env.insert("WAR_BOT_SCRCPY_TITLE", self.window_title.text().strip())
+        self.process.setProcessEnvironment(env)
+        self.process.setWorkingDirectory(ROOT)
+        self.process.start(self.python_path.text().strip(), [os.path.join(ROOT, "bot.py")])
+        self.start_button.setEnabled(False)
+
+    def toggle_pause(self):
+        control = read_json(CONTROL_FILE, {})
+        self.paused = not bool(control.get("paused", False))
+        self.write_control(self.paused, False)
+        self.pause_button.setText("▶  ПРОДОЛЖИТЬ" if self.paused else "Ⅱ  ПАУЗА")
+
+    def stop_bot(self):
+        self.write_control(False, True)
+        self.paused = False
+        self.pause_button.setText("Ⅱ  ПАУЗА")
+        if self.process.state() != QProcess.NotRunning:
+            QTimer.singleShot(3000, self.force_stop_if_needed)
+
+    def force_stop_if_needed(self):
+        if self.process.state() != QProcess.NotRunning:
+            self.process.terminate()
+
+    def process_finished(self):
+        self.start_button.setEnabled(True)
+
+    def read_process_output(self):
+        raw = bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace")
+        for line in raw.splitlines():
+            self.append_log(line)
+
+    def append_log(self, line):
+        if not line.strip():
+            return
+        self.full_log.addItem(line)
+        self.mini_log.addItem(line)
+        while self.full_log.count() > 500:
+            self.full_log.takeItem(0)
+        while self.mini_log.count() > 8:
+            self.mini_log.takeItem(0)
+        self.full_log.scrollToBottom()
+        self.mini_log.scrollToBottom()
+
+    def refresh(self):
+        self.refresh_state()
+        self.refresh_capture()
+        self.refresh_log_file()
+
+    def refresh_state(self):
+        state = read_json(bot.STATE_FILE, {})
+        phase = state.get("phase", "—")
+        self.phase_value.setText(PHASE_NAMES.get(phase, phase))
+        self.step_value.setText(str(state.get("step", "—")))
+        self.name_value.setText(f"{self.name_prefix.text()} {state.get('next_nickname', 1)}")
+        self.created_value.setText(str(state.get("characters_created", 0)))
+        running_pid = bot_pid()
+        self.start_button.setEnabled(running_pid is None)
+        if running_pid is not None:
+            self.start_button.setText(f"●  БОТ РАБОТАЕТ  PID {running_pid}")
+        else:
+            self.start_button.setText("▶  ЗАПУСТИТЬ")
+
+    def refresh_capture(self):
+        try:
+            if self.capture is None:
+                self.capture = bot.ScrcpyCapture()
+            frame, title, rect = self.capture.grab()
+            phone, _, _ = bot.crop_phone(frame)
+            rgb = cv2.cvtColor(phone, cv2.COLOR_BGR2RGB)
+            image = QImage(rgb.data, rgb.shape[1], rgb.shape[0], rgb.strides[0], QImage.Format_RGB888).copy()
+            pixmap = QPixmap.fromImage(image).scaled(
+                self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            self.preview.setPixmap(pixmap)
+            self.device_status.setText(f"● {title} подключён · {rect['width']}×{rect['height']}")
+            self.device_status.setStyleSheet("color: #55d98b")
+        except Exception as error:
+            if self.capture is not None:
+                self.capture.close()
+                self.capture = None
+            self.device_status.setText(f"● scrcpy недоступен: {error}")
+            self.device_status.setStyleSheet("color: #ff7185")
+
+    def refresh_log_file(self):
+        try:
+            size = os.path.getsize(LOG_FILE)
+            if size == self.last_log_size:
+                return
+            with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as stream:
+                lines = stream.readlines()[-12:]
+            self.last_log_size = size
+            existing = {self.mini_log.item(i).text() for i in range(self.mini_log.count())}
+            for line in lines:
+                line = line.rstrip()
+                if line and line not in existing:
+                    self.append_log(line)
+        except OSError:
+            pass
+
+    def load_config(self):
+        config = read_json(GUI_CONFIG_FILE, {})
+        state = read_json(bot.STATE_FILE, {})
+        self.name_prefix.setText(config.get("name_prefix", "Тугарин"))
+        self.next_number.setValue(int(state.get("next_nickname", config.get("next_number", 1))))
+        self.target_state.setValue(int(state.get("target_state", config.get("target_state", 3))))
+        self.infinite_cycle.setChecked(bool(config.get("infinite_cycle", True)))
+        self.auto_tutorial.setChecked(bool(config.get("auto_tutorial", True)))
+        self.window_title.setText(config.get("window_title", bot.SCRCPY_VIDEO_TITLE))
+
+    def save_config(self, show_message=True):
+        config = {
+            "name_prefix": self.name_prefix.text().strip() or "Тугарин",
+            "next_number": self.next_number.value(),
+            "target_state": self.target_state.value(),
+            "infinite_cycle": self.infinite_cycle.isChecked(),
+            "auto_tutorial": self.auto_tutorial.isChecked(),
+            "window_title": self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE,
+        }
+        atomic_json(GUI_CONFIG_FILE, config)
+        state = read_json(bot.STATE_FILE, dict(bot.DEFAULT_STATE))
+        state["target_state"] = config["target_state"]
+        if int(state.get("characters_created", 0)) == 0:
+            state["next_nickname"] = config["next_number"]
+        atomic_json(bot.STATE_FILE, state)
+        if show_message:
+            QMessageBox.information(self, "WAR BOT", "Настройки сохранены.")
+
+    def closeEvent(self, event):
+        if self.capture is not None:
+            self.capture.close()
+        event.accept()
+
+    def apply_style(self):
+        self.setStyleSheet("""
+            QWidget { background: #10141d; color: #e9edf6; font: 10pt 'Segoe UI'; }
+            QMainWindow { background: #10141d; }
+            #brand { font-size: 20pt; font-weight: 800; color: #74d6ff; padding: 8px; }
+            #muted { color: #8994a8; }
+            #card { background: #171d28; border: 1px solid #273043; border-radius: 10px; }
+            #cardTitle { color: #94a2b8; font-size: 9pt; font-weight: 700; padding: 4px; }
+            #preview { background: #080b11; border-radius: 7px; color: #667085; }
+            QListWidget { background: #141a24; border: 1px solid #273043; border-radius: 8px; padding: 4px; }
+            QListWidget::item { padding: 10px; border-radius: 6px; }
+            QListWidget::item:selected { background: #25334b; color: #74d6ff; }
+            QPushButton { background: #273043; border: 0; border-radius: 7px; padding: 9px 14px; font-weight: 700; }
+            QPushButton:hover { background: #344057; }
+            QPushButton:disabled { color: #657086; }
+            #primary { background: #168fbd; color: white; }
+            #primary:hover { background: #1aa6d9; }
+            #danger { background: #743343; color: #ffdce3; }
+            QLineEdit, QSpinBox, QComboBox { background: #0f141d; border: 1px solid #344057; border-radius: 6px; padding: 7px; }
+            QCheckBox { padding: 5px; }
+        """)
+
+
+def main():
+    app = QApplication(sys.argv)
+    app.setApplicationName("WAR BOT")
+    window = WarBotWindow()
+    window.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

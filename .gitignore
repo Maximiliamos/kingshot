@@ -1,6 +1,10 @@
 # Runtime state
 state.json
 state.json.tmp
+control.json
+gui_config.json
+bot.pid
+bot.lock
 logs/
 unknown/
 debug/
