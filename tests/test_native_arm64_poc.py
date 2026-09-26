@@ -118,6 +118,22 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertTrue(inv["kernel"].endswith("kernel-ranchu"))
         self.assertTrue(inv["system"].endswith("system.img"))
 
+    def test_critical_log_extracts_architecture_failure(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "INFO boot\n"
+                "PANIC: Avd's CPU Architecture 'arm64' is not supported by QEMU2 emulator on x86_64 host.\n"
+                "INFO end\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                critical = arm64._qemu_critical_lines()
+        self.assertIn("arm64", critical)
+        self.assertIn("x86_64", critical)
+        self.assertIn("PANIC", critical)
+
     def test_wait_for_boot_fails_fast_if_qemu_exits(self):
         process = type("Process", (), {"poll": lambda self: 7})()
         with patch("native_arm64_poc._qemu_log_tail", return_value="boom"):
