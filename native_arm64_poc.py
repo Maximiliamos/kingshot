@@ -153,15 +153,25 @@ def qemu_machine_names() -> list[str]:
     return list(qemu_machine_probe()["names"])
 
 
-def choose_machine(names: list[str] | None = None) -> str:
+def choose_machine(names: list[str] | None = None, *, strict=True) -> str:
     names = names if names is not None else qemu_machine_names()
     if "ranchu" in names:
         return "ranchu"
     if "virt" in names:
         return "virt"
-    raise RuntimeError(
-        "qemu-system-aarch64 exposes neither 'ranchu' nor 'virt' machine"
-    )
+
+    # Some QEMU builds expose only versioned ARM virtual-machine names
+    # (for example virt-8.2) instead of the unversioned "virt" alias.
+    versioned_virt = [name for name in names if name.startswith("virt-")]
+    if versioned_virt:
+        return versioned_virt[0]
+
+    if strict:
+        raise RuntimeError(
+            "qemu-system-aarch64 exposes no ranchu/virt-compatible machine; "
+            f"available={names}"
+        )
+    return ""
 
 
 def probe() -> dict[str, object]:
@@ -190,7 +200,7 @@ def probe() -> dict[str, object]:
         },
         "qemu": {
             "machines": machines,
-            "selected_machine": choose_machine(machines) if machines else "",
+            "selected_machine": choose_machine(machines, strict=False),
             "machine_help_returncode": machine_probe["returncode"],
             "machine_help_returncode_hex": (
                 f"0x{machine_probe['returncode'] & 0xFFFFFFFF:08X}"
