@@ -1,0 +1,24 @@
+name: PoC tests
+
+on:
+  push:
+    branches:
+      - feature/emulator-poc
+      - feature/bluestacks-poc
+  pull_request:
+    branches:
+      - feature/emulator-poc
+      - main
+
+jobs:
+  windows-poc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile PoC modules
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py
+      - name: Run PoC unit tests
+        run: python -m unittest tests.test_emulator_poc tests.test_bluestacks_poc -v

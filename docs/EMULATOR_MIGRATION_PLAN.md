@@ -74,6 +74,17 @@ Tutorial не должен знать, какой backend используетс
   несовместимость защитного/упаковочного слоя игры с официальным ARM DBT.
   Библиотеки APK не модифицируются; основной backend остаётся physical/scrcpy.
 
+## Следующий Windows-only backend
+
+Официальный Android Emulator считается исследованным и закрытым для этой
+сборки игры на G2. Следующий разрешённый PoC — stock BlueStacks 5 без патча APK,
+root, emulator masking или обхода Play Integrity.
+
+BlueStacks PoC обязан сначала установить `com.got.globalru` через Google Play
+в Android 11 64-bit instance с ARM64-совместимым ABI, затем снять фактические
+splits/ABI и только после этого проверять запуск. См.
+`docs/BLUESTACKS_POC_PLAN.md`.
+
 ## Данные и безопасность
 
 Счётчики, phase/step и device id хранятся вне Android. Snapshot не считается
