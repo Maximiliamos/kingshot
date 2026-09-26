@@ -43,9 +43,33 @@ ADB = SDK_ROOT / "platform-tools" / "adb.exe"
 SDKMANAGER = SDK_ROOT / "cmdline-tools" / "latest" / "bin" / "sdkmanager.bat"
 QEMU_DIR = SDK_ROOT / "emulator" / "qemu" / "windows-x86_64"
 QEMU_ARM64 = QEMU_DIR / "qemu-system-aarch64.exe"
+QEMU_ARM64_HEADLESS = QEMU_DIR / "qemu-system-aarch64-headless.exe"
 
 
-def run(args, *, timeout=120, check=True, text=True, capture=True):
+def qemu_library_dirs() -> list[Path]:
+    emulator_root = SDK_ROOT / "emulator"
+    candidates = [
+        QEMU_DIR,
+        emulator_root,
+        emulator_root / "lib64",
+        emulator_root / "lib64" / "gles_swiftshader",
+        emulator_root / "lib64" / "gles_angle",
+        emulator_root / "lib64" / "gles_angle9",
+        emulator_root / "lib64" / "gles_angle11",
+        emulator_root / "lib64" / "qt" / "lib",
+    ]
+    return [path for path in candidates if path.is_dir()]
+
+
+def qemu_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    prefix = os.pathsep.join(str(path) for path in qemu_library_dirs())
+    if prefix:
+        env["PATH"] = prefix + os.pathsep + env.get("PATH", "")
+    return env
+
+
+def run(args, *, timeout=120, check=True, text=True, capture=True, env=None):
     result = subprocess.run(
         [str(x) for x in args],
         capture_output=capture,
@@ -54,6 +78,7 @@ def run(args, *, timeout=120, check=True, text=True, capture=True):
         errors="replace" if text else None,
         timeout=timeout,
         check=False,
+        env=env,
     )
     if check and result.returncode:
         detail = ""
@@ -99,7 +124,12 @@ def image_inventory(image_dir: Path) -> dict[str, str]:
 def qemu_machine_probe() -> dict[str, object]:
     if not QEMU_ARM64.is_file():
         return {"returncode": None, "output": "", "names": []}
-    result = run([QEMU_ARM64, "-machine", "help"], timeout=30, check=False)
+    result = run(
+        [QEMU_ARM64, "-machine", "help"],
+        timeout=30,
+        check=False,
+        env=qemu_environment(),
+    )
     # QEMU builds on Windows are inconsistent about whether help goes to
     # stdout or stderr. Parse both so an empty stdout is not mistaken for
     # "no ARM64 machines".
@@ -150,6 +180,7 @@ def probe() -> dict[str, object]:
             "adb": ADB.is_file(),
             "sdkmanager": SDKMANAGER.is_file(),
             "qemu_system_aarch64": QEMU_ARM64.is_file(),
+            "qemu_system_aarch64_headless": QEMU_ARM64_HEADLESS.is_file(),
         },
         "system_image": {
             "package": DEFAULT_SYSTEM_IMAGE,
@@ -161,7 +192,13 @@ def probe() -> dict[str, object]:
             "machines": machines,
             "selected_machine": choose_machine(machines) if machines else "",
             "machine_help_returncode": machine_probe["returncode"],
+            "machine_help_returncode_hex": (
+                f"0x{machine_probe['returncode'] & 0xFFFFFFFF:08X}"
+                if isinstance(machine_probe["returncode"], int)
+                else ""
+            ),
             "machine_help_output": machine_probe["output"],
+            "library_search_dirs": [str(path) for path in qemu_library_dirs()],
             "tcg": True,
             "hardware_acceleration": False,
         },
@@ -299,6 +336,7 @@ def start_direct(*, window=False, wipe=False, wait=True):
         stdout=log,
         stderr=subprocess.STDOUT,
         creationflags=flags,
+        env=qemu_environment(),
     )
     paths["pid"].write_text(str(proc.pid), encoding="ascii")
     print(f"Native ARM64 QEMU started: PID {proc.pid}")
