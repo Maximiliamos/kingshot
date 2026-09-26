@@ -72,6 +72,8 @@ class NativeArm64PocTests(unittest.TestCase):
     def test_choose_machine_prefers_ranchu(self):
         self.assertEqual(arm64.choose_machine(["virt", "ranchu"]), "ranchu")
         self.assertEqual(arm64.choose_machine(["virt"]), "virt")
+        self.assertEqual(arm64.choose_machine(["virt-8.2", "virt-8.1"]), "virt-8.2")
+        self.assertEqual(arm64.choose_machine(["foo"], strict=False), "")
 
     def test_inventory_finds_arm64_image_files(self):
         with TemporaryDirectory() as td:
