@@ -58,3 +58,24 @@ The goal of the next phase is to automate the tutorial until the governor menu b
 4. Create next character.
 5. Persist nickname counter.
 6. Controlled app-data reset and repeat.
+
+
+## Tutorial branch update — 2026-09-26
+
+Real-device evidence after character creation showed the actual order is:
+
+1. game loading screen;
+2. skippable intro/cinematic with `Пропустить`;
+3. tutorial gameplay;
+4. task-scroll / building-upgrade loop.
+
+`feature/tutorial` now:
+- migrates the old runtime step `tutorial_scroll` to `tutorial_intro`;
+- waits through the real loading screen;
+- detects the real `tutorial_skip.png` button before clicking;
+- never blindly taps the top-right area;
+- retries Skip only while the Skip template is still visible;
+- then waits for the task scroll and Upgrade actions;
+- treats the governor avatar becoming available as the completion signal for the mandatory tutorial.
+
+Latest commits: `d2461ff`, `5c4b21b`, `219c376`.
