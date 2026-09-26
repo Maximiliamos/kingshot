@@ -174,6 +174,7 @@ class NativeArm64PocTests(unittest.TestCase):
         joined = " ".join(cmd).lower()
         self.assertIn("qemu-system-aarch64", joined)
         self.assertIn("-accel off", joined)
+        self.assertIn("-debug-init", joined)
         self.assertIn("-sysdir", joined)
         self.assertIn("-data", joined)
         self.assertIn("-initdata", joined)
