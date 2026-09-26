@@ -40,6 +40,22 @@ class NativeArm64PocTests(unittest.TestCase):
         }))
 
 
+
+    def test_qemu_environment_prepends_emulator_library_dirs(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            qemu = root / "emulator" / "qemu" / "windows-x86_64"
+            lib64 = root / "emulator" / "lib64"
+            qemu.mkdir(parents=True)
+            lib64.mkdir(parents=True)
+            with patch("native_arm64_poc.SDK_ROOT", root), \
+                 patch("native_arm64_poc.QEMU_DIR", qemu), \
+                 patch.dict("os.environ", {"PATH": r"C:\Windows\System32"}, clear=False):
+                env = arm64.qemu_environment()
+        self.assertIn(str(qemu), env["PATH"])
+        self.assertIn(str(lib64), env["PATH"])
+        self.assertTrue(env["PATH"].endswith(r"C:\Windows\System32"))
+
     def test_qemu_machine_probe_parses_stderr(self):
         result = type("Result", (), {
             "stdout": "",
