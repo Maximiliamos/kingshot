@@ -69,6 +69,20 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertEqual(probe["returncode"], 0)
         self.assertEqual(probe["names"][:2], ["ranchu", "virt"])
 
+
+    def test_qemu_probe_enters_passthrough_mode(self):
+        result = type("Result", (), {
+            "stdout": "Supported machines are:\\nvirt ARM Virtual Machine\\n",
+            "stderr": "",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result) as run:
+            qemu.is_file.return_value = True
+            arm64.qemu_machine_probe()
+        args = run.call_args.args[0]
+        self.assertEqual(args[1:4], ["-qemu", "-machine", "help"])
+
     def test_choose_machine_prefers_ranchu(self):
         self.assertEqual(arm64.choose_machine(["virt", "ranchu"]), "ranchu")
         self.assertEqual(arm64.choose_machine(["virt"]), "virt")
