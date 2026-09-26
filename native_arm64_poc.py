@@ -38,6 +38,7 @@ SERIAL = os.environ.get("WAR_BOT_ARM64_SERIAL", f"emulator-{CONSOLE_PORT}")
 RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
+GPU_MODE = os.environ.get("WAR_BOT_ARM64_GPU", "host")
 
 ADB = SDK_ROOT / "platform-tools" / "adb.exe"
 SDKMANAGER = SDK_ROOT / "cmdline-tools" / "latest" / "bin" / "sdkmanager.bat"
@@ -206,6 +207,10 @@ def probe() -> dict[str, object]:
             "installed": image_dir.is_dir(),
             "files": inventory,
         },
+        "graphics": {
+            "mode": GPU_MODE,
+            "vulkan_guest": False,
+        },
         "qemu": {
             "machines": machines,
             "selected_machine": choose_machine(machines, strict=False),
@@ -333,7 +338,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         # Android Emulator 37.x may still try to initialize Lavapipe/Vulkan
         # when GPU is "off". Use SwiftShader explicitly for GLES and disable
         # Vulkan host emulation for this first ARM64 boot gate.
-        "-gpu", "swiftshader",
+        "-gpu", GPU_MODE,
         "-feature", "-Vulkan",
         "-feature", "-VulkanSnapshots",
         "-no-metrics",
