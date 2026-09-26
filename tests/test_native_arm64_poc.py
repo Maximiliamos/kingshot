@@ -140,6 +140,23 @@ class NativeArm64PocTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "exit_code=7"):
                 arm64.wait_for_boot(timeout=1, process=process)
 
+    def test_gpu_mode_can_be_overridden(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+             patch("native_arm64_poc.choose_machine", return_value="ranchu"), \
+             patch("native_arm64_poc.GPU_MODE", "swangle_indirect"):
+            cmd = arm64.build_direct_qemu_command()
+        self.assertIn("-gpu swangle_indirect", " ".join(cmd).lower())
+
     def test_command_uses_aarch64_tcg_not_native_bridge(self):
         inv = {
             "kernel": r"C:\image\kernel-ranchu",
@@ -160,7 +177,7 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("-sysdir", joined)
         self.assertIn("-data", joined)
         self.assertIn("-initdata", joined)
-        self.assertIn("-gpu swiftshader", joined)
+        self.assertIn("-gpu host", joined)
         self.assertIn("-feature -vulkan", joined)
         self.assertIn("-feature -vulkansnapshots", joined)
         self.assertIn("-no-metrics", joined)
