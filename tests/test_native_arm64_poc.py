@@ -118,6 +118,12 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertTrue(inv["kernel"].endswith("kernel-ranchu"))
         self.assertTrue(inv["system"].endswith("system.img"))
 
+    def test_wait_for_boot_fails_fast_if_qemu_exits(self):
+        process = type("Process", (), {"poll": lambda self: 7})()
+        with patch("native_arm64_poc._qemu_log_tail", return_value="boom"):
+            with self.assertRaisesRegex(RuntimeError, "exit_code=7"):
+                arm64.wait_for_boot(timeout=1, process=process)
+
     def test_command_uses_aarch64_tcg_not_native_bridge(self):
         inv = {
             "kernel": r"C:\image\kernel-ranchu",
