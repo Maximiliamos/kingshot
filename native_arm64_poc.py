@@ -321,6 +321,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     # console/ADB and the Android-specific virtual hardware.
     cmd = [
         str(QEMU_ARM64),
+        "-debug-init",
         "-sysdir", str(image_dir),
         "-datadir", str(RUNTIME_ROOT),
         "-kernel", inv["kernel"],
