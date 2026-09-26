@@ -32,6 +32,9 @@ UNKNOWN_SAVE_INTERVAL = 12.0
 UNKNOWN_DIFF = 8.0
 MONITOR_INDEX = 1
 DRY_RUN = False
+TEMPLATE_CACHE = {}
+WATCHDOG_SECONDS = 75.0
+GOVERNOR_CONFIRM_SECONDS = 1.5
 
 user32 = ctypes.windll.user32
 VK_F8 = 0x77
@@ -42,6 +45,8 @@ DEFAULT_STATE = {
     "step": "home",
     "target_state": 3,
     "next_nickname": 1,
+    "characters_created": 0,
+    "current_cycle": 1,
     "step_started_at": 0.0,
 }
 
@@ -174,10 +179,33 @@ def emergency():
 
 
 def tpl(name):
+    if name in TEMPLATE_CACHE:
+        return TEMPLATE_CACHE[name]
     p = os.path.join(TPL, name)
     if not os.path.isfile(p):
+        TEMPLATE_CACHE[name] = None
         return None
-    return cv2.imread(p)
+    img = cv2.imread(p)
+    TEMPLATE_CACHE[name] = img
+    return img
+
+
+def validate_templates():
+    names = [
+        "governor_avatar.png", "profile_settings.png", "settings_characters.png",
+        "create_plus.png", "select_kingdom_title.png", "state3_modal.png",
+        "loading_logo.png", "tutorial_skip.png", "task_scroll.png",
+        "upgrade_button.png", "newbie_offer_context.png", "offline_confirm.png",
+        "invasion_title.png",
+    ]
+    bad = []
+    for name in names:
+        p = os.path.join(TPL, name)
+        if os.path.isfile(p) and tpl(name) is None:
+            bad.append(name)
+    if bad:
+        raise RuntimeError("Повреждены PNG-шаблоны: " + ", ".join(bad))
+    log(f"Шаблоны проверены: {len(names)-len(bad)} позиций.")
 
 
 def match(phone, image, threshold):
@@ -310,8 +338,14 @@ def handle_create_step(phone, state):
         if elapsed < KINGDOM_WAIT:
             return False
 
-        log("Поиск «3» завершён. Нажимаю ТОЛЬКО первую строку — государство №3.")
-        tap_norm(0.50, 0.350)
+        # Never assume that the first search result is state #3: search can
+        # contain 3, 13, 23, ... . Click only an explicitly recognised #3 row.
+        exact = match(phone, tpl("state3_row.png"), 0.90)
+        if not exact:
+            return False
+        debug(phone, exact, "state3_row")
+        log("Найдена точная строка «Государство №3».")
+        tap_match(phone, exact)
         set_step(state, "state_confirm")
         return True
 
@@ -349,8 +383,16 @@ def handle_tutorial(phone, state):
             set_step(state, "tutorial_wait_scroll")
             return "acted"
 
-        # We no longer click a hard-coded top-right coordinate here.
-        # If neither loading nor the real Skip button is visible, save the
+        # Dialogue screens can appear before/after Skip.  Advance only when
+        # the characteristic dialogue continuation marker is recognised.
+        dialogue = match(phone, tpl("tutorial_dialogue_continue.png"), 0.88)
+        if dialogue:
+            debug(phone, dialogue, "tutorial_dialogue")
+            log("Туториал: найден маркер продолжения диалога.")
+            tap_match(phone, dialogue)
+            return "acted"
+
+        # If neither loading, Skip nor a dialogue marker is visible, save the
         # screen as unknown instead of guessing.
         return False
 
@@ -362,6 +404,13 @@ def handle_tutorial(phone, state):
             log("Туториал: меню губернатора доступно — обязательная часть завершена.")
             set_phase(state, "tutorial_complete", "governor_available")
             return "wait"
+
+        dialogue = match(phone, tpl("tutorial_dialogue_continue.png"), 0.88)
+        if dialogue:
+            debug(phone, dialogue, "tutorial_dialogue")
+            log("Туториал: продолжаю подтверждённый диалог.")
+            tap_match(phone, dialogue)
+            return "acted"
 
         # Some cinematic pages can remain after the first skip request.
         # Retry only when the actual Skip template is still visible.
@@ -416,6 +465,7 @@ def main():
         DRY_RUN = True
 
     state = load_state()
+    validate_templates()
     log("="*70)
     log(f"WAR BOT v4 | phase={state['phase']} step={state['step']}")
     adb_check()
