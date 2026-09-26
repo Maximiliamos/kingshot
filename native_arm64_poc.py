@@ -330,7 +330,13 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         "-no-audio",
         "-no-snapshot",
         "-no-cache",
-        "-gpu", "off",
+        # Android Emulator 37.x may still try to initialize Lavapipe/Vulkan
+        # when GPU is "off". Use SwiftShader explicitly for GLES and disable
+        # Vulkan host emulation for this first ARM64 boot gate.
+        "-gpu", "swiftshader_indirect",
+        "-feature", "-Vulkan",
+        "-feature", "-VulkanSnapshots",
+        "-no-metrics",
         "-show-kernel",
     ]
     if "vendor" in inv:
