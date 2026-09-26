@@ -59,6 +59,21 @@ Tutorial не должен знать, какой backend используетс
 Проверяются в таком порядке: ADB `exec-out screencap -p`, scrcpy, захват окна.
 Решение принимается по FPS, задержке tap-to-frame, CPU и числу чёрных кадров.
 
+## PoC evidence
+
+- Официальный ARM64 system image API 34 установлен, но QEMU2 37.1.11 на
+  x86-64 Windows отклонил запуск: архитектура AVD должна совпадать с host.
+- Следующий G1-кандидат: официальный x86_64 Google Play image API 34 с
+  поставляемым Google ARM DBT/native bridge. Совместимость считается
+  подтверждённой только после реального `install-multiple` ARM64 split APK.
+- G1 PASS: x86_64 Google Play AVD загрузился через WHPX, объявил ABI
+  `x86_64,arm64-v8a` с `libndk_translation.so` и успешно установил все три APK.
+- G2 FAIL: `com.got.globalru` завершается при старте. Android зафиксировал
+  `UnsatisfiedLinkError`: ARM64-процесс пытается загрузить находящийся в split
+  файл `libnesec-x86.so` формата `EM_X86_64` вместо `EM_AARCH64`. Это
+  несовместимость защитного/упаковочного слоя игры с официальным ARM DBT.
+  Библиотеки APK не модифицируются; основной backend остаётся physical/scrcpy.
+
 ## Данные и безопасность
 
 Счётчики, phase/step и device id хранятся вне Android. Snapshot не считается
