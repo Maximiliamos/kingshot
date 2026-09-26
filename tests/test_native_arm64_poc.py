@@ -39,6 +39,20 @@ class NativeArm64PocTests(unittest.TestCase):
             "native_bridge": "libndk_translation.so",
         }))
 
+
+    def test_qemu_machine_probe_parses_stderr(self):
+        result = type("Result", (), {
+            "stdout": "",
+            "stderr": "Supported machines are:\\nranchu Android Emulator\\nvirt ARM Virtual Machine\\n",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result):
+            qemu.is_file.return_value = True
+            probe = arm64.qemu_machine_probe()
+        self.assertEqual(probe["returncode"], 0)
+        self.assertEqual(probe["names"][:2], ["ranchu", "virt"])
+
     def test_choose_machine_prefers_ranchu(self):
         self.assertEqual(arm64.choose_machine(["virt", "ranchu"]), "ranchu")
         self.assertEqual(arm64.choose_machine(["virt"]), "virt")
