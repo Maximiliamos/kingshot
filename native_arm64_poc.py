@@ -306,6 +306,8 @@ def runtime_paths() -> dict[str, Path]:
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
         "crash": RUNTIME_ROOT / "game-crash.txt",
         "boot_crash": RUNTIME_ROOT / "zygote-crash.txt",
+        "adb_crash": RUNTIME_ROOT / "adb-crash-buffer.txt",
+        "tombstones": RUNTIME_ROOT / "tombstones",
         "boot_report": RUNTIME_ROOT / "boot-diagnostic.json",
         "frame": RUNTIME_ROOT / "frame.png",
         "pstore": RUNTIME_ROOT / "pstore.bin",
@@ -731,6 +733,55 @@ def collect_boot_crash() -> dict[str, object]:
     return report
 
 
+def collect_adb_boot_diagnostics() -> dict[str, object]:
+    """Best-effort crash evidence when adbd is reachable but framework is not."""
+    paths = runtime_paths()
+    result: dict[str, object] = {
+        "crash_buffer": "",
+        "tombstones_dir": "",
+        "crash_buffer_saved": False,
+        "tombstones_pulled": False,
+    }
+
+    try:
+        state = run(
+            [ADB, "-s", SERIAL, "get-state"],
+            timeout=5, check=False,
+        ).stdout.strip()
+    except subprocess.TimeoutExpired:
+        return result
+    if state != "device":
+        return result
+
+    try:
+        crash = run(
+            [ADB, "-s", SERIAL, "logcat", "-b", "crash", "-d", "-v", "threadtime"],
+            timeout=12, check=False,
+        )
+        text = crash.stdout or crash.stderr or ""
+        if text.strip():
+            paths["adb_crash"].write_text(text, encoding="utf-8", errors="replace")
+            result["crash_buffer"] = str(paths["adb_crash"])
+            result["crash_buffer_saved"] = True
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+    try:
+        if paths["tombstones"].exists():
+            shutil.rmtree(paths["tombstones"], ignore_errors=True)
+        pull = run(
+            [ADB, "-s", SERIAL, "pull", "/data/tombstones", str(paths["tombstones"])],
+            timeout=30, check=False,
+        )
+        if pull.returncode == 0 and paths["tombstones"].exists():
+            result["tombstones_dir"] = str(paths["tombstones"])
+            result["tombstones_pulled"] = True
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+
+    return result
+
+
 def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, object]:
     RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
     try:
@@ -756,6 +807,7 @@ def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, objec
         "codec2_disabled": True,
         "guest": guest,
         "boot_crash": collect_boot_crash(),
+        "adb_diagnostics": collect_adb_boot_diagnostics(),
         "critical_lines": _qemu_critical_lines(),
     }
     if extra:
