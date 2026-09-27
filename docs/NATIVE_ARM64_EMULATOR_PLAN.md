@@ -261,3 +261,59 @@ when present, and boot configuration.
 Production startup no longer requires a separately-installed upstream
 `qemu-system-aarch64.exe`; the Google Android Emulator ARM64 binaries are the
 production runtime. Upstream QEMU remains only an optional A/B diagnostic.
+
+
+### 2026-09-27 — real-host ranchu TCG result and machine pivot
+
+The first long integrated verifier run produced an important correction:
+`adb get-state` eventually returned `device`, but Android **did not** reach
+`sys.boot_completed=1`. The old progress helper incorrectly labeled the log
+as `android-boot-complete` because it matched
+`sys.bootstat.first_boot_completed 0` / text saying processes crashed
+"before boot completed". The milestone detector now accepts only the real
+`sys.boot_completed=1` property (or an exact `setprop sys.boot_completed 1`).
+
+The run also proved that `qemu.media.ccodec=0` reached the kernel command
+line, but zygote and several unrelated Android services continued to crash.
+The serial log repeatedly showed zygote SIGSEGV, media/camera failures and
+hwcomposer restarts. This means the remaining failure cannot safely be treated
+as only a Codec2 toggle issue.
+
+Most importantly, the guest kernel reported that CPU1-CPU3 could not be
+started because PSCI was unavailable and only CPU0 was activated. This matches
+AOSP's legacy ARM `ranchu` implementation: PSCI is not provided for TCG
+there.
+
+AOSP later modified the ARM `virt` machine specifically to emulate ranchu:
+it adds the goldfish pipe, framebuffer, address-space and audio devices while
+retaining the maintained virt/PSCI CPU topology. WAR BOT therefore now uses
+Google's Android-modified `virt` machine by default under TCG and retains
+legacy `ranchu` only through:
+
+```text
+WAR_BOT_ARM64_MACHINE=ranchu
+```
+
+The direct runner also supplies explicit `-boot-property` entries so the
+guest qemu-props service receives the host boot-property channel normally
+initialized by the stock launcher.
+
+The DTB remains derived from the selected Google QEMU machine itself and only
+the Android logical-partition/vbmeta properties are patched. Machine-specific
+DTB names prevent a stale ranchu DTB from being reused with virt. A legacy
+ranchu runtime is automatically recreated when the production machine changes
+to virt; PC-side WAR BOT nickname/state files are outside that disposable
+runtime and are not touched.
+
+Next real-host PASS remains strict:
+
+- all requested ARM vCPUs start;
+- ADB = `device`;
+- `sys.boot_completed=1`;
+- ABI = `arm64-v8a`;
+- no x86 ABI and no native bridge;
+- valid screenshot;
+- game installation and stability gate pass.
+
+If boot still fails, the report now also attempts to save the Android crash
+buffer and `/data/tombstones` once adbd is reachable.
