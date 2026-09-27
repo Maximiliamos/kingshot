@@ -47,13 +47,14 @@ $verifyArgs = @(
 if ($WipeRuntime) { $verifyArgs += "-WipeRuntime" }
 if ($CleanGame) { $verifyArgs += "-CleanGame" }
 
+$savedErrorAction = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 try {
     & powershell @verifyArgs 2>&1 | Tee-Object -FilePath $consoleLog
     $verifyExit = $LASTEXITCODE
 }
-catch {
-    $_ | Out-String | Tee-Object -FilePath $consoleLog -Append | Write-Host
-    $verifyExit = 998
+finally {
+    $ErrorActionPreference = $savedErrorAction
 }
 
 # Always ask the runtime for its latest deterministic report. Failure here
@@ -71,6 +72,8 @@ $knownFiles = @(
     "zygote-crash.txt",
     "adb-crash-buffer.txt",
     "adb-logcat-all.txt",
+    "adb-root-status.txt",
+    "adb-dmesg.txt",
     "tombstone-probe.txt",
     "boot-live-state.txt",
     "game-crash.txt",
