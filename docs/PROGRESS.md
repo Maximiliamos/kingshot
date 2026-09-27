@@ -1,81 +1,110 @@
-# Progress
+# WAR BOT progress
 
-## Confirmed working
+Updated: 2026-09-27
 
-- ADB connection to HONOR Magic V3.
-- ADB tap inside the game.
-- HONOR Suite fullscreen screen mirroring.
-- Monitor capture with MSS.
-- Phone-area crop for 1060×2376 aspect ratio.
-- OpenCV template matching.
-- Coordinate mapping from mirrored phone image to real phone.
-- Recovery loop for MSS / BitBlt capture failures.
-- F8 global emergency stop.
-- Strict step-by-step navigation:
-  - city
-  - governor profile
-  - settings
-  - characters
-  - create character
-  - kingdom selector
-  - confirmation dialog.
-- First tutorial concept: use the task scroll and then the proposed Upgrade action.
+## Application layer
 
-## Latest real test
+The application is no longer tied to a physical HONOR phone or a scrcpy
+desktop window.
 
-The bot successfully:
-1. opened the governor profile;
-2. opened Settings;
-3. opened Characters;
-4. started creating a new character;
-5. entered `3` in kingdom search;
-6. confirmed character creation;
-7. reached the new-character tutorial.
+Implemented on `feature/unified-android-backend`:
 
-### Known defect
+- `DeviceBackend` contract for Android transport;
+- `NativeArm64Backend` for the native ARM64 QEMU runtime;
+- generic `AdbDeviceBackend` for an already-running Android target;
+- device-scoped ADB serial for every command;
+- Android health/readiness checks;
+- strict native ARM64 gate before game install/launch;
+- direct screenshot through `adb exec-out screencap -p`;
+- tap, swipe/hold, keyevent, shell and app lifecycle through one backend;
+- optional uiautomator2 path for Android system UI;
+- existing OpenCV/Unity vision/state machine kept intact;
+- GUI backend selection and ARM64 runtime start/stop controls;
+- backend-aware live preview;
+- agent-friendly `warbot_cli.py`;
+- complete installer copies the application instead of only `bot.py`;
+- CI discovers and runs the whole test suite.
 
-The character was created in **state #23 instead of #3**.
+Legacy scrcpy is retained only as a diagnostic capture mode. It is not the
+production target.
 
-Do not treat the current “first result after searching 3” assumption as valid. The exact selection logic must be fixed and verified on a real kingdom-results screen.
+## Native ARM64 runtime
 
-## Tutorial observations
+Runtime work remains on `feature/native-arm64-emulator` / Draft PR #5.
 
-New-character tutorial screens observed include:
-- cinematic/dialog with **Пропустить**;
-- dialogue requiring advance;
-- loading screen;
-- game world/tutorial;
-- task scroll workflow;
-- building screen with **Улучшить**.
+Confirmed progress:
 
-The goal of the next phase is to automate the tutorial until the governor menu becomes available again.
+- ARM64 Android 11 image is installed;
+- Google ranchu core runs without the launcher-added invalid HDA device;
+- dynamic partitions are described through a derived ranchu DTB;
+- `super` is discovered;
+- `system`, `vendor`, `product` and `system_ext` mount;
+- userdata/FBE initializes;
+- boot reaches zygote/SurfaceFlinger;
+- no game APK has been installed before the native ARM64 gate.
 
-## Next milestones
+Current runtime blocker:
 
-1. Exact state #3 selection.
-2. Tutorial completion to governor-menu unlock.
-3. Rename character to `Тугарин<N>`.
-4. Create next character.
-5. Persist nickname counter.
-6. Controlled app-data reset and repeat.
+- `app_process64` repeatedly crashes with SIGSEGV while executing inside
+  `libcodec2_vndk.so`;
+- ADB therefore does not yet reach stable `device`;
+- `sys.boot_completed` is not yet `1`;
+- A1/A2 remain FAIL.
 
+The runtime diagnosis should continue independently: collect reproducible
+zygote crashes, symbolize the exact PC/offset and perform the planned
+Google-ranchu vs upstream-QEMU comparison before changing more CPU models or
+guest libraries.
 
-## Tutorial branch update — 2026-09-26
+## What becomes immediately usable after A1/A2
 
-Real-device evidence after character creation showed the actual order is:
+Once the ARM64 guest reaches:
 
-1. game loading screen;
-2. skippable intro/cinematic with `Пропустить`;
-3. tutorial gameplay;
-4. task-scroll / building-upgrade loop.
+```text
+ADB = device
+sys.boot_completed = 1
+ro.product.cpu.abi = arm64-v8a
+no x86 in abilist
+ro.dalvik.vm.native.bridge = empty / 0 / none
+```
 
-`feature/tutorial` now:
-- migrates the old runtime step `tutorial_scroll` to `tutorial_intro`;
-- waits through the real loading screen;
-- detects the real `tutorial_skip.png` button before clicking;
-- never blindly taps the top-right area;
-- retries Skip only while the Skip template is still visible;
-- then waits for the task scroll and Upgrade actions;
-- treats the governor avatar becoming available as the completion signal for the mandatory tutorial.
+the application layer can immediately:
 
-Latest commits: `d2461ff`, `5c4b21b`, `219c376`.
+1. capture a frame;
+2. send tap/swipe/key input;
+3. install the three verified game splits;
+4. launch/stop the game;
+5. reuse existing OpenCV templates and action gate;
+6. continue the character/tutorial/rename state machine;
+7. surface the same runtime in the GUI and CLI.
+
+No second transport rewrite should be necessary.
+
+## Remaining MVP gates
+
+| Gate | State | Required evidence |
+|---|---|---|
+| Stable ARM64 Android boot | BLOCKED | ADB device + boot_completed=1 |
+| Native ABI gate | BLOCKED by boot | arm64-v8a, no x86, no bridge |
+| Frame capture | CODE READY | real PNG from native guest |
+| Input | CODE READY | tap/swipe changes real guest frame |
+| Game install | CODE READY, GATED | install-multiple after ARM64 gate |
+| Game launch | CODE READY, GATED | Unity stays alive |
+| Tutorial/state machine | PARTIAL | complete real native-emulator flow |
+| Exact State #3 | NEEDS REAL VERIFICATION | never select #23 |
+| Rename/counter loop | PARTIAL | verified repeated cycle |
+| App-data reset/repeat | SAFE API READY | integrate after cycle validation |
+| GUI integration | IMPLEMENTED | validate against booted guest |
+
+## Safety
+
+The project does not:
+
+- patch the game APK or native libraries;
+- hide emulator properties;
+- spoof Play Integrity/attestation;
+- use Magisk/root/Frida to evade restrictions;
+- bypass server/account character limits.
+
+If the game/server rejects the environment or account flow, the bot must stop
+and surface the condition instead of bypassing it.
