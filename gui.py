@@ -561,10 +561,14 @@ class WarBotWindow(QMainWindow):
         self.cycle_created_value.setText(f"{cycle_created} / {per_cycle}")
         self.stop_reason_value.setText(str(state.get("last_stop_reason", "") or "—"))
         running_pid = bot_pid()
-        self.start_button.setEnabled(running_pid is None)
-        if running_pid is not None:
+        if self.pending_bot_start:
+            self.start_button.setEnabled(False)
+            self.start_button.setText("●  ПОДГОТОВКА ANDROID + ИГРЫ…")
+        elif running_pid is not None:
+            self.start_button.setEnabled(False)
             self.start_button.setText(f"●  БОТ РАБОТАЕТ  PID {running_pid}")
         else:
+            self.start_button.setEnabled(True)
             self.start_button.setText("▶  ЗАПУСТИТЬ")
 
     def _render_capture(self, phone, title, rect):
