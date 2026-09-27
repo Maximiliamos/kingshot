@@ -414,6 +414,9 @@ class NativeArm64Backend(AdbDeviceBackend):
 
     def start_runtime(self, *, wipe: bool = False, window: bool = False) -> int:
         import native_arm64_poc
+        # Idempotent: returns immediately when the verified ARM64 Android 11
+        # image already exists, otherwise installs it through sdkmanager.
+        native_arm64_poc.install_system_image()
         return native_arm64_poc.start_direct(window=window, wipe=wipe, wait=True)
 
     def stop_runtime(self) -> None:
