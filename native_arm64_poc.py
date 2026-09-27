@@ -39,6 +39,7 @@ SERIAL = os.environ.get("WAR_BOT_ARM64_SERIAL", f"127.0.0.1:{ADB_PORT}")
 RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
+TCG_THREAD_MODE = os.environ.get("WAR_BOT_ARM64_TCG_THREAD", "").strip().lower()
 POST_ADB_STALL_SECONDS = int(
     os.environ.get("WAR_BOT_ARM64_POST_ADB_TIMEOUT", "180")
 )
@@ -477,8 +478,15 @@ def build_google_arm64_command(*, window=False, wipe=False) -> list[str]:
         "qemu.skin=1060x2376 qemu.virtiowifi=0 qemu.vsync=60"
     )
     qemu = QEMU_ARM64 if window else QEMU_ARM64_HEADLESS
-    cmd = [
-        str(qemu), "-fuchsia", "-gpu", GPU_MODE,
+    cmd = [str(qemu), "-fuchsia"]
+    if TCG_THREAD_MODE:
+        if TCG_THREAD_MODE not in {"single", "multi"}:
+            raise RuntimeError(
+                "WAR_BOT_ARM64_TCG_THREAD must be 'single', 'multi', or empty"
+            )
+        cmd += ["-accel", f"tcg,thread={TCG_THREAD_MODE}"]
+    cmd += [
+        "-gpu", GPU_MODE,
         "-window-size", "1060x2376",
         "-L", str(SDK_ROOT / "emulator" / "lib" / "pc-bios"),
         "-machine", f"type={machine}", "-cpu", CPU_MODEL,
@@ -896,6 +904,11 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
     root adbd on this userdebug emulator only after the boot gate has failed.
     """
     paths = runtime_paths()
+    for stale_key in (
+        "adb_crash", "adb_logcat_all", "adb_root_status",
+        "adb_dmesg", "tombstone_probe",
+    ):
+        paths[stale_key].unlink(missing_ok=True)
     result: dict[str, object] = {
         "crash_buffer": str(paths["adb_crash"]),
         "logcat_all": "",
@@ -1063,6 +1076,8 @@ def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, objec
         "system_image": DEFAULT_SYSTEM_IMAGE,
         "cpu": CPU_MODEL,
         "cpu_cores": CPU_CORES,
+        "tcg_thread_mode": TCG_THREAD_MODE or "default",
+        "experiment": os.environ.get("WAR_BOT_RUNTIME_EXPERIMENT", ""),
         "ram_mb": RAM_MB,
         "gpu": GPU_MODE,
         "machine": google_arm64_machine(),
