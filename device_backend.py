@@ -500,6 +500,90 @@ class NativeArm64Backend(AdbDeviceBackend):
         return DeviceHealth(**data)
 
 
+class WsaBackend(AdbDeviceBackend):
+    """Windows Subsystem for Android transport.
+
+    WSA on an x86-64 Windows host may run ARM app libraries through an Android
+    native bridge (for example libhoudini). Unlike NativeArm64Backend, this
+    backend intentionally does not enforce the no-translation gate: the PoC is
+    meant to determine whether WSA's translation and graphics stack can run the
+    game stably enough for WAR BOT.
+    """
+
+    backend_name = "wsa"
+
+    def __init__(self, **kwargs):
+        if "serial" not in kwargs or kwargs["serial"] is None:
+            kwargs["serial"] = os.environ.get(
+                "WAR_BOT_WSA_SERIAL",
+                "127.0.0.1:58526",
+            )
+        super().__init__(**kwargs)
+
+    @property
+    def runtime_root(self) -> Path:
+        return Path(os.environ.get(
+            "WAR_BOT_WSA_RUNTIME",
+            r"C:\warbot_wsa_runtime",
+        ))
+
+    def start_runtime(self, *, wipe: bool = False, window: bool = True) -> None:
+        # WSA is managed by Windows/Hyper-V rather than WAR BOT. Opening the
+        # Settings app is a safe way to wake the subsystem and expose Developer
+        # mode / ADB. Never delete WSA userdata from this backend.
+        app = (
+            r"shell:AppsFolder\"
+            r"MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe"
+            r"!SettingsApp"
+        )
+        subprocess.Popen(
+            ["explorer.exe", app],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    def install_verified_game(
+        self,
+        apks_dir: str | os.PathLike[str] | None = None,
+    ) -> str:
+        self.require_ready(native_arm64=False)
+        root = Path(
+            apks_dir
+            or os.environ.get(
+                "WAR_BOT_APKS_DIR",
+                r"C:\warbot_emulator_poc\apks_1.12.10",
+            )
+        )
+        names = (
+            "base.apk",
+            "split_config.arm64_v8a.apk",
+            "split_game_asset.apk",
+        )
+        return self.install_apks(root / name for name in names)
+
+    def collect_game_crash(self) -> Path:
+        result = self._run(
+            ["logcat", "-b", "crash", "-d", "-v", "threadtime"],
+            timeout=120,
+            check=False,
+            text=True,
+        )
+        path = self.runtime_root / "game-crash.txt"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            result.stdout or result.stderr or "",
+            encoding="utf-8",
+            errors="replace",
+        )
+        return path
+
+    def health(self) -> DeviceHealth:
+        base = super().health()
+        data = asdict(base)
+        data["backend"] = self.backend_name
+        return DeviceHealth(**data)
+
+
 class BackendCapture:
     """Adapter exposing the old grab shape to the vision loop."""
 
@@ -528,8 +612,10 @@ def create_backend(
     selected = (name or os.environ.get("WAR_BOT_BACKEND", "native_arm64")).strip().lower()
     if selected in ("native", "native_arm64", "emulator"):
         return NativeArm64Backend(serial=serial, adb_path=adb_path)
+    if selected in ("wsa", "windows_subsystem_android"):
+        return WsaBackend(serial=serial, adb_path=adb_path)
     if selected in ("adb", "android"):
         return AdbDeviceBackend(serial=serial, adb_path=adb_path)
     raise BackendError(
-        f"Unknown Android backend {selected!r}; expected native_arm64 or adb"
+        f"Unknown Android backend {selected!r}; expected native_arm64, wsa or adb"
     )
