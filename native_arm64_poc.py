@@ -683,6 +683,16 @@ def collect_boot_crash() -> dict[str, object]:
 
 
 def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, object]:
+    try:
+        guest = guest_status()
+    except Exception as exc:
+        # This report is specifically useful before ADB exists. Never let a
+        # missing/offline adb executable hide the serial/QEMU crash evidence.
+        guest = {
+            "serial": SERIAL,
+            "device_state": "unavailable",
+            "diagnostic_error": str(exc),
+        }
     report = {
         "runtime_root": str(RUNTIME_ROOT),
         "serial": SERIAL,
@@ -693,7 +703,7 @@ def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, objec
         "gpu": GPU_MODE,
         "boot_device": RANCHU_BOOT_DEVICE,
         "codec2_disabled": True,
-        "guest": guest_status(),
+        "guest": guest,
         "boot_crash": collect_boot_crash(),
         "critical_lines": _qemu_critical_lines(),
     }
