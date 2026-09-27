@@ -216,6 +216,7 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("hostfwd=tcp:127.0.0.1:5561-:5555", joined)
         self.assertIn("qemu.encrypt=1", joined)
         self.assertIn("androidboot.logical_partitions=1", joined)
+        self.assertIn("qemu.media.ccodec=0", joined)
         self.assertNotIn("-qemu ", joined)
         self.assertNotIn("houdini", joined)
         self.assertNotIn("ndk_translation", joined)
