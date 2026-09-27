@@ -50,6 +50,26 @@ class FullCycleTests(unittest.TestCase):
         self.assertEqual(state["phase"], "reset_cycle")
         self.assertEqual(state["step"], "clear_data")
 
+    def test_cycle_can_stop_without_reset_when_repeat_disabled(self):
+        state = dict(bot.DEFAULT_STATE)
+        state.update({
+            "phase": "rename_governor",
+            "step": "rename_verify",
+            "pending_nickname": 4,
+            "next_nickname": 4,
+            "characters_created": 3,
+            "characters_created_cycle": 3,
+            "characters_per_cycle": 4,
+            "auto_reset_data": True,
+            "repeat_cycles": False,
+        })
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        with patch("bot.match", return_value=None), \
+                patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
+            bot.handle_rename_governor(phone, state)
+        self.assertEqual(state["phase"], "complete")
+        self.assertEqual(state["step"], "done")
+
     def test_cycle_reset_preserves_pc_nickname_counter(self):
         state = dict(bot.DEFAULT_STATE)
         state.update({
