@@ -27,6 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adb", default=None)
     parser.add_argument("--output", default="warbot-frame.png")
     parser.add_argument("--apks-dir", default=None)
+    parser.add_argument("--game-stability-seconds", type=int, default=45)
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument(
         "--clean-game",
@@ -117,7 +118,14 @@ def main(argv=None) -> int:
             reset_workflow_for_clean_game()
 
         backend.launch_app()
-        pid = backend.wait_package_running(timeout=90)
+        pid = backend.wait_package_running(timeout=180)
+        stability = max(1, int(args.game_stability_seconds))
+        print(
+            f"Game process {pid} started; verifying stability for {stability}s...",
+            flush=True,
+        )
+        backend.wait_package_stable(stability, expected_pid=pid)
+        print(f"Game stability gate passed: PID {pid}", flush=True)
         frame = backend.frame()
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -133,6 +141,7 @@ def main(argv=None) -> int:
             "installed_now": installed_now,
             "clean_game": bool(args.clean_game),
             "game_pid": pid,
+            "game_stability_seconds": stability,
             "screenshot": str(output.resolve()),
         }, ensure_ascii=False, indent=2))
         return 0
