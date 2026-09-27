@@ -23,6 +23,17 @@ if (-not $SkipPull) {
 }
 
 $commit = (& git rev-parse HEAD).Trim()
+
+# Evidence-driven experiment for the current blocker:
+# baseline Google virt + 4-vCPU MTTCG shows unrelated native processes
+# (zygote/media/storaged) all receiving SIGSEGV. This run isolates whether
+# multi-threaded TCG / SMP concurrency is causal without changing APK/system.
+$env:WAR_BOT_RUNTIME_EXPERIMENT = "virt-1cpu-single-tcg"
+$env:WAR_BOT_ARM64_CPU_CORES = "1"
+$env:WAR_BOT_ARM64_TCG_THREAD = "single"
+$env:WAR_BOT_ARM64_POST_ADB_TIMEOUT = "150"
+$WipeRuntime = $true
+
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $stage = Join-Path $env:TEMP ("warbot-runtime-report-" + $stamp + "-" + $PID)
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
@@ -131,6 +142,9 @@ $manifest = [ordered]@{
     verify_exit_code = $verifyExit
     result = $(if ($verifyExit -eq 0) { "PASS" } else { "FAIL" })
     runtime_root = $runtimeRoot
+    experiment = $env:WAR_BOT_RUNTIME_EXPERIMENT
+    arm64_cpu_cores = $env:WAR_BOT_ARM64_CPU_CORES
+    tcg_thread_mode = $env:WAR_BOT_ARM64_TCG_THREAD
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 $manifestPath
 
