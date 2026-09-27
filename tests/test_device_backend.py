@@ -76,6 +76,24 @@ class DeviceBackendTests(unittest.TestCase):
             frame = backend.frame()
         self.assertEqual(frame.shape, (20, 10, 3))
 
+    def test_require_ready_rejects_non_native_bridge(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        health = db.DeviceHealth(
+            backend="native_arm64",
+            serial="device-1",
+            state="device",
+            boot_completed="1",
+            abi="arm64-v8a",
+            abilist="arm64-v8a",
+            native_bridge="libhoudini.so",
+        )
+        with patch.object(backend, "health", return_value=health):
+            with self.assertRaises(db.BackendError):
+                backend.require_ready(native_arm64=True)
+
     def test_input_text_fails_closed_for_cyrillic(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
