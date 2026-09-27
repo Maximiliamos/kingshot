@@ -26,5 +26,10 @@ jobs:
         run: python -m pip install numpy opencv-python-headless mss fdt==0.3.3
       - name: Compile application modules
         run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py warbot_cli.py bot.py gui.py
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          [scriptblock]::Create((Get-Content -Raw scripts/install.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp.ps1)) | Out-Null
       - name: Run application unit tests
         run: python -m unittest discover -s tests -v
