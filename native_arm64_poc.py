@@ -312,6 +312,8 @@ def runtime_paths() -> dict[str, Path]:
         "boot_crash": RUNTIME_ROOT / "zygote-crash.txt",
         "adb_crash": RUNTIME_ROOT / "adb-crash-buffer.txt",
         "adb_logcat_all": RUNTIME_ROOT / "adb-logcat-all.txt",
+        "adb_root_status": RUNTIME_ROOT / "adb-root-status.txt",
+        "adb_dmesg": RUNTIME_ROOT / "adb-dmesg.txt",
         "tombstone_probe": RUNTIME_ROOT / "tombstone-probe.txt",
         "boot_live_state": RUNTIME_ROOT / "boot-live-state.txt",
         "tombstones": RUNTIME_ROOT / "tombstones",
@@ -815,11 +817,83 @@ def collect_adb_live_state() -> dict[str, object]:
     return result
 
 
+def _wait_for_adb_device(timeout=45) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            state = run(
+                [ADB, "-s", SERIAL, "get-state"],
+                timeout=5, check=False,
+            ).stdout.strip()
+        except (subprocess.TimeoutExpired, OSError):
+            state = ""
+        if state == "device":
+            return True
+        time.sleep(1)
+    return False
+
+
+def _adb_root_for_diagnostics() -> dict[str, object]:
+    """Best-effort root adbd on the debuggable emulator image.
+
+    This is diagnostics-only and runs after the production boot gate has
+    already failed. The installed ARM64 Google APIs image is userdebug/dev-keys
+    and advertises ro.debuggable=1 in the serial log.
+    """
+    paths = runtime_paths()
+    result: dict[str, object] = {
+        "attempted": True,
+        "root": False,
+        "output": "",
+        "id": "",
+        "path": str(paths["adb_root_status"]),
+    }
+    notes: list[str] = []
+    try:
+        root = run(
+            [ADB, "-s", SERIAL, "root"],
+            timeout=30, check=False,
+        )
+        output = ((root.stdout or "") + "\n" + (root.stderr or "")).strip()
+        result["output"] = output
+        notes.append("===== adb root =====\n" + (output or "<no output>"))
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        notes.append(f"===== adb root =====\n<failed: {exc}>")
+        paths["adb_root_status"].write_text(
+            "\n\n".join(notes) + "\n", encoding="utf-8", errors="replace"
+        )
+        return result
+
+    if not _wait_for_adb_device(timeout=60):
+        notes.append("===== reconnect =====\n<adb did not return as device>")
+        paths["adb_root_status"].write_text(
+            "\n\n".join(notes) + "\n", encoding="utf-8", errors="replace"
+        )
+        return result
+
+    try:
+        ident = run(
+            [ADB, "-s", SERIAL, "shell", "id"],
+            timeout=10, check=False,
+        )
+        ident_text = (ident.stdout or ident.stderr or "").strip()
+        result["id"] = ident_text
+        result["root"] = "uid=0(" in ident_text or ident_text.startswith("uid=0 ")
+        notes.append("===== adb shell id =====\n" + (ident_text or "<empty>"))
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        notes.append(f"===== adb shell id =====\n<failed: {exc}>")
+
+    paths["adb_root_status"].write_text(
+        "\n\n".join(notes) + "\n", encoding="utf-8", errors="replace"
+    )
+    return result
+
+
 def collect_adb_boot_diagnostics() -> dict[str, object]:
     """Best-effort Android crash evidence once adbd is reachable.
 
-    Always materialize the diagnostic files. An empty crash log is itself
-    useful evidence and must not look like a missing collector run.
+    Always materialize status files. If shell SELinux blocks tombstones, try
+    root adbd on this userdebug emulator only after the boot gate has failed.
     """
     paths = runtime_paths()
     result: dict[str, object] = {
@@ -827,6 +901,8 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
         "logcat_all": "",
         "tombstones_dir": "",
         "tombstone_probe": "",
+        "adb_root": {},
+        "dmesg": "",
         "crash_buffer_saved": False,
         "crash_buffer_empty": False,
         "logcat_all_saved": False,
@@ -841,16 +917,14 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
     except (subprocess.TimeoutExpired, OSError) as exc:
         paths["adb_crash"].write_text(
             f"<adb unavailable: {exc}>\n",
-            encoding="utf-8",
-            errors="replace",
+            encoding="utf-8", errors="replace",
         )
         return result
 
     if state != "device":
         paths["adb_crash"].write_text(
             f"<adb state is {state or 'missing'}; crash buffer not queried>\n",
-            encoding="utf-8",
-            errors="replace",
+            encoding="utf-8", errors="replace",
         )
         return result
 
@@ -859,10 +933,10 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
             [ADB, "-s", SERIAL, "logcat", "-b", "crash", "-d", "-v", "threadtime"],
             timeout=12, check=False,
         )
-        text = (crash.stdout or "").strip()
+        crash_text = (crash.stdout or "").strip()
         stderr = (crash.stderr or "").strip()
-        if text:
-            body = text + "\n"
+        if crash_text:
+            body = crash_text + "\n"
             result["crash_buffer_saved"] = True
         else:
             body = (
@@ -872,20 +946,87 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
             )
             result["crash_buffer_empty"] = True
         paths["adb_crash"].write_text(
-            body,
-            encoding="utf-8",
-            errors="replace",
+            body, encoding="utf-8", errors="replace"
         )
     except (subprocess.TimeoutExpired, OSError) as exc:
         paths["adb_crash"].write_text(
             f"<crash-buffer query failed: {exc}>\n",
-            encoding="utf-8",
-            errors="replace",
+            encoding="utf-8", errors="replace",
         )
 
-    # When -b crash is empty, logd's other buffers can still contain init,
-    # linker, libc or service diagnostics useful for early userspace crashes.
-    if result["crash_buffer_empty"]:
+    # First try without changing adbd privileges.
+    pull_error = ""
+    try:
+        if paths["tombstones"].exists():
+            shutil.rmtree(paths["tombstones"], ignore_errors=True)
+        pull = run(
+            [ADB, "-s", SERIAL, "pull", "/data/tombstones", str(paths["tombstones"])],
+            timeout=30, check=False,
+        )
+        pull_error = ((pull.stdout or "") + "\n" + (pull.stderr or "")).strip()
+        if pull.returncode == 0 and paths["tombstones"].exists():
+            result["tombstones_dir"] = str(paths["tombstones"])
+            result["tombstones_pulled"] = True
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        pull_error = str(exc)
+
+    # The Google APIs ARM64 image used here is userdebug/dev-keys. If SELinux
+    # blocks shell from tombstone_data_file, restart adbd as root strictly for
+    # post-failure evidence collection and retry.
+    if not result["tombstones_pulled"]:
+        root_result = _adb_root_for_diagnostics()
+        result["adb_root"] = root_result
+        if root_result.get("root"):
+            try:
+                if paths["tombstones"].exists():
+                    shutil.rmtree(paths["tombstones"], ignore_errors=True)
+                pull = run(
+                    [ADB, "-s", SERIAL, "pull", "/data/tombstones", str(paths["tombstones"])],
+                    timeout=60, check=False,
+                )
+                root_pull = ((pull.stdout or "") + "\n" + (pull.stderr or "")).strip()
+                pull_error += "\n\n===== root retry =====\n" + root_pull
+                if pull.returncode == 0 and paths["tombstones"].exists():
+                    result["tombstones_dir"] = str(paths["tombstones"])
+                    result["tombstones_pulled"] = True
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                pull_error += f"\n\n<root tombstone pull failed: {exc}>"
+
+            try:
+                dmesg = run(
+                    [ADB, "-s", SERIAL, "shell", "dmesg"],
+                    timeout=20, check=False,
+                )
+                dmesg_text = dmesg.stdout or dmesg.stderr or ""
+                if dmesg_text.strip():
+                    paths["adb_dmesg"].write_text(
+                        dmesg_text, encoding="utf-8", errors="replace"
+                    )
+                    result["dmesg"] = str(paths["adb_dmesg"])
+            except (subprocess.TimeoutExpired, OSError):
+                pass
+
+    if not result["tombstones_pulled"]:
+        probe_text = "===== adb pull /data/tombstones =====\n" + (pull_error or "<empty>")
+        try:
+            probe = run(
+                [ADB, "-s", SERIAL, "shell", "ls", "-laZ", "/data/tombstones"],
+                timeout=10, check=False,
+            )
+            probe_text += (
+                "\n\n===== ls -laZ /data/tombstones =====\n"
+                + (probe.stdout or probe.stderr or "")
+            )
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            probe_text += f"\n<tombstone probe failed: {exc}>\n"
+        paths["tombstone_probe"].write_text(
+            probe_text, encoding="utf-8", errors="replace"
+        )
+        result["tombstone_probe"] = str(paths["tombstone_probe"])
+
+    # If logcat -b crash was empty or timed out, root may make the full log
+    # buffer readable. Keep this as a fallback, not a required boot action.
+    if not result["crash_buffer_saved"]:
         try:
             all_logs = run(
                 [ADB, "-s", SERIAL, "logcat", "-b", "all", "-d", "-v", "threadtime"],
@@ -894,55 +1035,12 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
             all_text = all_logs.stdout or all_logs.stderr or ""
             if all_text.strip():
                 paths["adb_logcat_all"].write_text(
-                    all_text,
-                    encoding="utf-8",
-                    errors="replace",
+                    all_text, encoding="utf-8", errors="replace"
                 )
                 result["logcat_all"] = str(paths["adb_logcat_all"])
                 result["logcat_all_saved"] = True
         except (subprocess.TimeoutExpired, OSError):
             pass
-
-    try:
-        if paths["tombstones"].exists():
-            shutil.rmtree(paths["tombstones"], ignore_errors=True)
-        pull = run(
-            [ADB, "-s", SERIAL, "pull", "/data/tombstones", str(paths["tombstones"])],
-            timeout=30, check=False,
-        )
-        if pull.returncode == 0 and paths["tombstones"].exists():
-            result["tombstones_dir"] = str(paths["tombstones"])
-            result["tombstones_pulled"] = True
-        else:
-            probe_text = (
-                f"adb pull returncode={pull.returncode}\n"
-                f"stdout={pull.stdout or ''}\n"
-                f"stderr={pull.stderr or ''}\n"
-            )
-            try:
-                probe = run(
-                    [ADB, "-s", SERIAL, "shell", "ls", "-laZ", "/data/tombstones"],
-                    timeout=10, check=False,
-                )
-                probe_text += (
-                    "\n===== ls -laZ /data/tombstones =====\n"
-                    + (probe.stdout or probe.stderr or "")
-                )
-            except (subprocess.TimeoutExpired, OSError) as exc:
-                probe_text += f"\n<tombstone probe failed: {exc}>\n"
-            paths["tombstone_probe"].write_text(
-                probe_text,
-                encoding="utf-8",
-                errors="replace",
-            )
-            result["tombstone_probe"] = str(paths["tombstone_probe"])
-    except (subprocess.TimeoutExpired, OSError) as exc:
-        paths["tombstone_probe"].write_text(
-            f"<tombstone pull failed: {exc}>\n",
-            encoding="utf-8",
-            errors="replace",
-        )
-        result["tombstone_probe"] = str(paths["tombstone_probe"])
 
     return result
 
