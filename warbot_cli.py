@@ -202,6 +202,6 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (BackendError, OSError) as exc:
+    except (BackendError, OSError, RuntimeError) as exc:
         print(f"WAR BOT CLI ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
