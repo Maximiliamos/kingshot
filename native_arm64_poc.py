@@ -800,6 +800,8 @@ def guest_status() -> dict[str, object]:
         "abi": adb("shell", "getprop", "ro.product.cpu.abi", check=False).stdout.strip(),
         "abilist": adb("shell", "getprop", "ro.product.cpu.abilist", check=False).stdout.strip(),
         "native_bridge": adb("shell", "getprop", "ro.dalvik.vm.native.bridge", check=False).stdout.strip(),
+        "codec2": adb("shell", "getprop", "debug.stagefright.ccodec", check=False).stdout.strip(),
+        "kernel_codec2": adb("shell", "getprop", "ro.kernel.qemu.media.ccodec", check=False).stdout.strip(),
         "boot_devices": adb("shell", "getprop", "ro.boot.boot_devices", check=False).stdout.strip(),
         "logical_partitions": adb("shell", "getprop", "ro.boot.logical_partitions", check=False).stdout.strip(),
         "vbmeta_device_state": adb("shell", "getprop", "ro.boot.vbmeta.device_state", check=False).stdout.strip(),
