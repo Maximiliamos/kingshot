@@ -1,0 +1,14 @@
+﻿{
+    "schema":  1,
+    "commit":  "bcd5a1f72d66e078a6ed98db591775bec72859ef",
+    "source_branch":  "feature/unified-android-backend",
+    "started_at":  "2026-09-28T01:04:52.9750959+03:00",
+    "finished_at":  "2026-09-28T01:14:56.8169673+03:00",
+    "duration_seconds":  604,
+    "verify_exit_code":  0,
+    "result":  "DIAGNOSTIC",
+    "runtime_root":  "C:\\warbot_arm64_runtime",
+    "experiment":  "upstream-virt-1cpu-single-tcg",
+    "arm64_cpu_cores":  "1",
+    "tcg_thread_mode":  "single"
+}
