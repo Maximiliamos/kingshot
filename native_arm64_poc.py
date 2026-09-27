@@ -740,8 +740,32 @@ def _qemu_critical_lines():
     return "\n".join(hits[-120:])
 
 
+def _boot_milestone() -> str:
+    log_path = runtime_paths()["stdout"]
+    if not log_path.is_file():
+        return "qemu-start"
+    text = log_path.read_text(encoding="utf-8", errors="replace").lower()
+    if "sys.boot_completed=1" in text or "boot_completed" in text and "setprop" in text:
+        return "android-boot-complete"
+    if "zygote" in text or "app_process64" in text:
+        return "zygote"
+    if "surfaceflinger" in text:
+        return "surfaceflinger"
+    if "product" in text and "system_ext" in text and "vendor" in text:
+        return "logical-partitions-mounted"
+    if "super" in text:
+        return "super-discovered"
+    if "init: second stage" in text or "second stage init" in text:
+        return "init-second-stage"
+    if "init" in text:
+        return "kernel-init"
+    return "kernel"
+
+
 def wait_for_boot(timeout=1200, process=None):
-    deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    deadline = started + timeout
+    next_report = started + 10
     last_state = ""
     while time.monotonic() < deadline:
         if process is not None:
@@ -773,8 +797,17 @@ def wait_for_boot(timeout=1200, process=None):
                 "shell", "getprop", "sys.boot_completed", check=False
             ).stdout.strip()
             if boot == "1":
-                print(f"ARM64 Android booted: {SERIAL}")
+                print(f"ARM64 Android booted: {SERIAL}", flush=True)
                 return
+        now = time.monotonic()
+        if now >= next_report:
+            elapsed = int(now - started)
+            print(
+                f"ARM64 boot waiting: {elapsed}s | "
+                f"adb={last_state or 'missing'} | stage={_boot_milestone()}",
+                flush=True,
+            )
+            next_report = now + 15
         time.sleep(3)
     crash = collect_boot_crash()
     write_boot_report({"timeout_seconds": timeout, "adb_state": last_state})
