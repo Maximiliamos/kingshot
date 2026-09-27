@@ -186,7 +186,7 @@ DEFAULT_STATE = {
     "auto_reset_data": False,
     "repeat_cycles": True,
     "current_cycle": 1,
-    "tutorial_origin": "new_character",
+    "tutorial_origin": "initial",
     "last_stop_reason": "",
     "step_started_at": 0.0,
     "skip_locked": False,
