@@ -433,14 +433,25 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     return cmd
 
 
-def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
-    """Run Google's ARM64 QEMU core directly, without launcher-added HDA.
+def google_arm64_machine() -> str:
+    machine = GOOGLE_ARM64_MACHINE
+    if machine not in {"virt", "ranchu"}:
+        raise RuntimeError(
+            f"WAR_BOT_ARM64_MACHINE must be 'virt' or 'ranchu', got {machine!r}"
+        )
+    return machine
 
-    ``-fuchsia`` is the emulator's supported positional-QEMU entry point.  It
-    bypasses AVD argument synthesis while retaining the Google ranchu devices
-    and gfxstream libraries required by the stock Android vendor image.
+
+def build_google_arm64_command(*, window=False, wipe=False) -> list[str]:
+    """Run Google's ARM64 QEMU core directly without launcher-added HDA.
+
+    The Android-modified virt board is the production default. AOSP added
+    ranchu/goldfish pipe, framebuffer and audio devices to this board, while
+    normal virt PSCI remains available under TCG. The legacy ranchu board
+    stays available only as an opt-in comparison mode.
     """
     inv, paths = prepare_runtime(wipe=wipe)
+    machine = google_arm64_machine()
     append = (
         "8250.nr_uarts=1 no_timer_check console=ttyAMA0,38400 keep_bootcon "
         "earlyprintk=ttyAMA0 loop.max_part=7 printk.devkmsg=on "
@@ -450,29 +461,28 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         "androidboot.vbmeta.digest=15e6b2e26d1523b6c38c0a60d5ac8f8cf547364c343d16e58338814e45faa6a8 "
         "androidboot.vbmeta.hash_alg=sha256 androidboot.vbmeta.size=6720 "
         "qemu=1 androidboot.qemu=1 qemu.encrypt=1 qemu.gles=1 "
-        # Goldfish/ranchu Android 11 disables Codec2 by default because the
-        # emulator platform does not provide the ION path Codec2 expects.
-        # Without this boot property our direct launcher can crash zygote in
-        # libcodec2_vndk.so before ADB becomes available.
         "qemu.media.ccodec=0 "
         "qemu.gltransport=pipe qemu.opengles.version=131072 "
         "qemu.skin=1060x2376 qemu.virtiowifi=0 qemu.vsync=60"
     )
     qemu = QEMU_ARM64 if window else QEMU_ARM64_HEADLESS
-    return [
+    cmd = [
         str(qemu), "-fuchsia", "-gpu", GPU_MODE,
         "-window-size", "1060x2376",
         "-L", str(SDK_ROOT / "emulator" / "lib" / "pc-bios"),
-        "-machine", "type=ranchu", "-cpu", CPU_MODEL,
+        "-machine", f"type={machine}", "-cpu", CPU_MODEL,
         "-smp", f"cores={CPU_CORES}", "-m", str(RAM_MB),
         "-lcd-density", "480", "-nodefaults", "-no-audio",
-        "-device", f"goldfish_pstore,addr=0xff018000,size=0x10000,file={paths['pstore']}",
+    ]
+
+    if machine == "ranchu":
+        cmd += [
+            "-device",
+            f"goldfish_pstore,addr=0xff018000,size=0x10000,file={paths['pstore']}",
+        ]
+
+    cmd += [
         "-kernel", inv["kernel"], "-initrd", inv["ramdisk"],
-        # Match Android Emulator's ARM64 PartitionParameters order exactly.
-        # On ranchu/virt, command-line virtio devices are assigned to MMIO
-        # transports in decreasing address order. With five block devices,
-        # vendor -> encrypt -> userdata -> cache -> system places the system
-        # Use the dynamic-partition boot device emitted by the stock launcher.
         "-drive", f"index=0,id=vendor,if=none,file={inv['vendor']},read-only",
         "-device", "virtio-blk-device,drive=vendor",
         "-drive", f"index=1,id=encrypt,if=none,file={paths['encryptionkey']}",
@@ -490,6 +500,24 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         "-append", append, "-android-hw", str(paths["hw"]),
     ]
 
+    for prop in (
+        "qemu.sf.lcd_density=480",
+        "qemu.hw.mainkeys=0",
+        "qemu.gles=1",
+        "qemu.gltransport=pipe",
+        "qemu.vsync=60",
+        "qemu.media.ccodec=0",
+        "qemu.camera_protocol_ver=1",
+        "qemu.camera_hq_edge_processing=0",
+    ):
+        cmd += ["-boot-property", prop]
+
+    return cmd
+
+
+def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
+    """Compatibility alias for old local scripts."""
+    return build_google_arm64_command(window=window, wipe=wipe)
 
 def _set_fstab_node(tree, name, dev, mount_flags, fs_mgr_flags):
     node = f"/firmware/android/fstab/{name}"
