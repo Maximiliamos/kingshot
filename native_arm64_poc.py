@@ -304,6 +304,7 @@ def runtime_paths() -> dict[str, Path]:
         "hw": RUNTIME_ROOT / "hardware-qemu.ini",
         "stdout": RUNTIME_ROOT / "qemu-arm64.log",
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
+        "machine_stamp": RUNTIME_ROOT / "machine.txt",
         "crash": RUNTIME_ROOT / "game-crash.txt",
         "boot_crash": RUNTIME_ROOT / "zygote-crash.txt",
         "adb_crash": RUNTIME_ROOT / "adb-crash-buffer.txt",
@@ -595,9 +596,42 @@ def ensure_dynamic_partition_dtb(cmd: list[str], *, wipe=False) -> Path:
     return patched_dtb
 
 def start_direct(*, window=False, wipe=False, wait=True):
+    machine = google_arm64_machine()
+    paths = runtime_paths()
+    previous_machine = ""
+    if paths["machine_stamp"].is_file():
+        previous_machine = paths["machine_stamp"].read_text(
+            encoding="ascii", errors="ignore"
+        ).strip().lower()
+
+    # A machine-topology switch changes DT, MMIO and boot assumptions. Reusing
+    # an encrypted userdata/cache runtime across that switch makes diagnosis
+    # ambiguous, so recreate only the disposable emulator runtime. PC-side
+    # WAR BOT state/counters live outside RUNTIME_ROOT and are untouched.
+    legacy_ranchu_runtime = (
+        not previous_machine
+        and machine == "virt"
+        and (RUNTIME_ROOT / "ranchu-warbot.dtb").is_file()
+    )
+    if previous_machine and previous_machine != machine:
+        print(
+            f"ARM64 machine changed {previous_machine} -> {machine}; "
+            "recreating emulator runtime.",
+            flush=True,
+        )
+        wipe = True
+    elif legacy_ranchu_runtime:
+        print(
+            "Legacy ranchu runtime detected; recreating disposable Android "
+            "runtime for Google virt.",
+            flush=True,
+        )
+        wipe = True
+
     _, paths = prepare_runtime(wipe=wipe)
     cmd = build_google_arm64_command(window=window, wipe=False)
     dtb = ensure_dynamic_partition_dtb(cmd, wipe=wipe)
+    paths["machine_stamp"].write_text(machine, encoding="ascii")
     cmd += ["-dtb", str(dtb)]
     log = open(paths["stdout"], "w", encoding="utf-8", errors="replace")
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
