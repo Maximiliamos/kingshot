@@ -45,9 +45,10 @@ if (-not $SkipPull) {
 $commit = (& git rev-parse HEAD).Trim()
 
 # Evidence-driven experiment for the current blocker:
-# baseline Google virt + 4-vCPU MTTCG shows unrelated native processes
-# (zygote/media/storaged) all receiving SIGSEGV. This run isolates whether
-# multi-threaded TCG / SMP concurrency is causal without changing APK/system.
+# Google Android-QEMU reproduces native app_process64/libcodec2 SIGSEGV, while
+# upstream QEMU crossed the same ~228s crash point and reached zygote/adbd with
+# no SIGSEGV. Keep the upstream guest alive longer and verify whether TCP ADB
+# becomes usable and whether sys.boot_completed reaches 1.
 $env:WAR_BOT_RUNTIME_EXPERIMENT = "upstream-virt-1cpu-single-tcg"
 $env:WAR_BOT_ARM64_CPU_CORES = "1"
 $env:WAR_BOT_ARM64_TCG_THREAD = "single"
@@ -92,7 +93,7 @@ Write-Host ""
 $probeArgs = @(
     ".\native_arm64_poc.py",
     "upstream-diagnose",
-    "--duration-seconds", "300"
+    "--duration-seconds", "600"
 )
 
 $savedErrorAction = $ErrorActionPreference
