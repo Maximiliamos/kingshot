@@ -457,6 +457,9 @@ def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]
     behavior.
     """
     validate_tools(require_image=True, require_upstream=True)
+    # Avoid mixing evidence with a still-running Google-QEMU instance from the
+    # previous host cycle.
+    stop()
     _, paths = prepare_runtime(wipe=wipe)
     cmd = build_direct_qemu_command(window=False, wipe=False)
 
