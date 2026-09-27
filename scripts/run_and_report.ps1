@@ -45,14 +45,17 @@ if (-not $SkipPull) {
 $commit = (& git rev-parse HEAD).Trim()
 
 # Evidence-driven experiment for the current blocker:
-# Google Android-QEMU reproduces native app_process64/libcodec2 SIGSEGV, while
-# upstream QEMU crossed the same ~228s crash point and reached zygote/adbd with
-# no SIGSEGV. Keep the upstream guest alive longer and verify whether TCP ADB
-# becomes usable and whether sys.boot_completed reaches 1.
-$env:WAR_BOT_RUNTIME_EXPERIMENT = "upstream-virt-1cpu-single-tcg"
+# Upstream QEMU avoids the Google-QEMU SIGSEGV but cannot provide the Android
+# goldfish/hwcomposer device model required by this stock Google ARM64 image.
+# Return to Google virt and change only the guest CPU model. If cortex-a53
+# avoids the static libcodec2 crash seen with cortex-a57, the bug is narrowed
+# to the Google QEMU A57 TCG translation path rather than Android userspace.
+$env:WAR_BOT_RUNTIME_EXPERIMENT = "google-virt-a53-1cpu-single-tcg"
+$env:WAR_BOT_ARM64_MACHINE = "virt"
+$env:WAR_BOT_ARM64_CPU = "cortex-a53"
 $env:WAR_BOT_ARM64_CPU_CORES = "1"
 $env:WAR_BOT_ARM64_TCG_THREAD = "single"
-$env:WAR_BOT_ARM64_POST_ADB_TIMEOUT = "150"
+$env:WAR_BOT_ARM64_POST_ADB_TIMEOUT = "180"
 $WipeRuntime = $true
 
 $configJson = (& python .\native_arm64_poc.py config | Out-String)
@@ -61,16 +64,20 @@ if ($LASTEXITCODE -ne 0) {
 }
 $config = $configJson | ConvertFrom-Json
 Write-Host "Runtime experiment: $($config.experiment)"
+Write-Host "Runtime machine:    $($config.machine)"
+Write-Host "Runtime CPU model:  $($config.cpu)"
 Write-Host "Runtime CPU cores:  $($config.cpu_cores)"
 Write-Host "TCG thread mode:    $($config.tcg_thread_mode)"
 if (
-    $config.experiment -ne "upstream-virt-1cpu-single-tcg" -or
+    $config.experiment -ne "google-virt-a53-1cpu-single-tcg" -or
+    $config.machine -ne "virt" -or
+    $config.cpu -ne "cortex-a53" -or
     [int]$config.cpu_cores -ne 1 -or
     $config.tcg_thread_mode -ne "single"
 ) {
     throw (
         "Experiment propagation guard failed. Refusing expensive host run. " +
-        "Expected upstream-virt-1cpu-single-tcg / 1 CPU / single TCG."
+        "Expected Google virt / cortex-a53 / 1 CPU / single TCG."
     )
 }
 
@@ -81,6 +88,42 @@ New-Item -ItemType Directory -Force -Path $stage | Out-Null
 $consoleLog = Join-Path $stage "console.txt"
 $manifestPath = Join-Path $stage "manifest.json"
 
+# Remove host-side evidence from prior experiments. Guest userdata/cache are
+# handled separately by -WipeRuntime; this only prevents stale tombstones or
+# stale boot reports from contaminating the new upload.
+$runtimeRoot = "C:\warbot_arm64_runtime"
+$staleFiles = @(
+    "boot-diagnostic.json",
+    "zygote-crash.txt",
+    "adb-crash-buffer.txt",
+    "adb-logcat-all.txt",
+    "adb-root-status.txt",
+    "adb-dmesg.txt",
+    "tombstone-probe.txt",
+    "boot-live-state.txt",
+    "game-crash.txt",
+    "upstream-diagnostic.json",
+    "upstream-qemu-arm64.log"
+)
+foreach ($name in $staleFiles) {
+    Remove-Item -LiteralPath (Join-Path $runtimeRoot $name) -Force -ErrorAction SilentlyContinue
+}
+Remove-Item -LiteralPath (Join-Path $runtimeRoot "tombstones") -Recurse -Force -ErrorAction SilentlyContinue
+
+# Persist the exact Android Emulator toolchain version used for this A/B.
+$emulatorExe = "C:\Android\Sdk\emulator\emulator.exe"
+$emulatorVersionPath = Join-Path $stage "emulator-version.txt"
+if (Test-Path $emulatorExe) {
+    (& $emulatorExe -version 2>&1 | Out-String) |
+        Set-Content -Encoding UTF8 $emulatorVersionPath
+    Write-Host "Android Emulator version:"
+    Get-Content $emulatorVersionPath | Select-Object -First 8 | Write-Host
+}
+else {
+    "emulator.exe not found at $emulatorExe" | Set-Content -Encoding UTF8 $emulatorVersionPath
+}
+
+
 $started = Get-Date
 $verifyExit = 999
 
@@ -90,16 +133,18 @@ Write-Host "Commit: $commit"
 Write-Host "Local report staging: $stage"
 Write-Host ""
 
-$probeArgs = @(
-    ".\native_arm64_poc.py",
-    "upstream-diagnose",
-    "--duration-seconds", "600"
+$verifyArgs = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", (Join-Path $PSScriptRoot "verify_mvp.ps1")
 )
+if ($WipeRuntime) { $verifyArgs += "-WipeRuntime" }
+if ($CleanGame) { $verifyArgs += "-CleanGame" }
 
 $savedErrorAction = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 try {
-    & python @probeArgs 2>&1 | Tee-Object -FilePath $consoleLog
+    & powershell @verifyArgs 2>&1 | Tee-Object -FilePath $consoleLog
     $verifyExit = $LASTEXITCODE
 }
 finally {
@@ -116,7 +161,6 @@ catch {
     ("boot-report collection failed: " + ($_ | Out-String)) | Tee-Object -FilePath $consoleLog -Append | Write-Host
 }
 
-$runtimeRoot = "C:\warbot_arm64_runtime"
 $knownFiles = @(
     "boot-diagnostic.json",
     "zygote-crash.txt",
@@ -128,8 +172,6 @@ $knownFiles = @(
     "boot-live-state.txt",
     "game-crash.txt",
     "qemu-arm64.log",
-    "upstream-qemu-arm64.log",
-    "upstream-diagnostic.json",
     "machine.txt"
 )
 
@@ -184,6 +226,8 @@ $manifest = [ordered]@{
     result = "DIAGNOSTIC"
     runtime_root = $runtimeRoot
     experiment = $env:WAR_BOT_RUNTIME_EXPERIMENT
+    arm64_machine = $env:WAR_BOT_ARM64_MACHINE
+    arm64_cpu = $env:WAR_BOT_ARM64_CPU
     arm64_cpu_cores = $env:WAR_BOT_ARM64_CPU_CORES
     tcg_thread_mode = $env:WAR_BOT_ARM64_TCG_THREAD
 }
