@@ -436,8 +436,16 @@ function Invoke-AdbSafe {
     $stderrPath = Join-Path $env:TEMP ("warbot-android-err-" + $token + ".txt")
     try {
         $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -NoNewWindow -PassThru -Wait -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
-        $stdout = if (Test-Path $stdoutPath) { (Get-Content -Raw $stdoutPath).Trim() } else { "" }
-        $stderr = if (Test-Path $stderrPath) { (Get-Content -Raw $stderrPath).Trim() } else { "" }
+        $stdout = ""
+        $stderr = ""
+        if (Test-Path $stdoutPath) {
+            $rawStdout = Get-Content -Raw $stdoutPath
+            if ($null -ne $rawStdout) { $stdout = $rawStdout.Trim() }
+        }
+        if (Test-Path $stderrPath) {
+            $rawStderr = Get-Content -Raw $stderrPath
+            if ($null -ne $rawStderr) { $stderr = $rawStderr.Trim() }
+        }
         $parts = @()
         if ($stdout) { $parts += $stdout }
         if ($stderr) { $parts += $stderr }
@@ -483,23 +491,30 @@ if ($Serial -match ":58526$") {
 
 $attempts = @()
 $onlineSerial = $null
-foreach ($candidate in $serialCandidates) {
-    $connectResult = Invoke-AdbSafe -Arguments @("connect", $candidate)
-    $stateResult = Invoke-AdbSafe -Arguments @("-s", $candidate, "get-state")
-    $stateText = $stateResult.Stdout.Trim()
-    $attempts += [ordered]@{
-        serial = $candidate
-        connect_exit = $connectResult.ExitCode
-        connect = $connectResult.Text
-        state_exit = $stateResult.ExitCode
-        state = $stateText
-        state_error = $stateResult.Stderr
+$connectDeadline = (Get-Date).AddMinutes(4)
+$round = 0
+while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
+    $round++
+    foreach ($candidate in $serialCandidates) {
+        $connectResult = Invoke-AdbSafe -Arguments @("connect", $candidate)
+        $stateResult = Invoke-AdbSafe -Arguments @("-s", $candidate, "get-state")
+        $stateText = ([string]$stateResult.Stdout).Trim()
+        $attempts += [ordered]@{
+            round = $round
+            serial = $candidate
+            connect_exit = $connectResult.ExitCode
+            connect = $connectResult.Text
+            state_exit = $stateResult.ExitCode
+            state = $stateText
+            state_error = $stateResult.Stderr
+        }
+        Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
+        if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
+            $onlineSerial = $candidate
+            break
+        }
     }
-    Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
-    if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
-        $onlineSerial = $candidate
-        break
-    }
+    if (-not $onlineSerial) { Start-Sleep -Seconds 10 }
 }
 
 $attempts | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "android-connect-attempts.json")
