@@ -9,16 +9,18 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
-$ReleaseTag = "Windows_11_2407.40000.4.0_LTS_8"
-$ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z"
-$ArchiveUrl = "https://github.com/MustardChef/WSABuilds/releases/download/$ReleaseTag/$ArchiveName"
-$ArchiveSha256 = "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1"
-
 $WorkRoot = "C:\warbot_wsa"
 $DownloadRoot = Join-Path $WorkRoot "downloads"
-$InstallRoot = Join-Path $WorkRoot "WSA_LTS8"
-$ArchivePath = Join-Path $DownloadRoot $ArchiveName
 $RuntimeRoot = "C:\warbot_wsa_runtime"
+
+# Selected after reading the real Windows build. WSABuilds ships separate
+# patched LTS 8 packages for Windows 10 and Windows 11.
+$ReleaseTag = ""
+$ArchiveName = ""
+$ArchiveUrl = ""
+$ArchiveSha256 = ""
+$InstallRoot = ""
+$ArchivePath = ""
 
 function Test-IsAdmin {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -118,10 +120,18 @@ Write-Log "Starting WSA LTS 8 PoC installer."
 
 $os = Get-CimInstance Win32_OperatingSystem
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+$currentVersion = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+$build = [int]$os.BuildNumber
+$ubr = [int]$currentVersion.UBR
+$fullBuild = "$build.$ubr"
+
 $hostInfo = [ordered]@{
     caption = $os.Caption
     version = $os.Version
     build = $os.BuildNumber
+    ubr = $ubr
+    full_build = $fullBuild
+    display_version = $currentVersion.DisplayVersion
     architecture = $os.OSArchitecture
     cpu = $cpu.Name
     virtualization_firmware_enabled = $cpu.VirtualizationFirmwareEnabled
@@ -129,10 +139,30 @@ $hostInfo = [ordered]@{
 }
 $hostInfo | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $stage "host.json")
 
-if ([int]$os.BuildNumber -lt 22000) {
-    Finish-Report -State "UNSUPPORTED_WINDOWS_BUILD" -ExitCode 11 -Extra @{ host = $hostInfo }
-    throw "WSA Windows 11 build requires Windows 11 build 22000.526 or newer."
+if ($build -ge 22000) {
+    $ReleaseTag = "Windows_11_2407.40000.4.0_LTS_8"
+    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z"
+    $ArchiveSha256 = "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1"
+    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows11"
+    Write-Log "Selected WSABuilds LTS 8 package for Windows 11 ($fullBuild)."
 }
+elseif ($build -eq 19045 -and $ubr -ge 2311) {
+    $ReleaseTag = "Windows_10_2407.40000.4.0_LTS_8"
+    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z"
+    $ArchiveSha256 = "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8"
+    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10"
+    Write-Log "Selected WSABuilds LTS 8 package for Windows 10 22H2 ($fullBuild)."
+}
+else {
+    Finish-Report -State "UNSUPPORTED_WINDOWS_BUILD" -ExitCode 11 -Extra @{ host = $hostInfo }
+    throw (
+        "This WSA PoC requires Windows 11 build 22000+ or Windows 10 22H2 " +
+        "build 19045.2311+. Detected $fullBuild."
+    )
+}
+
+$ArchiveUrl = "https://github.com/MustardChef/WSABuilds/releases/download/$ReleaseTag/$ArchiveName"
+$ArchivePath = Join-Path $DownloadRoot $ArchiveName
 
 if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
     Finish-Report -State "VIRTUALIZATION_DISABLED" -ExitCode 12 -Extra @{ host = $hostInfo }
@@ -205,7 +235,7 @@ if (-not $SkipInstall) {
         }
 
         if ($needDownload) {
-            Write-Log "Downloading WSABuilds LTS 8 NoGApps/NoAmazon (~554 MB)."
+            Write-Log "Downloading WSABuilds LTS 8 NoGApps/NoAmazon package for this Windows build (~556 MB)."
             $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
             if ($curl) {
                 & curl.exe -L --fail --retry 5 --retry-all-errors --output $ArchivePath $ArchiveUrl
