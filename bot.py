@@ -404,7 +404,7 @@ def tap_norm(nx, ny):
 
 
 def tap_client(phone, nx, ny):
-    """Tap a normalized point in the current scrcpy client frame."""
+    """Tap a normalized point in the current Android frame."""
     tap(nx * PHONE_W, ny * PHONE_H)
 
 
@@ -1353,7 +1353,7 @@ def main():
                 try:
                     capture = create_capture()
                     frame, title, rect = capture.grab()
-                    log(f"Захват scrcpy: {title} {rect['width']}x{rect['height']}")
+                    log(f"Захват Android: {title} {rect['width']}x{rect['height']}")
                 except Exception as e:
                     log(f"Захват Android не открылся: {e}; повтор через 2 сек.")
                     if capture is not None:
