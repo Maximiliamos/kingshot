@@ -25,6 +25,6 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install numpy opencv-python-headless mss fdt==0.3.3
       - name: Compile application modules
-        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py bot.py gui.py
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py warbot_cli.py bot.py gui.py
       - name: Run application unit tests
         run: python -m unittest discover -s tests -v
