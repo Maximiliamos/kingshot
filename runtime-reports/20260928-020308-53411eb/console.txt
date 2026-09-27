@@ -1,0 +1,5 @@
+﻿[2026-09-28T02:02:04.1041320+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T02:02:06.0620438+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T02:02:09.1850541+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-28T02:02:10.3324413+03:00] Extracting WSA archive.
+[2026-09-28T02:02:50.2414278+03:00] Registering Windows Subsystem for Android.
