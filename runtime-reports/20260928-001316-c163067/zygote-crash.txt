@@ -1,0 +1,266 @@
+WAR BOT native ARM64 boot crash
+process: zygote
+signal: 
+si_code: 
+fault_addr: 
+pc: 
+lr: 
+library: 
+build_id: 
+
+---- captured serial context ----
+[   66.825097] init: starting service 'health-hal-2-1'...
+[   66.879989] init: Opened file '/dev/kmsg', flags 1
+[   68.099054] init: starting service 'neuralnetworks_hal_service_sample_all'...
+[   69.456633] init: starting service 'neuralnetworks_hal_service_sample_float_fast'...
+[   70.855490] init: starting service 'neuralnetworks_hal_service_sample_float_slow'...
+[   72.626378] init: starting service 'neuralnetworks_hal_service_sample_minimal'...
+[   73.973805] init: starting service 'neuralnetworks_hal_service_sample_quant'...
+[   75.390679] init: starting service 'vendor.power.stats-hal-1-0-mock'...
+[   76.936821] init: starting service 'vendor.sensors-hal-2-1-multihal'...
+[   78.449208] init: starting service 'vendor.thermal-hal-2-0-mock'...
+[   79.683663] init: starting service 'vendor.usb-hal-1-0'...
+[   81.134861] init: starting service 'vendor.wifi_hal_legacy'...
+[   82.837865] init: starting service 'vendor.identity-default'...
+[   83.203546] healthd: batteryCapacityLevelPath not found
+[   83.206675] healthd: batteryChargeTimeToFullNowPath. not found
+[   83.245080] healthd: batteryFullChargeDesignCapacityUahPath. not found
+[   84.770089] init: starting service 'vendor.light-default'...
+[   86.546291] healthd: battery none chg=a
+[   86.858162] init: starting service 'vendor.power-default'...
+[   88.865320] init: starting service 'vendor.rebootescrow-default'...
+[   90.846501] init: starting service 'vendor.vibrator-default'...
+[   92.294836] init: Command 'class_start hal' action=boot (/system/etc/init/hw/init.rc:946) took 34206ms and succeeded
+[   92.381597] init: Service 'bpfloader' (pid 292) exited with status 0 oneshot service took 37.652000 seconds in background
+[   92.441705] init: Sending signal 9 to service 'bpfloader' (pid 292) process group...
+[   92.518942] libprocessgroup: Successfully killed process cgroup uid 0 pid 292 in 32ms
+[   93.223462] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[   93.548866] init: starting service 'ranchu-setup'...
+[   95.623601] init: starting service 'audioserver'...
+[   97.237924] init: starting service 'credstore'...
+[   98.457473] init: starting service 'gpu'...
+[  100.165161] init: starting service 'surfaceflinger'...
+[  100.520586] init: Could not create socket 'pdx/system/vr/display/client': Failed to bind socket 'pdx/system/vr/display/client': No such file or directory
+[  100.704441] init: Could not create socket 'pdx/system/vr/display/manager': Failed to bind socket 'pdx/system/vr/display/manager': No such file or directory
+[  100.912946] init: Could not create socket 'pdx/system/vr/display/vsync': Failed to bind socket 'pdx/system/vr/display/vsync': No such file or directory
+[  102.246927] init: Command 'class_start core' action=boot (/system/etc/init/hw/init.rc:948) took 8933ms and succeeded
+[  102.280203] init: Service 'zygote' (pid 296) received signal 11
+[  102.283812] init: Sending signal 9 to service 'zygote' (pid 296) process group...
+[  102.337544] libprocessgroup: Successfully killed process cgroup uid 0 pid 296 in 48ms
+[  102.670290] init: starting service 'exec 13 (/system/bin/vdc volume abort_fuse)'...
+[  103.743470] init: Command 'exec_background - system system -- /system/bin/vdc volume abort_fuse' action=onrestart (<Service 'zygote' onrestart>:1) took 1242ms and succeeded
+[  103.965825] init: Command 'write /sys/power/state on' action=onrestart (<Service 'zygote' onrestart>:2) took 193ms and failed: Unable to write to file '/sys/power/state': Unable to write file contents: Invalid argument
+[  104.020444] init: Sending signal 9 to service 'audioserver' (pid 362) process group...
+[  104.281602] libprocessgroup: Successfully killed process cgroup uid 1041 pid 362 in 222ms
+[  104.604448] init: Command 'restart audioserver' action=onrestart (<Service 'zygote' onrestart>:3) took 612ms and succeeded
+[  104.732949] init: starting service 'cameraserver'...
+[  105.695381] init: Command 'restart cameraserver' action=onrestart (<Service 'zygote' onrestart>:4) took 1067ms and succeeded
+[  105.760894] init: starting service 'media'...
+[  106.683007] init: Command 'restart media' action=onrestart (<Service 'zygote' onrestart>:5) took 946ms and succeeded
+[  106.730806] libprocessgroup: Failed to open /dev/cpuset/camera-daemon/tasks: No such file or directory: No such file or directory
+[  106.733627] libprocessgroup: Failed to apply CameraServiceCapacity task profile: No such file or directory
+[  106.741350] init: Sending signal 9 to service 'netd' (pid 295) process group...
+[  107.242538] libprocessgroup: Successfully killed process cgroup uid 0 pid 295 in 485ms
+[  107.376636] init: Command 'restart netd' action=onrestart (<Service 'zygote' onrestart>:6) took 668ms and succeeded
+[  107.451560] init: starting service 'wificond'...
+[  108.145654] init: Command 'restart wificond' action=onrestart (<Service 'zygote' onrestart>:7) took 720ms and succeeded
+[  108.484142] init: Service 'netd' (pid 295) received signal 9
+[  108.534488] init: Command 'restart zygote_secondary' action=onrestart (<Service 'netd' onrestart>:2) took 18ms and failed: service zygote_secondary not found
+[  108.696825] init: Untracked pid 324 exited with status 0
+[  108.712222] init: Untracked pid 326 exited with status 0
+[  108.750536] init: Service 'audioserver' (pid 362) received signal 9
+[  108.886538] init: Command 'setprop sys.audio.restart.hal 1' action=onrestart (<Service 'audioserver' onrestart>:1) took 112ms and succeeded
+[  108.975502] init: Untracked pid 335 received signal 9
+[  109.005047] init: Untracked pid 337 received signal 9
+[  109.038202] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[  109.150073] init: starting service 'exec 14 (/system/bin/fsverity_init)'...
+[  109.460448] init: SVC_EXEC service 'exec 14 (/system/bin/fsverity_init)' pid 389 (uid 0 gid 0+0 context default) started; waiting...
+[  109.478484] init: Command 'exec -- /system/bin/fsverity_init' action=boot (/system/etc/init/hw/init.rc:951) took 410ms and succeeded
+[  109.552530] init: starting service 'zygote'...
+[  109.684898] init: Created socket '/dev/socket/zygote', mode 660, user 0, group 1000
+[  109.820324] init: Created socket '/dev/socket/usap_pool_primary', mode 660, user 0, group 1000
+[  110.512665] init: starting service 'audioserver'...
+[  111.402326] init: starting service 'netd'...
+[  111.590440] init: Created socket '/dev/socket/dnsproxyd', mode 660, user 0, group 3003
+[  111.725566] init: Created socket '/dev/socket/mdns', mode 660, user 0, group 1000
+[  111.837838] init: Created socket '/dev/socket/fwmarkd', mode 660, user 0, group 3003
+[  112.461423] init: Service 'exec 13 (/system/bin/vdc volume abort_fuse)' (pid 376) exited with status 0 oneshot service took 8.967000 seconds in background
+[  112.480632] init: Sending signal 9 to service 'exec 13 (/system/bin/vdc volume abort_fuse)' (pid 376) process group...
+[  112.525248] libprocessgroup: Successfully killed process cgroup uid 1000 pid 376 in 24ms
+[  112.691894] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[  112.744737] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[  112.821869] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[  112.864197] init: Control message: Processed ctl.interface_start for 'android.hardware.graphics.allocator@3.0::IAllocator/default' from pid: 183 (/system/bin/hwservicemanager)
+[  114.265218] init: Service 'exec 14 (/system/bin/fsverity_init)' (pid 389) exited with status 0 waiting took 4.901000 seconds
+[  114.283879] init: Sending signal 9 to service 'exec 14 (/system/bin/fsverity_init)' (pid 389) process group...
+[  114.317468] libprocessgroup: Successfully killed process cgroup uid 0 pid 389 in 29ms
+[  114.395423] init: processing action (persist.sys.usb.config=* && boot) from (/system/etc/init/hw/init.usb.rc:105)
+[  114.469879] init: Command 'setprop sys.usb.config ${persist.sys.usb.config}' action=persist.sys.usb.config=* && boot (/system/etc/init/hw/init.usb.rc:106) took 69ms and succeeded
+[  114.485652] init: processing action (boot) from (/vendor/etc/init/hw/init.ranchu.rc:65)
+[  114.568713] init: Unable to set property 'ro.hardware.egl' from uid:0 gid:0 pid:154: Read-only property was already set
+[  114.593452] init: Command 'setprop ro.hardware.egl emulation' action=boot (/vendor/etc/init/hw/init.ranchu.rc:66) took 104ms and succeeded
+[  114.670351] init: Command 'setprop debug.sf.vsync_reactor 0' action=boot (/vendor/etc/init/hw/init.ranchu.rc:67) took 61ms and succeeded
+[  114.775790] init: Command 'setprop debug.hwui.renderer opengl' action=boot (/vendor/etc/init/hw/init.ranchu.rc:68) took 93ms and succeeded
+[  114.883029] init: Command 'setprop debug.hwui.renderer ${ro.kernel.qemu.uirenderer}' action=boot (/vendor/etc/init/hw/init.ranchu.rc:69) took 73ms and failed: property 'ro.kernel.qemu.uirenderer' doesn't exist while expanding '${ro.kernel.qemu.uirenderer}'
+[  114.979945] init: Command 'setprop ro.opengles.version ${ro.kernel.qemu.opengles.version}' action=boot (/vendor/etc/init/hw/init.ranchu.rc:70) took 76ms and succeeded
+[  115.066945] init: Command 'setprop ro.zygote.disable_gl_preload 1' action=boot (/vendor/etc/init/hw/init.ranchu.rc:71) took 63ms and succeeded
+[  115.157244] init: Command 'setprop debug.stagefright.ccodec ${ro.kernel.qemu.media.ccodec}' action=boot (/vendor/etc/init/hw/init.ranchu.rc:77) took 84ms and succeeded
+[  115.237540] init: Command 'setprop dalvik.vm.heapsize 192m' action=boot (/vendor/etc/init/hw/init.ranchu.rc:79) took 72ms and succeeded
+[  115.257855] init: Command 'setprop dalvik.vm.heapsize ${ro.kernel.qemu.dalvik.vm.heapsize}' action=boot (/vendor/etc/init/hw/init.ranchu.rc:80) took 8ms and failed: property 'ro.kernel.qemu.dalvik.vm.heapsize' doesn't exist while expanding '${ro.kernel.qemu.dalvik.vm.heapsize}'
+[  115.415752] init: Command 'setprop wifi.interface wlan0' action=boot (/vendor/etc/init/hw/init.ranchu.rc:85) took 63ms and succeeded
+[  115.484951] init: Command 'setprop wifi.direct.interface p2p-dev-wlan0' action=boot (/vendor/etc/init/hw/init.ranchu.rc:86) took 63ms and succeeded
+[  115.549695] init: starting service 'goldfish-logcat'...
+[  115.787006] init.ranchu-cor (359) used greatest stack depth: 11808 bytes left
+[  115.977853] init: Command 'start goldfish-logcat' action=boot (/vendor/etc/init/hw/init.ranchu.rc:88) took 475ms and succeeded
+[  115.994846] init: Service 'ranchu-setup' (pid 359) exited with status 0 oneshot service took 21.709000 seconds in background
+[  116.021127] init: Sending signal 9 to service 'ranchu-setup' (pid 359) process group...
+[  116.073223] libprocessgroup: Successfully killed process cgroup uid 0 pid 359 in 22ms
+[  116.280467] init: Command 'mkdir /config/usb_gadget/g1 0770 root root' action=boot (/vendor/etc/init/hw/init.ranchu.rc:91) took 86ms and succeeded
+[  116.286940] init: processing action (boot) from (/system/etc/init/dumpstate.rc:1)
+[  116.296022] init: processing action (boot) from (/system/etc/init/gsid.rc:20)
+[  116.319997] init: starting service 'exec 15 (/system/bin/gsid run-startup-tasks)'...
+[  116.413542] init: Command 'exec_background - root root -- /system/bin/gsid run-startup-tasks' action=boot (/system/etc/init/gsid.rc:21) took 111ms and succeeded
+[  116.428859] init: processing action (enable_property_trigger) from (<Builtin Action>:0)
+[  116.446304] init: processing action (apexd.status=ready && ro.product.cpu.abilist64=*) from (/system/etc/init/hw/init.rc:91)
+[  116.469980] init: starting service 'boringssl_self_test_apex64'...
+[  116.805663] init: SVC_EXEC service 'boringssl_self_test_apex64' pid 402 (uid 0 gid 0+0 context default) started; waiting...
+[  116.841140] init: Command 'exec_start boringssl_self_test_apex64' action=apexd.status=ready && ro.product.cpu.abilist64=* (/system/etc/init/hw/init.rc:92) took 373ms and succeeded
+[  118.716287] logcat (399) used greatest stack depth: 11616 bytes left
+[  118.729776] init: Service 'goldfish-logcat' (pid 399) exited with status 0 oneshot service took 3.039000 seconds in background
+[  118.750373] init: Sending signal 9 to service 'goldfish-logcat' (pid 399) process group...
+[  118.809866] libprocessgroup: Successfully killed process cgroup uid 1036 pid 399 in 47ms
+[  119.049607] logcat (399): highest shadow stack usage: 344 bytes
+[  120.027763] init: Service 'boringssl_self_test_apex64' (pid 402) exited with status 0 waiting took 3.455000 seconds
+[  120.030728] init: Sending signal 9 to service 'boringssl_self_test_apex64' (pid 402) process group...
+[  120.100397] libprocessgroup: Successfully killed process cgroup uid 0 pid 402 in 19ms
+[  120.364319] init: processing action (sys.init.perf_lsm_hooks=1) from (/system/etc/init/hw/init.rc:1017)
+[  120.409311] init: processing action (security.perf_harden=1) from (/system/etc/init/hw/init.rc:1031)
+[  120.491127] init: processing action (ro.debuggable=1) from (/system/etc/init/hw/init.rc:1058)
+[  120.540094] init: processing action (sys.usb.config=adb && sys.usb.configfs=0) from (/system/etc/init/hw/init.usb.rc:37)
+[  120.577811] init: Command 'write /sys/class/android_usb/android0/enable 0' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:38) took 25ms and failed: Unable to write to file '/sys/class/android_usb/android0/enable': open() failed: Permission denied
+[  120.618785] init: Command 'write /sys/class/android_usb/android0/idVendor 18d1' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:39) took 23ms and failed: Unable to write to file '/sys/class/android_usb/android0/idVendor': open() failed: Permission denied
+[  120.651539] init: Command 'write /sys/class/android_usb/android0/idProduct 4EE7' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:40) took 12ms and failed: Unable to write to file '/sys/class/android_usb/android0/idProduct': open() failed: Permission denied
+[  120.717306] init: Command 'write /sys/class/android_usb/android0/functions ${sys.usb.config}' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:41) took 39ms and failed: Unable to write to file '/sys/class/android_usb/android0/functions': open() failed: Permission denied
+[  120.758290] init: Command 'write /sys/class/android_usb/android0/enable 1' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:42) took 13ms and failed: Unable to write to file '/sys/class/android_usb/android0/enable': open() failed: Permission denied
+[  120.793941] init: starting service 'adbd'...
+[  120.895899] init: Created socket '/dev/socket/adbd', mode 660, user 1000, group 1000
+[  121.364560] init: Command 'start adbd' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:43) took 575ms and succeeded
+[  121.398271] init: Service 'exec 15 (/system/bin/gsid run-startup-tasks)' (pid 401) exited with status 0 oneshot service took 5.023000 seconds in background
+[  121.428092] init: Sending signal 9 to service 'exec 15 (/system/bin/gsid run-startup-tasks)' (pid 401) process group...
+[  121.467918] libprocessgroup: Successfully killed process cgroup uid 0 pid 401 in 21ms
+[  121.645757] init: Command 'setprop sys.usb.state ${sys.usb.config}' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:44) took 128ms and succeeded
+[  121.674656] init: processing action (qemu.networknamespace=ready) from (/vendor/etc/init/hw/init.ranchu.rc:109)
+[  121.759835] init: starting service 'ranchu-net'...
+[  122.515628] init: Command 'start ranchu-net' action=qemu.networknamespace=ready (/vendor/etc/init/hw/init.ranchu.rc:110) took 781ms and succeeded
+[  122.569571] init: processing action (init.svc.audioserver=running) from (/system/etc/init/audioserver.rc:32)
+[  122.645379] init: Command 'start vendor.audio-hal-4-0-msd' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:34) took 5ms and failed: service vendor.audio-hal-4-0-msd not found
+[  122.725841] init: Command 'start vendor.audio-hal-2-0' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:36) took 17ms and failed: service vendor.audio-hal-2-0 not found
+[  122.753409] init: Command 'start audio-hal-2-0' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:37) took 0ms and failed: service audio-hal-2-0 not found
+[  122.773171] init: processing action (sys.audio.restart.hal=1) from (/system/etc/init/audioserver.rc:39)
+[  122.832955] init: Sending signal 9 to service 'vendor.audio-hal' (pid 301) process group...
+[  123.401867] libprocessgroup: Successfully killed process cgroup uid 1041 pid 301 in 543ms
+[  123.556573] init: Command 'restart vendor.audio-hal' action=sys.audio.restart.hal=1 (/system/etc/init/audioserver.rc:40) took 759ms and succeeded
+[  123.593513] init: Service 'vendor.audio-hal' (pid 301) received signal 9
+[  123.618560] init: Sending signal 9 to service 'audioserver' (pid 392) process group...
+[  124.365201] libprocessgroup: Successfully killed process cgroup uid 1041 pid 392 in 713ms
+[  124.500189] init: Command 'restart audioserver' action=onrestart (<Service 'vendor.audio-hal' onrestart>:1) took 895ms and succeeded
+[  124.634951] init: Service 'audioserver' (pid 392) received signal 9
+[  124.730289] init: Command 'setprop sys.audio.restart.hal 1' action=onrestart (<Service 'audioserver' onrestart>:1) took 93ms and succeeded
+[  125.052070] init: Command 'restart vendor.audio-hal-4-0-msd' action=sys.audio.restart.hal=1 (/system/etc/init/audioserver.rc:41) took 1ms and failed: service vendor.audio-hal-4-0-msd not found
+[  125.225850] init: starting service 'audioserver'...
+[  126.381961] init: starting service 'vendor.audio-hal'...
+[  127.380293] init: Command 'restart vendor.audio-hal-2-0' action=sys.audio.restart.hal=1 (/system/etc/init/audioserver.rc:43) took 5ms and failed: service vendor.audio-hal-2-0 not found
+[  127.425831] init: Command 'restart audio-hal-2-0' action=sys.audio.restart.hal=1 (/system/etc/init/audioserver.rc:44) took 0ms and failed: service audio-hal-2-0 not found
+[  127.583355] init: Command 'setprop sys.audio.restart.hal 0' action=sys.audio.restart.hal=1 (/system/etc/init/audioserver.rc:46) took 145ms and succeeded
+[  127.625374] init: processing action (ro.persistent_properties.ready=true) from (/system/etc/init/bootstat.rc:67)
+[  127.807903] init: Command 'setprop sys.bootstat.first_boot_completed 0' action=ro.persistent_properties.ready=true (/system/etc/init/bootstat.rc:68) took 136ms and succeeded
+[  127.839845] init: processing action (ro.persistent_properties.ready=true) from (/system/etc/init/bootstat.rc:71)
+[  128.119593] init: starting service 'exec 16 (/system/bin/bootstat --set_system_boot_reason)'...
+[  129.340393] init: Command 'exec_background - system log -- /system/bin/bootstat --set_system_boot_reason' action=ro.persistent_properties.ready=true (/system/etc/init/bootstat.rc:74) took 1405ms and succeeded
+[  129.422942] init: processing action (persist.heapprofd.enable= && traced.lazy.heapprofd=) from (/system/etc/init/heapprofd.rc:34)
+[  129.985129] init: Command 'stop heapprofd' action=persist.heapprofd.enable= && traced.lazy.heapprofd= (/system/etc/init/heapprofd.rc:35) took 465ms and succeeded
+[  130.057891] init: processing action (ro.debuggable=1) from (/system/etc/init/llkd-debuggable.rc:1)
+[  130.398581] init: Command 'setprop llk.enable ${ro.llk.enable:-1}' action=ro.debuggable=1 (/system/etc/init/llkd-debuggable.rc:2) took 336ms and succeeded
+[  130.659848] init: Command 'setprop khungtask.enable ${ro.khungtask.enable:-1}' action=ro.debuggable=1 (/system/etc/init/llkd-debuggable.rc:3) took 176ms and succeeded
+[  130.677637] init: processing action (ro.debuggable=*) from (/system/etc/init/llkd.rc:2)
+[  130.841975] init: Command 'setprop khungtask.enable ${ro.khungtask.enable:-0}' action=ro.debuggable=* (/system/etc/init/llkd.rc:4) took 82ms and succeeded
+[  130.886672] init: processing action (init.svc.media=*) from (/system/etc/init/mediaserver.rc:1)
+[  131.089397] init: Command 'setprop init.svc.mediadrm ${init.svc.media}' action=init.svc.media=* (/system/etc/init/mediaserver.rc:2) took 188ms and succeeded
+[  131.147047] init: processing action (debug.atrace.user_initiated= && persist.traced.enable=1) from (/system/etc/init/perfetto.rc:47)
+[  131.394176] init: starting service 'traced_probes'...
+[  131.438656] init: Opened file '/dev/kmsg', flags 1
+[  133.303033] init: Command 'start traced_probes' action=debug.atrace.user_initiated= && persist.traced.enable=1 (/system/etc/init/perfetto.rc:48) took 2078ms and succeeded
+[  133.677824] init: starting service 'mdnsd'...
+[  133.828603] init: Created socket '/dev/socket/mdnsd', mode 660, user 1020, group 3003
+[  134.884889] init: Control message: Processed ctl.start for 'mdnsd' from pid: 405 (/apex/com.android.adbd/bin/adbd --root_seclabel=u:r:su:s0)
+[  134.907043] init: processing action (persist.traced.enable=1) from (/system/etc/init/perfetto.rc:50)
+[  135.084200] init: starting service 'bootanim'...
+[  136.117837] init: Control message: Processed ctl.start for 'bootanim' from pid: 373 (/system/bin/surfaceflinger)
+[  136.328611] init: starting service 'traced'...
+[  136.557710] init: Created socket '/dev/socket/traced_consumer', mode 666, user 0, group 0
+[  136.733890] init: Created socket '/dev/socket/traced_producer', mode 666, user 0, group 0
+[  138.890658] init: Command 'start traced' action=persist.traced.enable=1 (/system/etc/init/perfetto.rc:59) took 2674ms and succeeded
+[  138.958111] init: processing action (persist.traced_perf.enable= && sys.init.perf_lsm_hooks=1 && traced.lazy.traced_perf=) from (/system/etc/init/traced_perf.rc:43)
+[  139.893508] init: Command 'stop traced_perf' action=persist.traced_perf.enable= && sys.init.perf_lsm_hooks=1 && traced.lazy.traced_perf= (/system/etc/init/traced_perf.rc:44) took 874ms and succeeded
+[  139.919154] init: processing action (nonencrypted) from (/system/etc/init/hw/init.rc:953)
+[  140.021916] init: starting service 'drm'...
+[  141.017356] init: starting service 'idmap2d'...
+[  141.979000] init: starting service 'incidentd'...
+[  143.268764] init: starting service 'installd'...
+[  144.225062] init: starting service 'iorapd'...
+[  145.121828] init: starting service 'keystore'...
+[  145.712790] healthd: battery none chg=a
+[  146.129920] init: starting service 'mediaextractor'...
+[  147.061203] init: starting service 'mediametrics'...
+[  147.821288] init: starting service 'storaged'...
+[  147.879365] init: Could not open file '/d/mmc0/mmc0:0001/ext_csd': Failed to open file '/d/mmc0/mmc0:0001/ext_csd': No such file or directory
+[  149.089218] init: starting service 'vendor.media.omx'...
+[  151.671461] init: starting service 'vendor.ril-daemon'...
+[  152.685865] init: Could not start service 'vendor_flash_recovery' as part of class 'main': Cannot find '/vendor/bin/install-recovery.sh': No such file or directory
+[  152.836054] init: starting service 'media.swcodec'...
+[  153.714145] init: Command 'class_start main' action=nonencrypted (/system/etc/init/hw/init.rc:954) took 13778ms and succeeded
+[  153.770352] init: Service 'zygote' (pid 390) received signal 11
+[  153.785302] init: Sending signal 9 to service 'zygote' (pid 390) process group...
+[  153.844968] libprocessgroup: Successfully killed process cgroup uid 0 pid 390 in 28ms
+[  153.972116] init: starting service 'exec 17 (/system/bin/vdc volume abort_fuse)'...
+[  154.357899] init: Command 'exec_background - system system -- /system/bin/vdc volume abort_fuse' action=onrestart (<Service 'zygote' onrestart>:1) took 423ms and succeeded
+[  154.567547] init: Command 'write /sys/power/state on' action=onrestart (<Service 'zygote' onrestart>:2) took 150ms and failed: Unable to write to file '/sys/power/state': Unable to write file contents: Invalid argument
+[  154.588243] init: Sending signal 9 to service 'audioserver' (pid 416) process group...
+[  155.258514] libprocessgroup: Successfully killed process cgroup uid 1041 pid 416 in 650ms
+[  155.444761] init: Command 'restart audioserver' action=onrestart (<Service 'zygote' onrestart>:3) took 857ms and succeeded
+[  155.455148] init: Sending signal 9 to service 'cameraserver' (pid 385) process group...
+[  156.367035] libprocessgroup: Successfully killed process cgroup uid 1047 pid 385 in 890ms
+[  156.451394] init: Command 'restart cameraserver' action=onrestart (<Service 'zygote' onrestart>:4) took 998ms and succeeded
+[  156.463010] init: Sending signal 9 to service 'media' (pid 387) process group...
+[  157.160085] libprocessgroup: Successfully killed process cgroup uid 1013 pid 387 in 683ms
+[  157.232575] init: Command 'restart media' action=onrestart (<Service 'zygote' onrestart>:5) took 777ms and succeeded
+[  157.247027] init: Sending signal 9 to service 'netd' (pid 397) process group...
+[  157.273113] Binder:397_4 (397) used greatest stack depth: 11280 bytes left
+[  157.774069] libprocessgroup: Successfully killed process cgroup uid 0 pid 397 in 523ms
+[  157.896246] init: Command 'restart netd' action=onrestart (<Service 'zygote' onrestart>:6) took 659ms and succeeded
+[  157.898548] init: Sending signal 9 to service 'wificond' (pid 388) process group...
+[  158.066334] libprocessgroup: Successfully killed process cgroup uid 1010 pid 388 in 154ms
+[  158.156843] init: Command 'restart wificond' action=onrestart (<Service 'zygote' onrestart>:7) took 255ms and succeeded
+[  158.334663] init: Service 'cameraserver' (pid 385) received signal 9
+[  158.501984] init: Service 'media' (pid 387) received signal 9
+[  158.649261] init: Service 'wificond' (pid 388) received signal 9
+[  158.725703] init: Service 'netd' (pid 397) received signal 9
+[  158.769491] init: Command 'restart zygote_secondary' action=onrestart (<Service 'netd' onrestart>:2) took 0ms and failed: service zygote_secondary not found
+[  158.844741] init: Untracked pid 407 exited with status 0
+[  158.859878] init: Untracked pid 411 exited with status 0
+[  158.878164] init: Service 'audioserver' (pid 416) received signal 9
+[  159.029010] init: Service 'exec 16 (/system/bin/bootstat --set_system_boot_reason)' (pid 426) exited with status 0 oneshot service took 30.054001 seconds in background
+[  159.031108] init: Sending signal 9 to service 'exec 16 (/system/bin/bootstat --set_system_boot_reason)' (pid 426) process group...
+[  159.069714] libprocessgroup: Successfully killed process cgroup uid 1000 pid 426 in 17ms
+[  159.101452] init: Untracked pid 474 received signal 9
+[  159.115791] init: Untracked pid 480 received signal 9
+[  159.120941] init: Untracked pid 485 received signal 9
+[  159.133308] init: Untracked pid 490 received signal 9
+[  159.137736] init: Untracked pid 406 received signal 9
+[  159.155269] init: Untracked pid 408 received signal 9
+[  159.259639] init: starting service 'dhcpclient_def'...
+[  159.630313] init: Control message: Processed ctl.start for 'dhcpclient_def' from pid: 476 (setprop ctl.start dhcpclient_def)
+[  159.705628] init: starting service 'gatekeeperd'...
+[  160.353420] init: starting service 'usbd'...
+[  161.000618] init: starting service 'vendor.face-hal-1-0-default'...
+[  161.677450] init: starting service 'vendor.fps_hal'...
