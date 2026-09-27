@@ -58,6 +58,43 @@ class DeviceBackendTests(unittest.TestCase):
         self.assertIsInstance(backend, db.AdbDeviceBackend)
         self.assertEqual(backend.serial, "device-1")
 
+    def test_health_does_not_probe_package_before_boot_complete(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+
+        def fake_run(args, **kwargs):
+            args = list(args)
+            if args == ["get-state"]:
+                return subprocess.CompletedProcess(args, 0, stdout="device\n", stderr="")
+            if args[:2] == ["shell", "getprop"]:
+                return subprocess.CompletedProcess(args, 0, stdout="\n", stderr="")
+            if "pidof" in args or "wm" in args:
+                raise AssertionError("pre-boot health must not call pidof/wm")
+            raise AssertionError(f"unexpected command: {args}")
+
+        with patch.object(backend, "_run", side_effect=fake_run):
+            health = backend.health()
+
+        self.assertEqual(health.state, "device")
+        self.assertEqual(health.boot_completed, "")
+        self.assertFalse(health.package_running)
+        self.assertEqual(health.resolution, "")
+
+    def test_run_converts_adb_timeout_to_backend_error(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        timeout = subprocess.TimeoutExpired(["adb", "shell"], 3)
+        with patch.object(Path, "is_file", return_value=True), \
+                patch.object(backend, "_ensure_transport"), \
+                patch("device_backend.subprocess.run", side_effect=timeout):
+            with self.assertRaises(db.BackendError) as ctx:
+                backend._run(["shell", "getprop", "sys.boot_completed"], timeout=3)
+        self.assertIn("ADB timeout after 3s", str(ctx.exception))
+
     def test_screenshot_decodes_png(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
