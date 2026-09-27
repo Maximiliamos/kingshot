@@ -180,7 +180,12 @@ DEFAULT_STATE = {
     "next_nickname": 1,
     "pending_nickname": 1,
     "characters_created": 0,
+    "characters_created_cycle": 0,
+    "characters_per_cycle": 4,
+    "auto_reset_data": False,
     "current_cycle": 1,
+    "tutorial_origin": "new_character",
+    "last_stop_reason": "",
     "step_started_at": 0.0,
     "skip_locked": False,
     "skip_lock_version": 0,
@@ -325,15 +330,97 @@ def set_phase(s, phase, step):
     log(f"PHASE -> {phase}; STEP -> {step}")
 
 
-def begin_next_character_cycle(state):
-    """Enter the mandatory rename gate after a completed tutorial."""
-    state["pending_nickname"] = int(state.get("next_nickname", 1))
+def _reset_tutorial_locks(state):
     state["skip_locked"] = False
     state["tutorial_hand_locked"] = False
     state["tutorial_primary_locked"] = False
     state["ocr_locked_action"] = ""
+    state["ocr_locked_until"] = 0.0
+    state["ocr_absent_since"] = 0.0
     state["ocr_upgrade_hold_ms"] = 0
+
+
+def begin_tutorial(state, origin):
+    """Enter tutorial with an explicit reason so completion is deterministic."""
+    _reset_tutorial_locks(state)
+    state["tutorial_origin"] = origin
+    set_phase(state, "tutorial_new_character", "tutorial_intro")
+
+
+def begin_next_character_cycle(state):
+    """Enter the mandatory rename gate after a created character tutorial."""
+    state["pending_nickname"] = int(state.get("next_nickname", 1))
+    _reset_tutorial_locks(state)
     set_phase(state, "rename_governor", "governor_home")
+
+
+def finish_tutorial(state):
+    """Route tutorial completion according to the flow that started it."""
+    origin = state.get("tutorial_origin", "new_character")
+    if origin == "initial":
+        log("Начальное обучение завершено: перехожу к созданию персонажа в государстве №3.")
+        set_phase(state, "create_character", "home")
+        return
+    begin_next_character_cycle(state)
+
+
+def perform_cycle_reset(state):
+    """Clear only game app data and begin the next initial tutorial.
+
+    PC-side state.json is intentionally preserved, so the nickname counter is
+    never reset by pm clear.
+    """
+    backend = get_device_backend()
+    log(
+        "Цикл завершён: очищаю данные игры перед новым чистым запуском. "
+        "Счётчик имён на ПК сохраняется."
+    )
+    backend.stop_app()
+    result = backend.clear_app_data()
+    if result.strip():
+        log("pm clear: " + result.strip())
+    state["current_cycle"] = int(state.get("current_cycle", 1)) + 1
+    state["characters_created_cycle"] = 0
+    state["last_stop_reason"] = ""
+    save_state(state)
+    begin_tutorial(state, "initial")
+    backend.launch_app()
+    log(f"Новый цикл #{state['current_cycle']}: игра запущена после очистки данных.")
+
+
+def ensure_game_running():
+    backend = get_device_backend()
+    if hasattr(backend, "package_installed") and not backend.package_installed():
+        raise RuntimeError(
+            "Игра com.got.globalru не установлена. Сначала установите её через "
+            "GUI или warbot_cli.py install-game."
+        )
+    health = backend.health()
+    if not health.package_running:
+        backend.launch_app()
+        log("Игра была остановлена — запустил com.got.globalru.")
+
+
+STOP_OCR_PHRASES = (
+    "лимитперсонажей",
+    "достигнутлимит",
+    "нельзясоздатьперсонажа",
+    "невозможносоздатьперсонажа",
+    "слишкоммногоперсонажей",
+    "попробуйтепозже",
+    "слишкомчасто",
+    "ограничениеаккаунта",
+)
+
+
+def detect_stop_reason(phone):
+    """Recognise only stop conditions; never use OCR here to bypass them."""
+    lines = ocr_lines(phone)
+    normalized = " ".join(line.get("normalized", "") for line in lines)
+    for phrase in STOP_OCR_PHRASES:
+        if phrase in normalized:
+            return f"Сервер/аккаунт сообщил ограничение: {phrase}"
+    return ""
 
 
 def get_device_backend():
@@ -975,7 +1062,7 @@ def handle_create_step(phone, state):
         debug(phone, hit, "state3_modal")
         log("Подтверждён диалог «создать в государстве #3». Нажимаю его Confirm.")
         tap_norm(0.710, 0.612)
-        set_phase(state, "tutorial_new_character", "tutorial_intro")
+        begin_tutorial(state, "new_character")
         return True
 
     return False
@@ -1054,7 +1141,16 @@ def handle_rename_governor(phone, state):
             return False
         state["next_nickname"] = int(state.get("pending_nickname", 1)) + 1
         state["characters_created"] = int(state.get("characters_created", 0)) + 1
-        set_phase(state, "create_character", "profile")
+        state["characters_created_cycle"] = int(state.get("characters_created_cycle", 0)) + 1
+        limit = max(1, int(state.get("characters_per_cycle", 4)))
+        if state.get("auto_reset_data", False) and state["characters_created_cycle"] >= limit:
+            log(
+                f"В текущем цикле создано {state['characters_created_cycle']} из {limit}; "
+                "планирую безопасный reset данных игры."
+            )
+            set_phase(state, "reset_cycle", "clear_data")
+        else:
+            set_phase(state, "create_character", "profile")
         return False
 
     return False
@@ -1082,7 +1178,7 @@ def handle_tutorial(phone, state):
             governor = match(phone, tpl(name), threshold)
             if governor:
                 log("Туториал завершён: запускаю обязательное переименование перед новым персонажем.")
-                begin_next_character_cycle(state)
+                finish_tutorial(state)
                 return "wait"
 
     # A visible hand is the tutorial's exclusive input contract: the game
@@ -1226,7 +1322,7 @@ def handle_tutorial(phone, state):
         governor = match(phone, tpl("governor_avatar.png"), 0.91)
         if governor:
             log("Туториал: меню губернатора доступно — обязательная часть завершена.")
-            begin_next_character_cycle(state)
+            finish_tutorial(state)
             return "wait"
 
         dialogue = match(phone, tpl("tutorial_dialogue_continue.png"), 0.88)
@@ -1321,6 +1417,7 @@ def main():
     log("="*70)
     log(f"WAR BOT v4 | phase={state['phase']} step={state['step']}")
     adb_check()
+    ensure_game_running()
 
     if BACKEND_NAME == "scrcpy":
         print("Legacy diagnostics: откройте ровно одно окно scrcpy.")
@@ -1358,6 +1455,19 @@ def main():
             if pause_reported:
                 log("GUI: работа продолжена.")
                 pause_reported = False
+
+            if state.get("phase") == "reset_cycle":
+                if capture is not None:
+                    try:
+                        capture.close()
+                    except Exception:
+                        pass
+                    capture = None
+                perform_cycle_reset(state)
+                gate = ActionGate()
+                unknown_since = None
+                time.sleep(2.0)
+                continue
 
             if capture is None:
                 try:
@@ -1449,6 +1559,23 @@ def main():
                         log(f"НЕИЗВЕСТНЫЙ ЭКРАН — ничего не нажимаю: {out} | diff={d:.1f}")
                     last_unknown = phone.copy()
                     last_unknown_at = now
+
+            if now - unknown_since >= WATCHDOG_SECONDS:
+                out = os.path.join(
+                    UNKNOWN_DIR,
+                    f"watchdog_{fs()}_{state['phase']}_{state['step']}.png"
+                )
+                save_img(out, phone)
+                reason = detect_stop_reason(phone)
+                if not reason:
+                    reason = (
+                        f"Экран не распознан {WATCHDOG_SECONDS:.0f} сек.; "
+                        "остановка без слепых нажатий."
+                    )
+                state["last_stop_reason"] = reason
+                save_state(state)
+                log(f"STOP: {reason} Screenshot: {out}")
+                break
 
             time.sleep(LOOP_DELAY)
 
