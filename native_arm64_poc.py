@@ -39,6 +39,9 @@ SERIAL = os.environ.get("WAR_BOT_ARM64_SERIAL", f"127.0.0.1:{ADB_PORT}")
 RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
+POST_ADB_STALL_SECONDS = int(
+    os.environ.get("WAR_BOT_ARM64_POST_ADB_TIMEOUT", "180")
+)
 GPU_MODE = os.environ.get("WAR_BOT_ARM64_GPU", "host")
 # Prefer Google's Android-modified ARM virt board. AOSP extended this board
 # with ranchu/goldfish devices while retaining PSCI under TCG, unlike the
@@ -308,6 +311,7 @@ def runtime_paths() -> dict[str, Path]:
         "crash": RUNTIME_ROOT / "game-crash.txt",
         "boot_crash": RUNTIME_ROOT / "zygote-crash.txt",
         "adb_crash": RUNTIME_ROOT / "adb-crash-buffer.txt",
+        "boot_live_state": RUNTIME_ROOT / "boot-live-state.txt",
         "tombstones": RUNTIME_ROOT / "tombstones",
         "boot_report": RUNTIME_ROOT / "boot-diagnostic.json",
         "frame": RUNTIME_ROOT / "frame.png",
@@ -767,6 +771,48 @@ def collect_boot_crash() -> dict[str, object]:
     return report
 
 
+def collect_adb_live_state() -> dict[str, object]:
+    """Capture cheap pre-framework state without requiring system_server."""
+    paths = runtime_paths()
+    sections: list[str] = []
+    result = {
+        "path": "",
+        "saved": False,
+        "online_cpus": "",
+    }
+
+    commands = (
+        ("getprop", ["shell", "getprop"]),
+        ("cpuinfo", ["shell", "cat", "/proc/cpuinfo"]),
+        ("online-cpus", ["shell", "cat", "/sys/devices/system/cpu/online"]),
+        ("processes", ["shell", "ps", "-A"]),
+    )
+    for title, args in commands:
+        try:
+            proc = run(
+                [ADB, "-s", SERIAL, *args],
+                timeout=10,
+                check=False,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            sections.append(f"===== {title} =====\n<timeout/unavailable>\n")
+            continue
+        body = (proc.stdout or proc.stderr or "").strip()
+        sections.append(f"===== {title} =====\n{body}\n")
+        if title == "online-cpus":
+            result["online_cpus"] = body
+
+    if sections:
+        paths["boot_live_state"].write_text(
+            "\n".join(sections),
+            encoding="utf-8",
+            errors="replace",
+        )
+        result["path"] = str(paths["boot_live_state"])
+        result["saved"] = True
+    return result
+
+
 def collect_adb_boot_diagnostics() -> dict[str, object]:
     """Best-effort crash evidence when adbd is reachable but framework is not."""
     paths = runtime_paths()
@@ -841,6 +887,7 @@ def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, objec
         "codec2_disabled": True,
         "guest": guest,
         "boot_crash": collect_boot_crash(),
+        "adb_live_state": collect_adb_live_state(),
         "adb_diagnostics": collect_adb_boot_diagnostics(),
         "critical_lines": _qemu_critical_lines(),
     }
@@ -908,6 +955,7 @@ def wait_for_boot(timeout=1200, process=None):
     started = time.monotonic()
     deadline = started + timeout
     next_report = started + 10
+    first_device_at = None
     last_state = ""
     while time.monotonic() < deadline:
         if process is not None:
@@ -937,7 +985,10 @@ def wait_for_boot(timeout=1200, process=None):
             last_state = state.stdout.strip()
         except subprocess.TimeoutExpired:
             last_state = "unresponsive"
+        now = time.monotonic()
         if last_state == "device":
+            if first_device_at is None:
+                first_device_at = now
             try:
                 boot = adb(
                     "shell", "getprop", "sys.boot_completed",
@@ -948,7 +999,23 @@ def wait_for_boot(timeout=1200, process=None):
             if boot == "1":
                 print(f"ARM64 Android booted: {SERIAL}", flush=True)
                 return
-        now = time.monotonic()
+
+            post_adb = now - first_device_at
+            if post_adb >= POST_ADB_STALL_SECONDS:
+                stage = _boot_milestone()
+                write_boot_report({
+                    "adb_state": last_state,
+                    "boot_stage": stage,
+                    "post_adb_stall_seconds": int(post_adb),
+                })
+                raise TimeoutError(
+                    "ARM64 Android stalled after adbd became reachable; "
+                    f"sys.boot_completed is still empty after {int(post_adb)}s "
+                    f"(stage={stage}). Diagnostics: "
+                    f"{runtime_paths()['boot_report']}"
+                )
+        else:
+            first_device_at = None
         if now >= next_report:
             elapsed = int(now - started)
             print(
