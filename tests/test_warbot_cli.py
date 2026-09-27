@@ -72,6 +72,47 @@ class WarBotCliTests(unittest.TestCase):
             self.assertTrue(Path(output).is_file())
             self.assertIn('"native_arm64": true', out.getvalue())
 
+    def test_bootstrap_supports_wsa_translation_backend(self):
+        backend = warbot_cli.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        ready = DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+            android="13",
+            abi="x86_64",
+            abilist="x86_64,x86,arm64-v8a,armeabi-v7a",
+            native_bridge="libhoudini.so",
+        )
+        with TemporaryDirectory() as td:
+            output = str(Path(td) / "wsa-frame.png")
+            with patch("warbot_cli.create_backend", return_value=backend), \
+                    patch.object(backend, "health", return_value=ready), \
+                    patch.object(backend, "require_ready", return_value=ready) as require_ready, \
+                    patch.object(backend, "package_installed", return_value=False), \
+                    patch.object(backend, "install_verified_game", return_value="Success") as install, \
+                    patch.object(backend, "launch_app", return_value="Starting"), \
+                    patch.object(backend, "wait_package_running", return_value="5678"), \
+                    patch.object(backend, "wait_package_stable", return_value="5678"), \
+                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
+                out = io.StringIO()
+                with redirect_stdout(out):
+                    code = warbot_cli.main([
+                        "bootstrap", "--backend", "wsa",
+                        "--serial", "127.0.0.1:58526",
+                        "--output", output,
+                    ])
+
+            self.assertEqual(code, 0)
+            require_ready.assert_called_once_with(native_arm64=False)
+            install.assert_called_once()
+            self.assertTrue(Path(output).is_file())
+            self.assertIn('"backend": "wsa"', out.getvalue())
+            self.assertIn('"native_bridge": "libhoudini.so"', out.getvalue())
+
     def test_clean_start_preserves_pc_nickname_counter(self):
         backend = warbot_cli.NativeArm64Backend(
             serial="device-1",
