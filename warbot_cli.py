@@ -124,7 +124,11 @@ def main(argv=None) -> int:
             f"Game process {pid} started; verifying stability for {stability}s...",
             flush=True,
         )
-        backend.wait_package_stable(stability, expected_pid=pid)
+        try:
+            backend.wait_package_stable(stability, expected_pid=pid)
+        except BackendError as exc:
+            crash_path = backend.collect_game_crash()
+            raise BackendError(f"{exc}; game crash log: {crash_path}") from exc
         print(f"Game stability gate passed: PID {pid}", flush=True)
         frame = backend.frame()
         output = Path(args.output)
