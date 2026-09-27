@@ -70,6 +70,46 @@ class WarBotCliTests(unittest.TestCase):
             self.assertTrue(Path(output).is_file())
             self.assertIn('"native_arm64": true', out.getvalue())
 
+    def test_clean_start_preserves_pc_nickname_counter(self):
+        backend = warbot_cli.NativeArm64Backend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        ready = DeviceHealth(
+            backend="native_arm64",
+            serial="device-1",
+            state="device",
+            boot_completed="1",
+            abi="arm64-v8a",
+            abilist="arm64-v8a",
+            native_bridge="",
+        )
+        old = {
+            "next_nickname": 14,
+            "characters_created": 13,
+            "current_cycle": 4,
+            "characters_per_cycle": 4,
+            "auto_reset_data": True,
+            "repeat_cycles": True,
+            "target_state": 3,
+        }
+        with patch("warbot_cli.create_backend", return_value=backend), \
+                patch.object(backend, "require_ready", return_value=ready), \
+                patch.object(backend, "package_installed", return_value=True), \
+                patch.object(backend, "stop_app"), \
+                patch.object(backend, "clear_app_data", return_value="Success"), \
+                patch.object(backend, "launch_app"), \
+                patch("bot.load_state", return_value=old), \
+                patch("bot.save_state") as save_state:
+            code = warbot_cli.main(["clean-start", "--yes"])
+
+        self.assertEqual(code, 0)
+        saved = save_state.call_args.args[0]
+        self.assertEqual(saved["next_nickname"], 14)
+        self.assertEqual(saved["characters_created"], 13)
+        self.assertEqual(saved["phase"], "tutorial_new_character")
+        self.assertEqual(saved["tutorial_origin"], "initial")
+
     def test_tap_routes_coordinates_to_backend(self):
         backend = MagicMock()
         with patch("warbot_cli.create_backend", return_value=backend):
