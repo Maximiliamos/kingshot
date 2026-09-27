@@ -23,23 +23,24 @@ $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $reportName = "$stamp-$short"
 $worktree = Join-Path $env:TEMP ("warbot-report-worktree-" + $PID)
 
-function Invoke-Git {
-    param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
-    & git @Args
+function Assert-GitSuccess {
+    param([string]$Operation)
     if ($LASTEXITCODE -ne 0) {
-        throw "git command failed: git $($Args -join ' ')"
+        throw "git failed during $Operation (exit $LASTEXITCODE)"
     }
 }
 
 try {
     Write-Host "Uploading WAR BOT report to GitHub branch '$ReportsBranch'..."
-    Invoke-Git fetch $Remote $ReportsBranch
+    & git fetch $Remote $ReportsBranch
+    Assert-GitSuccess "fetch reports branch"
 
     if (Test-Path $worktree) {
         Remove-Item -Recurse -Force $worktree
     }
 
-    Invoke-Git worktree add --detach $worktree "$Remote/$ReportsBranch"
+    & git worktree add --detach $worktree "$Remote/$ReportsBranch"
+    Assert-GitSuccess "create report worktree"
 
     $reportsRoot = Join-Path $worktree "runtime-reports"
     $dest = Join-Path $reportsRoot $reportName
@@ -57,14 +58,16 @@ try {
     }
     $latest | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $reportsRoot "LATEST.json")
 
-    Invoke-Git -C $worktree add runtime-reports
+    & git -C $worktree add runtime-reports
+    Assert-GitSuccess "stage report"
 
     & git -C $worktree -c user.name="WAR BOT Runtime Reporter" -c user.email="warbot-runtime@local.invalid" commit -m "runtime: upload host report $reportName"
     if ($LASTEXITCODE -ne 0) {
         throw "git commit failed while uploading report."
     }
 
-    Invoke-Git -C $worktree push $Remote "HEAD:refs/heads/$ReportsBranch"
+    & git -C $worktree push $Remote "HEAD:refs/heads/$ReportsBranch"
+    Assert-GitSuccess "push report"
 
     Write-Host ""
     Write-Host "Report uploaded successfully."
