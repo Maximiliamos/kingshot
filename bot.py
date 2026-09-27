@@ -580,15 +580,20 @@ def validate_templates():
         "tutorial_task_kitchen.png",
         "tutorial_battle_pause.png",
     ]
+    missing = []
     bad = []
     for name in names:
         p = os.path.join(TPL, name)
-        if os.path.isfile(p) and tpl(name) is None:
+        if not os.path.isfile(p):
+            missing.append(name)
+        elif tpl(name) is None:
             bad.append(name)
+    if missing:
+        raise RuntimeError("Отсутствуют обязательные PNG-шаблоны: " + ", ".join(missing))
     if bad:
         raise RuntimeError("Повреждены обязательные PNG-шаблоны: " + ", ".join(bad))
 
-    log(f"Обязательные шаблоны проверены: {len(names)-len(bad)} позиций.")
+    log(f"Обязательные шаблоны проверены: {len(names)} позиций.")
 
 
 OCR_ACTIONS = {
