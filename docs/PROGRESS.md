@@ -43,22 +43,27 @@ Confirmed progress:
 - boot reaches zygote/SurfaceFlinger;
 - no game APK has been installed before the native ARM64 gate.
 
-Latest runtime hypothesis/fix:
+Latest real-host result and runtime architecture:
 
-- the second-agent baseline isolated a reproducible `app_process64`/zygote
-  SIGSEGV in `libcodec2_vndk.so`;
-- AOSP goldfish/ranchu explicitly disables Codec2 by default because this
-  emulator configuration does not provide the ION path Codec2 expects;
-- our direct launcher had omitted the supported
-  `qemu.media.ccodec=0` boot property;
-- both ARM64 launch paths now carry that property;
-- pre-ADB crashes are automatically collected into `zygote-crash.txt` and
-  `boot-diagnostic.json`.
+- legacy Google `ranchu` mounted all Android partitions and eventually
+  exposed adbd, but `sys.boot_completed` stayed empty;
+- zygote plus multiple unrelated HAL/media processes repeatedly crashed;
+- the kernel explicitly reported missing PSCI CPU-on support and activated
+  only CPU0 despite a 4-vCPU configuration;
+- `qemu.media.ccodec=0` was present on the real kernel command line, so the
+  remaining failure is broader than a missing Codec2 flag;
+- production now uses Google's Android-modified ARM `virt` machine, which
+  AOSP specifically extended with goldfish/ranchu devices while retaining
+  the maintained virt PSCI/multicore topology;
+- direct mode now initializes the qemu boot-property channel explicitly;
+- machine-specific derived DTBs prevent ranchu/virt topology mixing;
+- switching machine automatically recreates only disposable emulator runtime,
+  never the PC-side WAR BOT nickname counter/state;
+- boot diagnostics also attempt to collect Android crash-buffer/tombstones
+  once adbd is reachable.
 
-The code/CI side is complete for this hypothesis. The remaining runtime gate
-is one real Windows-host boot proving ADB=`device` and
-`sys.boot_completed=1`. If it still fails, the generated crash files become
-the evidence for the next isolated fix rather than another parameter sweep.
+The remaining runtime gate is the first real Windows-host `virt` boot proving
+ADB=`device` and `sys.boot_completed=1`.
 
 ## What becomes immediately usable after A1/A2
 
