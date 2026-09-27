@@ -184,6 +184,7 @@ DEFAULT_STATE = {
     "characters_created_cycle": 0,
     "characters_per_cycle": 4,
     "auto_reset_data": False,
+    "repeat_cycles": True,
     "current_cycle": 1,
     "tutorial_origin": "new_character",
     "last_stop_reason": "",
@@ -417,7 +418,7 @@ STOP_OCR_PHRASES = (
 def detect_stop_reason(phone):
     """Recognise only stop conditions; never use OCR here to bypass them."""
     lines = ocr_lines(phone)
-    normalized = " ".join(line.get("normalized", "") for line in lines)
+    normalized = "".join(line.get("normalized", "") for line in lines)
     for phrase in STOP_OCR_PHRASES:
         if phrase in normalized:
             return f"Сервер/аккаунт сообщил ограничение: {phrase}"
@@ -1146,11 +1147,18 @@ def handle_rename_governor(phone, state):
         state["characters_created_cycle"] = int(state.get("characters_created_cycle", 0)) + 1
         limit = max(1, int(state.get("characters_per_cycle", 4)))
         if state.get("auto_reset_data", False) and state["characters_created_cycle"] >= limit:
-            log(
-                f"В текущем цикле создано {state['characters_created_cycle']} из {limit}; "
-                "планирую безопасный reset данных игры."
-            )
-            set_phase(state, "reset_cycle", "clear_data")
+            if state.get("repeat_cycles", True):
+                log(
+                    f"В текущем цикле создано {state['characters_created_cycle']} из {limit}; "
+                    "планирую безопасный reset данных игры."
+                )
+                set_phase(state, "reset_cycle", "clear_data")
+            else:
+                log(
+                    f"Цель цикла достигнута: {state['characters_created_cycle']} из {limit}. "
+                    "Повтор циклов выключен — останавливаюсь."
+                )
+                set_phase(state, "complete", "done")
         else:
             set_phase(state, "create_character", "profile")
         return False
@@ -1457,6 +1465,10 @@ def main():
             if pause_reported:
                 log("GUI: работа продолжена.")
                 pause_reported = False
+
+            if state.get("phase") == "complete":
+                log("Работа завершена по настройке цикла.")
+                break
 
             if state.get("phase") == "reset_cycle":
                 if capture is not None:
