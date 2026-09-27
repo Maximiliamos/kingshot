@@ -39,6 +39,8 @@ INSTANCE_LOCK = None
 
 PHONE_W = 1060
 PHONE_H = 2376
+INPUT_W = PHONE_W
+INPUT_H = PHONE_H
 VISION_W = 421
 VISION_H = 944
 TARGET_STATE = 3
@@ -499,12 +501,12 @@ def hold(x, y, duration_ms):
 
 
 def tap_norm(nx, ny):
-    tap(nx * PHONE_W, ny * PHONE_H)
+    tap(nx * INPUT_W, ny * INPUT_H)
 
 
 def tap_client(phone, nx, ny):
     """Tap a normalized point in the current Android frame."""
-    tap(nx * PHONE_W, ny * PHONE_H)
+    tap(nx * INPUT_W, ny * INPUT_H)
 
 
 def type_tugarin_on_russian_keyboard(phone, number):
@@ -906,21 +908,21 @@ def tap_match(phone, hit):
     x, y = hit["loc"]
     cx = x + hit["w"] / 2
     cy = y + hit["h"] / 2
-    tap(cx * PHONE_W / phone.shape[1], cy * PHONE_H / phone.shape[0])
+    tap(cx * INPUT_W / phone.shape[1], cy * INPUT_H / phone.shape[0])
 
 
 def hold_match(phone, hit, duration_ms):
     x, y = hit["loc"]
     cx = x + hit["w"] / 2
     cy = y + hit["h"] / 2
-    hold(cx * PHONE_W / phone.shape[1], cy * PHONE_H / phone.shape[0], duration_ms)
+    hold(cx * INPUT_W / phone.shape[1], cy * INPUT_H / phone.shape[0], duration_ms)
 
 
 def tap_match_relative(phone, hit, rel_x, rel_y):
     """Tap a known point inside a context template, not its visual centre."""
     x = hit["loc"][0] + hit["w"] * rel_x
     y = hit["loc"][1] + hit["h"] * rel_y
-    tap(x * PHONE_W / phone.shape[1], y * PHONE_H / phone.shape[0])
+    tap(x * INPUT_W / phone.shape[1], y * INPUT_H / phone.shape[0])
 
 
 def debug(phone, hit, name):
@@ -928,6 +930,23 @@ def debug(phone, hit, name):
     out = phone.copy()
     cv2.rectangle(out, (x, y), (x+hit["w"], y+hit["h"]), (0,255,0), 3)
     save_img(os.path.join(DEBUG_DIR, f"{fs()}_{name}_{hit['score']:.3f}.png"), out)
+
+
+def sync_input_geometry(frame):
+    """Use the real Android framebuffer size for input coordinates.
+
+    Template matching always runs at VISION_W x VISION_H, but ADB input must
+    target the guest's actual framebuffer. Legacy scrcpy still uses the
+    physical device constants because its desktop window can be arbitrarily
+    resized/letterboxed.
+    """
+    global INPUT_W, INPUT_H
+    if BACKEND_NAME == "scrcpy":
+        INPUT_W, INPUT_H = PHONE_W, PHONE_H
+        return
+    height, width = frame.shape[:2]
+    if width >= 100 and height >= 100:
+        INPUT_W, INPUT_H = width, height
 
 
 def crop_phone(frame):
@@ -1521,6 +1540,7 @@ def main():
                 capture = None
                 time.sleep(2)
                 continue
+            sync_input_geometry(frame)
             phone, left, right = crop_phone(frame)
 
             if not stream_ok(frame, left, right):
