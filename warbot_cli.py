@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "action",
         choices=(
-            "status", "screenshot", "launch-game", "stop-game",
+            "status", "screenshot", "install-game", "launch-game", "stop-game",
             "clear-game-data", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
@@ -26,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--serial", default=None)
     parser.add_argument("--adb", default=None)
     parser.add_argument("--output", default="warbot-frame.png")
+    parser.add_argument("--apks-dir", default=None)
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument("--window", action="store_true")
     parser.add_argument("--yes", action="store_true")
@@ -63,6 +64,16 @@ def main(argv=None) -> int:
         if not cv2.imwrite(str(output), frame):
             raise BackendError(f"Could not save screenshot: {output}")
         print(output.resolve())
+        return 0
+
+    if args.action == "install-game":
+        if isinstance(backend, NativeArm64Backend):
+            print(backend.install_verified_game(args.apks_dir))
+        else:
+            raise BackendError(
+                "install-game currently requires --backend native_arm64 "
+                "so the ARM64 gate is enforced."
+            )
         return 0
 
     if args.action == "launch-game":
