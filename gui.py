@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 import bot
+from device_backend import BackendCapture, create_backend
 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -71,9 +72,13 @@ class WarBotWindow(QMainWindow):
         self.resize(1240, 780)
         self.process = QProcess(self)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
+        self.runtime_process = QProcess(self)
+        self.runtime_process.setProcessChannelMode(QProcess.MergedChannels)
+        self.runtime_process.readyReadStandardOutput.connect(self.read_runtime_output)
         self.process.readyReadStandardOutput.connect(self.read_process_output)
         self.process.finished.connect(self.process_finished)
         self.capture = None
+        self.capture_signature = None
         self.last_log_size = 0
         self.paused = False
         self.build_ui()
@@ -139,7 +144,7 @@ class WarBotWindow(QMainWindow):
         page = QWidget()
         layout = QHBoxLayout(page)
         preview_card = Card("ЭКРАН ТЕЛЕФОНА")
-        self.preview = QLabel("Откройте окно scrcpy FCP-AN10")
+        self.preview = QLabel("Ожидание Android backend")
         self.preview.setAlignment(Qt.AlignCenter)
         self.preview.setMinimumSize(430, 600)
         self.preview.setObjectName("preview")
@@ -222,16 +227,45 @@ class WarBotWindow(QMainWindow):
     def settings_page(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        card = Card("ПОДКЛЮЧЕНИЕ")
+        card = Card("ANDROID BACKEND")
         grid = QGridLayout()
+        self.backend_mode = QComboBox()
+        self.backend_mode.addItem("Native ARM64 emulator", "native_arm64")
+        self.backend_mode.addItem("ADB device", "adb")
+        self.backend_mode.addItem("Legacy scrcpy (диагностика)", "scrcpy")
+        self.android_serial = QLineEdit("127.0.0.1:5561")
+        self.adb_path = QLineEdit(os.environ.get("WAR_BOT_ADB", r"C:\Android\Sdk\platform-tools\adb.exe"))
         self.window_title = QLineEdit(bot.SCRCPY_VIDEO_TITLE)
         self.python_path = QLineEdit(sys.executable)
-        grid.addWidget(QLabel("Заголовок scrcpy"), 0, 0)
-        grid.addWidget(self.window_title, 0, 1)
-        grid.addWidget(QLabel("Python"), 1, 0)
-        grid.addWidget(self.python_path, 1, 1)
+        grid.addWidget(QLabel("Backend"), 0, 0)
+        grid.addWidget(self.backend_mode, 0, 1)
+        grid.addWidget(QLabel("ADB serial"), 1, 0)
+        grid.addWidget(self.android_serial, 1, 1)
+        grid.addWidget(QLabel("adb.exe"), 2, 0)
+        grid.addWidget(self.adb_path, 2, 1)
+        grid.addWidget(QLabel("Заголовок scrcpy"), 3, 0)
+        grid.addWidget(self.window_title, 3, 1)
+        grid.addWidget(QLabel("Python"), 4, 0)
+        grid.addWidget(self.python_path, 4, 1)
         card.layout.addLayout(grid)
+
+        runtime_row = QHBoxLayout()
+        self.start_android_button = QPushButton("▶ Запустить ARM64 Android")
+        self.stop_android_button = QPushButton("■ Остановить Android")
+        self.start_android_button.clicked.connect(self.start_android_runtime)
+        self.stop_android_button.clicked.connect(self.stop_android_runtime)
+        runtime_row.addWidget(self.start_android_button)
+        runtime_row.addWidget(self.stop_android_button)
+        card.layout.addLayout(runtime_row)
+
         layout.addWidget(card)
+        note = QLabel(
+            "Основной режим — Native ARM64. ADB device нужен для диагностики уже "
+            "загруженного Android; scrcpy оставлен только как legacy-источник кадров."
+        )
+        note.setWordWrap(True)
+        note.setObjectName("muted")
+        layout.addWidget(note)
         layout.addStretch()
         return page
 
@@ -262,11 +296,44 @@ class WarBotWindow(QMainWindow):
             return
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONIOENCODING", "utf-8")
+        env.insert("WAR_BOT_BACKEND", str(self.backend_mode.currentData() or "native_arm64"))
+        env.insert("WAR_BOT_ANDROID_SERIAL", self.android_serial.text().strip() or "127.0.0.1:5561")
+        env.insert("WAR_BOT_ADB", self.adb_path.text().strip())
         env.insert("WAR_BOT_SCRCPY_TITLE", self.window_title.text().strip())
         self.process.setProcessEnvironment(env)
         self.process.setWorkingDirectory(ROOT)
         self.process.start(self.python_path.text().strip(), [os.path.join(ROOT, "bot.py")])
         self.start_button.setEnabled(False)
+
+    def start_android_runtime(self):
+        if self.runtime_process.state() != QProcess.NotRunning:
+            return
+        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
+            QMessageBox.information(self, "WAR BOT", "Выберите Native ARM64 emulator.")
+            return
+        self.save_config(show_message=False)
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("PYTHONIOENCODING", "utf-8")
+        env.insert("WAR_BOT_ADB", self.adb_path.text().strip())
+        env.insert("WAR_BOT_ANDROID_SERIAL", self.android_serial.text().strip() or "127.0.0.1:5561")
+        self.runtime_process.setProcessEnvironment(env)
+        self.runtime_process.setWorkingDirectory(ROOT)
+        self.runtime_process.start(
+            self.python_path.text().strip(),
+            [os.path.join(ROOT, "native_arm64_poc.py"), "start"],
+        )
+
+    def stop_android_runtime(self):
+        QProcess.startDetached(
+            self.python_path.text().strip(),
+            [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
+            ROOT,
+        )
+
+    def read_runtime_output(self):
+        raw = bytes(self.runtime_process.readAllStandardOutput()).decode("utf-8", errors="replace")
+        for line in raw.splitlines():
+            self.append_log("[Android] " + line)
 
     def toggle_pause(self):
         control = read_json(CONTROL_FILE, {})
@@ -325,9 +392,20 @@ class WarBotWindow(QMainWindow):
             self.start_button.setText("▶  ЗАПУСТИТЬ")
 
     def refresh_capture(self):
+        mode = str(self.backend_mode.currentData() or "native_arm64")
+        serial = self.android_serial.text().strip() or "127.0.0.1:5561"
+        adb_path = self.adb_path.text().strip()
+        signature = (mode, serial, adb_path, self.window_title.text().strip())
         try:
-            if self.capture is None:
-                self.capture = bot.ScrcpyCapture()
+            if self.capture is None or signature != self.capture_signature:
+                if self.capture is not None:
+                    self.capture.close()
+                if mode == "scrcpy":
+                    self.capture = bot.ScrcpyCapture()
+                else:
+                    backend = create_backend(mode, serial=serial, adb_path=adb_path)
+                    self.capture = BackendCapture(backend)
+                self.capture_signature = signature
             frame, title, rect = self.capture.grab()
             phone, _, _ = bot.crop_phone(frame)
             rgb = cv2.cvtColor(phone, cv2.COLOR_BGR2RGB)
@@ -336,13 +414,14 @@ class WarBotWindow(QMainWindow):
                 self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
             self.preview.setPixmap(pixmap)
-            self.device_status.setText(f"● {title} подключён · {rect['width']}×{rect['height']}")
+            self.device_status.setText(f"● {title} · {rect['width']}×{rect['height']}")
             self.device_status.setStyleSheet("color: #55d98b")
         except Exception as error:
             if self.capture is not None:
                 self.capture.close()
                 self.capture = None
-            self.device_status.setText(f"● scrcpy недоступен: {error}")
+            self.capture_signature = None
+            self.device_status.setText(f"● Android недоступен: {error}")
             self.device_status.setStyleSheet("color: #ff7185")
 
     def refresh_log_file(self):
@@ -369,6 +448,11 @@ class WarBotWindow(QMainWindow):
         self.target_state.setValue(int(state.get("target_state", config.get("target_state", 3))))
         self.infinite_cycle.setChecked(bool(config.get("infinite_cycle", True)))
         self.auto_tutorial.setChecked(bool(config.get("auto_tutorial", True)))
+        backend = config.get("backend", "native_arm64")
+        index = self.backend_mode.findData(backend)
+        self.backend_mode.setCurrentIndex(index if index >= 0 else 0)
+        self.android_serial.setText(config.get("android_serial", "127.0.0.1:5561"))
+        self.adb_path.setText(config.get("adb_path", os.environ.get("WAR_BOT_ADB", r"C:\Android\Sdk\platform-tools\adb.exe")))
         self.window_title.setText(config.get("window_title", bot.SCRCPY_VIDEO_TITLE))
 
     def save_config(self, show_message=True):
@@ -378,6 +462,9 @@ class WarBotWindow(QMainWindow):
             "target_state": self.target_state.value(),
             "infinite_cycle": self.infinite_cycle.isChecked(),
             "auto_tutorial": self.auto_tutorial.isChecked(),
+            "backend": self.backend_mode.currentData() or "native_arm64",
+            "android_serial": self.android_serial.text().strip() or "127.0.0.1:5561",
+            "adb_path": self.adb_path.text().strip(),
             "window_title": self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE,
         }
         atomic_json(GUI_CONFIG_FILE, config)
