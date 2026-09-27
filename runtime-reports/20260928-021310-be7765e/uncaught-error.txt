@@ -1,0 +1,8 @@
+﻿adb.exe : error: device '127.0.0.1:58526' not found
+C:\warbot_git\scripts\install_wsa_poc.ps1:425 знак:11
++ $state = (& $adb -s $Serial get-state 2>&1 | Out-String).Trim()
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (error: device '...8526' not found:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

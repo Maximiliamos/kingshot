@@ -1,0 +1,11 @@
+﻿[2026-09-28T02:12:40.5578404+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T02:12:42.4525338+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T02:12:44.8551873+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-28T02:12:45.7834230+03:00] Extracting WSA archive.
+[2026-09-28T02:12:51.8979569+03:00] Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge).
+[2026-09-28T02:12:51.9929956+03:00] Dependency Microsoft.UI.Xaml.2.8 already satisfies minimum 8.2208.12001.0.
+[2026-09-28T02:12:52.0086264+03:00] Dependency Microsoft.VCLibs.140.00.UWPDesktop already satisfies minimum 14.0.33728.0.
+[2026-09-28T02:12:52.0246260+03:00] Dependency Microsoft.VCLibs.140.00 already satisfies minimum 14.0.33519.0.
+[2026-09-28T02:12:54.6124651+03:00] WSA AppX registration completed.
+[2026-09-28T02:12:54.9243854+03:00] Launching WSA Settings to wake the subsystem.
+[2026-09-28T02:13:09.1018002+03:00] ADB connect result: cannot connect to 127.0.0.1:58526: ╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╨╡ ╨╜╨╡ ╤Г╤Б╤В╨░╨╜╨╛╨▓╨╗╨╡╨╜╨╛, ╤В.╨║. ╨║╨╛╨╜╨╡╤З╨╜╤Л╨╣ ╨║╨╛╨╝╨┐╤М╤О╤В╨╡╤А ╨╛╤В╨▓╨╡╤А╨│ ╨╖╨░╨┐╤А╨╛╤Б ╨╜╨░ ╨┐╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╨╡. (10061)
