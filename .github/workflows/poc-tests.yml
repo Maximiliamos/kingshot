@@ -6,6 +6,8 @@ on:
       - feature/emulator-poc
       - feature/bluestacks-poc
       - feature/native-arm64-emulator
+      - feature/unified-android-backend
+      - feature/unified-android-backend
   pull_request:
     branches:
       - feature/emulator-poc
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Compile PoC modules
-        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py
-      - name: Run PoC unit tests
-        run: python -m unittest tests.test_emulator_poc tests.test_bluestacks_poc tests.test_native_arm64_poc -v
+      - name: Compile application modules
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py bot.py gui.py
+      - name: Run application unit tests
+        run: python -m unittest discover -s tests -v
