@@ -19,7 +19,7 @@ import numpy as np
 from device_backend import BackendCapture, BackendError, create_backend
 
 
-ADB = os.environ.get("WAR_BOT_ADB", r"C:\platform-tools\adb.exe")
+ADB = os.environ.get("WAR_BOT_ADB", "")
 BACKEND_NAME = os.environ.get("WAR_BOT_BACKEND", "native_arm64").strip().lower()
 ANDROID_SERIAL = os.environ.get("WAR_BOT_ANDROID_SERIAL", "127.0.0.1:5561")
 DEVICE_BACKEND = None
@@ -345,7 +345,7 @@ def get_device_backend():
         DEVICE_BACKEND = create_backend(
             backend_name,
             serial=serial,
-            adb_path=ADB,
+            adb_path=ADB or None,
         )
     return DEVICE_BACKEND
 
