@@ -357,6 +357,21 @@ class AdbDeviceBackend(DeviceBackend):
             return False
         return any(line.startswith("package:") for line in output.splitlines())
 
+    def wait_package_running(self, timeout: int = 60) -> str:
+        deadline = time.monotonic() + timeout
+        last = ""
+        while time.monotonic() < deadline:
+            try:
+                last = self.shell(["pidof", self.package], timeout=10).strip()
+            except BackendError:
+                last = ""
+            if last:
+                return last
+            time.sleep(1.0)
+        raise BackendError(
+            f"{self.package} did not stay running within {timeout}s"
+        )
+
     def _uiautomator(self):
         if self._u2_attempted:
             return self._u2
