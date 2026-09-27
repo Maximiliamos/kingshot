@@ -139,6 +139,7 @@ Legacy scrcpy оставлен только для диагностики. Дл�
 
 ```powershell
 python .\warbot_cli.py status
+python .\warbot_cli.py bootstrap --output bootstrap-frame.png
 python .\warbot_cli.py screenshot --output frame.png
 python .\warbot_cli.py install-game
 python .\warbot_cli.py launch-game
@@ -170,6 +171,30 @@ python -m pip install -r requirements-android-optional.txt
 
 Он нужен только для Android permission/settings dialogs. Интерфейс самой Unity
 игры по-прежнему обрабатывается OpenCV-шаблонами.
+
+## Полный цикл
+
+Для чистого запуска состояние по умолчанию начинается с обязательного
+обучения. После его завершения WAR BOT:
+
+```text
+initial tutorial
+→ create exact State #3
+→ character tutorial
+→ rename to Тугарин<N>
+→ create next character
+```
+
+Счётчик `Тугарин<N>` хранится на ПК и не сбрасывается при `pm clear`.
+
+В GUI можно задать число персонажей в одном цикле и отдельно включить
+автоматическую очистку данных игры. Автосброс по умолчанию выключен. Если
+OCR видит сообщение о лимите/ограничении аккаунта или сервера, бот
+останавливается; очистка данных не используется как обход такого ограничения.
+
+`bootstrap` — рекомендуемый первый запуск: он поднимает Native ARM64 Android,
+проверяет строгий ARM64 gate, при необходимости устанавливает ARM64 splits
+игры, запускает игру и сохраняет контрольный screenshot.
 
 ## Что не коммитим
 
