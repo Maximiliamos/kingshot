@@ -133,6 +133,40 @@ Legacy scrcpy оставлен только для диагностики. Дл�
 
 **F8** — аварийная остановка.
 
+## Backend CLI
+
+Для локальных агентов и диагностики добавлен единый CLI:
+
+```powershell
+python .\warbot_cli.py status
+python .\warbot_cli.py screenshot --output frame.png
+python .\warbot_cli.py launch-game
+python .\warbot_cli.py stop-game
+python .\warbot_cli.py ui-dump
+```
+
+Очистка данных требует явного подтверждения:
+
+```powershell
+python .\warbot_cli.py clear-game-data --yes
+```
+
+Управление ARM64 runtime:
+
+```powershell
+python .\warbot_cli.py start-runtime
+python .\warbot_cli.py stop-runtime
+```
+
+Опциональный системный UI-канал uiautomator2 устанавливается отдельно:
+
+```powershell
+python -m pip install -r requirements-android-optional.txt
+```
+
+Он нужен только для Android permission/settings dialogs. Интерфейс самой Unity
+игры по-прежнему обрабатывается OpenCV-шаблонами.
+
 ## Что не коммитим
 
 Локальные runtime-данные исключены через `.gitignore`:
