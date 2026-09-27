@@ -1,0 +1,7 @@
+adb pull returncode=1
+stdout=
+stderr=adb: error: failed to stat remote object '/data/tombstones': Permission denied
+
+
+===== ls -laZ /data/tombstones =====
+ls: /data/tombstones: Permission denied
