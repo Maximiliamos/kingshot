@@ -7,12 +7,12 @@ on:
       - feature/bluestacks-poc
       - feature/native-arm64-emulator
       - feature/unified-android-backend
-      - feature/unified-android-backend
   pull_request:
     branches:
       - feature/emulator-poc
       - main
       - feature/native-arm64-emulator
+      - feature/unified-android-backend
 
 jobs:
   windows-poc:
