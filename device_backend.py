@@ -460,6 +460,19 @@ class NativeArm64Backend(AdbDeviceBackend):
         )
         return self.install_apks(root / name for name in names)
 
+    def collect_game_crash(self) -> Path:
+        import native_arm64_poc
+        result = self._run(
+            ["logcat", "-b", "crash", "-d", "-v", "threadtime"],
+            timeout=120,
+            check=False,
+            text=True,
+        )
+        path = native_arm64_poc.runtime_paths()["crash"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(result.stdout or result.stderr or "", encoding="utf-8")
+        return path
+
     def health(self) -> DeviceHealth:
         base = super().health()
         data = asdict(base)
