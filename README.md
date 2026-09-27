@@ -58,12 +58,18 @@ image-first подход для Unity-интерфейса как в Airtest.
 - fail-closed при неизвестном экране или сообщении о лимите/ограничении;
 - тесты полного цикла, backend, runtime и vision.
 
-Текущий непроверенный на реальном Windows-host gate один: после последнего
-изменения native ARM64 runtime нужно подтвердить полный boot до
-`ADB=device` / `sys.boot_completed=1`. Для найденного падения
-`libcodec2_vndk.so` direct ranchu теперь передаёт официальный goldfish
-параметр `qemu.media.ccodec=0` и автоматически сохраняет
-`zygote-crash.txt` / `boot-diagnostic.json`, если boot всё ещё не проходит.
+Последний real-host прогон доказал, что legacy Google `ranchu` под TCG
+доходит до adbd, но не завершает Android boot: zygote/HAL-процессы продолжают
+падать, а ядро поднимает только CPU0 из-за отсутствия PSCI для TCG. Поэтому
+production runtime переключён на Android-модифицированную Google машину
+`virt`, которую AOSP специально расширил ranchu/goldfish-устройствами и
+которая сохраняет PSCI/multicore. Legacy `ranchu` оставлен только как
+диагностический fallback.
+
+Следующий real-host gate должен подтвердить `virt` до
+`ADB=device` + `sys.boot_completed=1`. При ошибке автоматически
+сохраняются serial log, crash buffer, tombstones (если доступны),
+`zygote-crash.txt` и `boot-diagnostic.json`.
 
 
 ## Установка
