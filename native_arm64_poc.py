@@ -39,8 +39,9 @@ RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
 GPU_MODE = os.environ.get("WAR_BOT_ARM64_GPU", "host")
+SERIAL_CONSOLE = os.environ.get("WAR_BOT_ARM64_SERIAL_CONSOLE", "")
 RANCHU_BOOT_DEVICE = os.environ.get(
-    "WAR_BOT_ARM64_BOOT_DEVICE", "a003e00.virtio_mmio"
+    "WAR_BOT_ARM64_BOOT_DEVICE", "a003600.virtio_mmio"
 )
 
 ADB = SDK_ROOT / "platform-tools" / "adb.exe"
@@ -292,6 +293,8 @@ def runtime_paths() -> dict[str, Path]:
         "crash": RUNTIME_ROOT / "game-crash.txt",
         "frame": RUNTIME_ROOT / "frame.png",
         "pstore": RUNTIME_ROOT / "pstore.bin",
+        "base_dtb": RUNTIME_ROOT / "ranchu-base.dtb",
+        "dtb": RUNTIME_ROOT / "ranchu-warbot.dtb",
     }
 
 
@@ -447,8 +450,7 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         # On ranchu/virt, command-line virtio devices are assigned to MMIO
         # transports in decreasing address order. With five block devices,
         # vendor -> encrypt -> userdata -> cache -> system places the system
-        # (dynamic-partition/super) disk on a003600.virtio_mmio, matching the
-        # verified-boot androidboot.boot_devices value shipped with this image.
+        # Use the dynamic-partition boot device emitted by the stock launcher.
         "-drive", f"index=0,id=vendor,if=none,file={inv['vendor']},read-only",
         "-device", "virtio-blk-device,drive=vendor",
         "-drive", f"index=1,id=encrypt,if=none,file={paths['encryptionkey']}",
@@ -462,13 +464,81 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         "-netdev", "user,id=mynet", "-device", "virtio-net-device,netdev=mynet",
         "-device", "virtio-rng-device", "-show-cursor",
         "-android-ports", f"{CONSOLE_PORT},{ADB_PORT}",
-        "-serial", "con:" if window else "stdio",
+        "-serial", SERIAL_CONSOLE or ("con:" if window else "stdio"),
         "-append", append, "-android-hw", str(paths["hw"]),
     ]
+
+
+def _set_fstab_node(tree, name, dev, mount_flags, fs_mgr_flags):
+    node = f"/firmware/android/fstab/{name}"
+    tree.set_property("compatible", f"android,{name}", node)
+    tree.set_property("dev", dev, node)
+    tree.set_property("type", "ext4", node)
+    tree.set_property("mnt_flags", mount_flags, node)
+    tree.set_property("fsmgr_flags", fs_mgr_flags, node)
+
+
+def build_dynamic_partition_dtb(base_path: Path, output_path: Path):
+    try:
+        import fdt
+    except ImportError as exc:
+        raise RuntimeError("Python package 'fdt' is required; install requirements.txt") from exc
+
+    tree = fdt.parse_dtb(base_path.read_bytes())
+    logical_flags = "wait,logical,first_stage_mount"
+    for name in ("system", "vendor", "product", "system_ext"):
+        _set_fstab_node(tree, name, name, "ro,barrier=1", logical_flags)
+    _set_fstab_node(
+        tree, "metadata",
+        "/dev/block/platform/a003c00.virtio_mmio/by-name/metadata",
+        "noatime,nosuid,nodev", "wait,formattable,first_stage_mount",
+    )
+    tree.set_property("compatible", "android,vbmeta", "/firmware/android/vbmeta")
+    tree.set_property(
+        "parts", "vbmeta,system,vendor,product,system_ext",
+        "/firmware/android/vbmeta",
+    )
+    tree.set_property(
+        "by_name_prefix", "/dev/block/platform/a003600.virtio_mmio/by-name/",
+        "/firmware/android/vbmeta",
+    )
+    output_path.write_bytes(tree.to_dtb())
+
+
+def ensure_dynamic_partition_dtb(cmd: list[str], *, wipe=False) -> Path:
+    paths = runtime_paths()
+    if wipe or not paths["dtb"].is_file():
+        paths["base_dtb"].unlink(missing_ok=True)
+        dump_cmd = list(cmd)
+        machine_index = dump_cmd.index("type=ranchu")
+        dump_cmd[machine_index] = f"type=ranchu,dumpdtb={paths['base_dtb'].as_posix()}"
+        proc = subprocess.Popen(
+            dump_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=qemu_environment(),
+        )
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            if paths["base_dtb"].is_file() and paths["base_dtb"].stat().st_size:
+                break
+            if proc.poll() is not None:
+                raise RuntimeError("Google ranchu exited before producing its base DTB")
+            time.sleep(0.2)
+        else:
+            raise RuntimeError("Timed out while dumping Google ranchu DTB")
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5)
+        build_dynamic_partition_dtb(paths["base_dtb"], paths["dtb"])
+    return paths["dtb"]
 
 def start_direct(*, window=False, wipe=False, wait=True):
     _, paths = prepare_runtime(wipe=wipe)
     cmd = build_google_ranchu_command(window=window, wipe=False)
+    dtb = ensure_dynamic_partition_dtb(cmd, wipe=wipe)
+    cmd += ["-dtb", str(dtb)]
     log = open(paths["stdout"], "w", encoding="utf-8", errors="replace")
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
     proc = subprocess.Popen(

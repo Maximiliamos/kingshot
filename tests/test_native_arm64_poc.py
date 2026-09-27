@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import native_arm64_poc as arm64
 
@@ -242,7 +242,7 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("-fuchsia", cmd)
         self.assertIn("-machine type=ranchu", joined)
         self.assertIn("-android-ports 5560,5561", joined)
-        self.assertIn("androidboot.boot_devices=a003e00.virtio_mmio", joined)
+        self.assertIn("androidboot.boot_devices=a003600.virtio_mmio", joined)
         self.assertIn("androidboot.logical_partitions=1", joined)
         block_devices = [
             cmd[i + 1]
@@ -271,6 +271,31 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertTrue(str(drive_args[4]).startswith("index=4,id=system,"))
         self.assertNotIn("-soundhw", joined)
         self.assertNotIn(" hda", joined)
+
+    def test_dynamic_partition_dtb_declares_logical_partitions_and_vbmeta(self):
+        tree = MagicMock()
+        tree.to_dtb.return_value = b"patched-dtb"
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            base = root / "base.dtb"
+            output = root / "patched.dtb"
+            base.write_bytes(b"base-dtb")
+            fdt_module = MagicMock()
+            fdt_module.parse_dtb.return_value = tree
+            with patch.dict("sys.modules", {"fdt": fdt_module}):
+                arm64.build_dynamic_partition_dtb(base, output)
+            self.assertEqual(output.read_bytes(), b"patched-dtb")
+
+        calls = tree.set_property.call_args_list
+        for name in ("system", "vendor", "product", "system_ext"):
+            self.assertIn(
+                (("fsmgr_flags", "wait,logical,first_stage_mount", f"/firmware/android/fstab/{name}"), {}),
+                [(call.args, call.kwargs) for call in calls],
+            )
+        self.assertIn(
+            (("by_name_prefix", "/dev/block/platform/a003600.virtio_mmio/by-name/", "/firmware/android/vbmeta"), {}),
+            [(call.args, call.kwargs) for call in calls],
+        )
 
 
 if __name__ == "__main__":

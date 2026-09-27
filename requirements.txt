@@ -2,3 +2,4 @@ mss
 opencv-python
 numpy
 PySide6
+fdt==0.3.3

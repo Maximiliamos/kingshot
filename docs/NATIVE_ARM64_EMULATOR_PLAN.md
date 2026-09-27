@@ -168,32 +168,44 @@ reproduced and ADB reaches `device` with `sys.boot_completed=1`.
 
 AOSP's ARM64 emulator target intentionally emits block images in the order
 `vendor -> encryption -> userdata -> cache -> system`. On ARM/ranchu the
-virtio-MMIO transport assignment is effectively reversed: command-line
-`-device` entries are attached to decreasing MMIO addresses. With five block
-devices this puts the fifth device (system/super) at
-`a003e00.virtio_mmio`, which matches the image's verified-boot
-`androidboot.boot_devices` value.
+virtio block naming is reversed, so the fifth device becomes `vda` and holds
+the GPT `super` partition. The stock launcher uses
+`androidboot.boot_devices=a003600.virtio_mmio` for this topology.
 
-The direct `-fuchsia` command had accidentally used the opposite device
-order (`system ... vendor`). That made `a003e00.virtio_mmio` point at the
-vendor disk while first-stage init searched there for the dynamic-partition
-backing device and failed with `partition(s) not found: system`.
+The remaining discovery failure was not the block order. A DTB dump proved
+that direct ranchu still exposed an old physical `/firmware/android/fstab`
+entry for `system` and no `/firmware/android/vbmeta` node. First-stage init
+therefore selected the legacy VBoot path and searched for a physical
+`by-name/system`, although Android 11 stores `system`, `vendor`, `product`,
+and `system_ext` as logical partitions inside `super`.
 
 The PoC now mirrors the launcher order and drive indices exactly:
-`vendor(0), encrypt(1), userdata(2), cache(3), system(4)`, while retaining
-`androidboot.boot_devices=a003600.virtio_mmio`. Unit tests pin both the
-ordering and the boot-device value.
+`vendor(0), encrypt(1), userdata(2), cache(3), system(4)`, retains
+`androidboot.boot_devices=a003600.virtio_mmio`, and generates a small derived
+DTB with logical first-stage fstab and vbmeta nodes. With that DTB the real
+guest discovers `super`, mounts all four logical partitions, configures FBE,
+and reaches zygote/SurfaceFlinger. Unit tests pin the topology and DTB data.
+
+The next blocker is now inside the ARM64 guest rather than storage discovery:
+`app_process64` repeatedly exits with `SIGSEGV` in the static constructor of
+`/system/lib64/libcodec2_vndk.so`. The same failure was reproduced with one
+and four vCPUs, single-thread TCG, and `cortex-a53`, `cortex-a57`, and `max`
+CPU models. These controlled trials rule out the earlier multi-thread/CPU
+feature hypotheses. ADB therefore remains offline and A1/A2 are still FAIL;
+do not classify this runtime as usable or install the game yet.
 
 Next real-host gate: rerun `start --wipe`. PASS requires ADB `device`,
 `sys.boot_completed=1`, ARM64 ABI, no native bridge, and a valid screenshot.
 
 
-### Evidence update — logical partitions vs. DTB
+### Evidence update — logical partitions and DTB
 
-The latest real-host run confirmed that `a003e00.virtio_mmio` is the correct
-boot-device transport for the physical disk containing the GPT `super`
-partition. The remaining failure still asked for a physical `system`
-partition.
+The real-host comparison established that `androidboot.logical_partitions=1`
+is necessary but not sufficient. With the flag alone, first-stage init still
+selected the physical `system` entry emitted by the base ranchu DTB. Using
+`a003e00.virtio_mmio` also failed at `/dev/block/by-name/super`; restoring
+the launcher value `a003600.virtio_mmio` and supplying the derived DTB is the
+combination that mounted `super` and all logical partitions.
 
 AOSP first-stage mount has an explicit, independent gate for dynamic/logical
 partitions: it enables dm-linear only when the kernel command line contains
@@ -202,12 +214,6 @@ logical partitions are enabled. Without it, init can fall back to looking for
 physical partitions such as `system`, even though the backing disk exposes
 `super`.
 
-The direct ranchu command now adds `androidboot.logical_partitions=1` and
-defaults the confirmed boot-device to `a003e00.virtio_mmio`.
-
-Do **not** inject a guessed `default.dtb` yet. Ranchu generates its device
-tree at runtime, and the Android QEMU glue has its own device-tree callback.
-An external DTB could replace hardware nodes required by ranchu/goldfish.
-Only revisit DTB/vbmeta if the next boot explicitly reports missing
-`vbmeta/compatible`, `vbmeta/parts`, or AVB setup failure after logical
-partition creation is enabled.
+The DTB is not guessed: the PoC first asks the same ranchu binary to dump its
+generated base tree, then changes only Android fstab/vbmeta properties while
+preserving all ranchu/goldfish hardware nodes.
