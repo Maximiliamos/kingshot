@@ -140,10 +140,14 @@ Legacy scrcpy оставлен только для диагностики. Дл�
 ```powershell
 python .\warbot_cli.py status
 python .\warbot_cli.py screenshot --output frame.png
+python .\warbot_cli.py install-game
 python .\warbot_cli.py launch-game
 python .\warbot_cli.py stop-game
 python .\warbot_cli.py ui-dump
 ```
+
+Установка игры в Native ARM64 режиме разрешается только после строгого gate:
+ADB=`device`, `sys.boot_completed=1`, ABI=`arm64-v8a`, без x86/native bridge.
 
 Очистка данных требует явного подтверждения:
 
