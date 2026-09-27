@@ -184,6 +184,23 @@ class NativeArm64PocTests(unittest.TestCase):
             self.assertTrue(paths["boot_crash"].is_file())
             self.assertIn("SomeSymbol", paths["boot_crash"].read_text(encoding="utf-8"))
 
+    def test_guest_status_survives_prezygote_shell_timeout(self):
+        get_state = type("Result", (), {"stdout": "device\n", "stderr": "", "returncode": 0})()
+        timeout = __import__("subprocess").TimeoutExpired(["adb", "shell"], 5)
+
+        def fake_run(args, **kwargs):
+            if "get-state" in [str(x) for x in args]:
+                return get_state
+            raise timeout
+
+        with patch("native_arm64_poc.run", side_effect=fake_run):
+            status = arm64.guest_status()
+
+        self.assertEqual(status["device_state"], "device")
+        self.assertEqual(status["boot_completed"], "")
+        self.assertEqual(status["resolution"], "")
+        self.assertFalse(status["native_arm64"])
+
     def test_wait_for_boot_fails_fast_if_qemu_exits(self):
         process = type("Process", (), {"poll": lambda self: 7})()
         with patch("native_arm64_poc._qemu_log_tail", return_value="boom"):
