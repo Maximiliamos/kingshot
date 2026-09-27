@@ -66,6 +66,7 @@ def main(argv=None) -> int:
     if args.action == "screenshot":
         frame = backend.frame()
         output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
         if not cv2.imwrite(str(output), frame):
             raise BackendError(f"Could not save screenshot: {output}")
         print(output.resolve())
@@ -98,6 +99,7 @@ def main(argv=None) -> int:
         pid = backend.wait_package_running(timeout=90)
         frame = backend.frame()
         output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
         if not cv2.imwrite(str(output), frame):
             raise BackendError(f"Could not save bootstrap screenshot: {output}")
 
