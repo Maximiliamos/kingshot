@@ -471,13 +471,14 @@ class WarBotWindow(QMainWindow):
         answer = QMessageBox.question(
             self,
             "WAR BOT",
-            "Очистить все данные com.got.globalru? Это сбросит локальное состояние игры.",
+            "Очистить данные com.got.globalru и синхронно начать новый чистый цикл? "
+            "Счётчик Тугарин<N> на ПК будет сохранён.",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
         if answer != QMessageBox.Yes:
             return
-        self.run_device_cli("clear-game-data", ["--yes"])
+        self.run_device_cli("clean-start", ["--yes"])
 
     def read_device_output(self):
         raw = bytes(self.device_process.readAllStandardOutput()).decode("utf-8", errors="replace")
