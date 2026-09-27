@@ -224,6 +224,48 @@ OCR видит сообщение о лимите/ограничении акк�
 - `debug/`
 - временные скриншоты.
 
+## Рабочий цикл ChatGPT ↔ Windows host
+
+Для дальнейшей разработки используется один повторяемый цикл:
+
+```text
+ChatGPT пишет код в feature/unified-android-backend
+        ↓
+пользователь запускает одну команду
+        ↓
+скрипт сам делает git pull
+        ↓
+запускает real-host verifier
+        ↓
+собирает console/runtime/crash/tombstone отчёты
+        ↓
+публикует их в GitHub branch runtime-reports
+        ↓
+ChatGPT читает отчёт из GitHub и делает следующий фикс
+```
+
+Команда для обычного цикла:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_and_report.ps1
+```
+
+Скрипт автоматически обновляет `feature/unified-android-backend`, запускает
+`verify_mvp.ps1`, формирует manifest, сохраняет консольный вывод и доступные
+runtime-диагностики, после чего коммитит их в отдельную ветку
+`runtime-reports`. Исходная рабочая ветка не загрязняется отчётами.
+
+На GitHub последний отчёт определяется файлом:
+
+```text
+runtime-reports/LATEST.json
+```
+
+Если автоматический push не авторизован на конкретном Windows-ПК, отчёт не
+теряется: скрипт оставляет staging-каталог в `%TEMP%` и сообщает его путь.
+После однократной настройки Git credentials следующие циклы полностью
+автоматические.
+
 ## Финальный real-host gate
 
 После зелёного CI остаётся один аппаратно-зависимый прогон на Windows-машине.
