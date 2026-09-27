@@ -37,8 +37,15 @@ if (Test-Path "$PSScriptRoot\..\docs") {
         }
 }
 
-if (Test-Path "$PSScriptRoot\verify_mvp.ps1") {
-    Copy-Item "$PSScriptRoot\verify_mvp.ps1" (Join-Path $Target "scripts\verify_mvp.ps1") -Force
+foreach ($scriptName in @(
+    "verify_mvp.ps1",
+    "run_and_report.ps1",
+    "upload_runtime_report.ps1"
+)) {
+    $scriptPath = Join-Path $PSScriptRoot $scriptName
+    if (Test-Path $scriptPath) {
+        Copy-Item $scriptPath (Join-Path $Target "scripts\$scriptName") -Force
+    }
 }
 
 if (Test-Path "$PSScriptRoot\..\templates") {
@@ -60,3 +67,4 @@ Write-Host "GUI:          python $Target\gui.py"
 Write-Host "Reset state:  python $Target\bot.py --reset-state"
 Write-Host "Native probe: python $Target\native_arm64_poc.py probe"
 Write-Host "MVP verify:   powershell -ExecutionPolicy Bypass -File $Target\scripts\verify_mvp.ps1"
+Write-Host "Remote cycle: powershell -ExecutionPolicy Bypass -File $Target\scripts\run_and_report.ps1"
