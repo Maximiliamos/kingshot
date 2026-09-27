@@ -1335,15 +1335,9 @@ def handle_tutorial(phone, state):
             log("Туториал: загрузочный экран, жду.")
             return "wait"
 
-        # Dialogue screens can appear before/after Skip.  Advance only when
-        # the characteristic dialogue continuation marker is recognised.
-        dialogue = match(phone, tpl("tutorial_dialogue_continue.png"), 0.88)
-        if dialogue:
-            debug(phone, dialogue, "tutorial_dialogue")
-            log("Туториал: найден маркер продолжения диалога.")
-            tap_match(phone, dialogue)
-            return "acted"
-
+        # Dialogue screens can appear before/after Skip. We do not ship a
+        # guessed generic dialogue image; the fallback below only accepts
+        # explicit "Далее/Продолжить" OCR text in the safe lower dialogue zone.
         fallback = handle_tutorial_ocr(phone, state)
         return fallback if fallback else False
 
@@ -1356,13 +1350,8 @@ def handle_tutorial(phone, state):
             finish_tutorial(state)
             return "wait"
 
-        dialogue = match(phone, tpl("tutorial_dialogue_continue.png"), 0.88)
-        if dialogue:
-            debug(phone, dialogue, "tutorial_dialogue")
-            log("Туториал: продолжаю подтверждённый диалог.")
-            tap_match(phone, dialogue)
-            return "acted"
-
+        # Text-based dialogue continuation is handled by the safe OCR
+        # fallback below if none of the stronger tutorial markers match.
         # The first real tutorial task is a hand pointing to the shelter, not
         # the later task scroll.  Its crop comes from the live scrcpy frame.
         hand = match(phone, tpl("tutorial_hand_building.png"), 0.94)
