@@ -157,6 +157,7 @@ class AdbDeviceBackend(DeviceBackend):
             self.adb_path = next((p for p in candidates if p.is_file()), candidates[0])
         self._u2 = None
         self._u2_attempted = False
+        self._last_connect_attempt = 0.0
 
     def _base(self) -> list[str]:
         return [str(self.adb_path), "-s", self.serial]
@@ -171,6 +172,7 @@ class AdbDeviceBackend(DeviceBackend):
     ) -> subprocess.CompletedProcess:
         if not self.adb_path.is_file():
             raise BackendError(f"adb.exe not found: {self.adb_path}")
+        self._ensure_transport()
         result = subprocess.run(
             [*self._base(), *[str(x) for x in args]],
             capture_output=True,
@@ -200,11 +202,21 @@ class AdbDeviceBackend(DeviceBackend):
     ) -> subprocess.CompletedProcess:
         return self._run(args, timeout=timeout, check=check, text=True)
 
+    def _ensure_transport(self) -> None:
+        if ":" not in self.serial:
+            return
+        now = time.monotonic()
+        if now - self._last_connect_attempt < 2.0:
+            return
+        self._last_connect_attempt = now
+        self.connect()
+
     def connect(self) -> str:
         if ":" not in self.serial:
             return ""
         if not self.adb_path.is_file():
             raise BackendError(f"adb.exe not found: {self.adb_path}")
+        self._last_connect_attempt = time.monotonic()
         result = subprocess.run(
             [str(self.adb_path), "connect", self.serial],
             capture_output=True,
@@ -221,8 +233,6 @@ class AdbDeviceBackend(DeviceBackend):
 
     def health(self) -> DeviceHealth:
         try:
-            if ":" in self.serial:
-                self.connect()
             state = self._run(["get-state"], timeout=10, check=False).stdout.strip()
         except (BackendError, subprocess.TimeoutExpired):
             state = ""
