@@ -376,6 +376,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         "console=ttyAMA0,38400 keep_bootcon earlycon=pl011,0x09000000 "
         "loop.max_part=7 printk.devkmsg=on "
         "androidboot.boot_devices=a003600.virtio_mmio "
+        "androidboot.logical_partitions=1 "
         "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64 "
         "qemu=1 androidboot.qemu=1 qemu.encrypt=1 "
         "qemu.gles=0 qemu.virtiowifi=0"
@@ -557,6 +558,9 @@ def guest_status() -> dict[str, object]:
         "abi": adb("shell", "getprop", "ro.product.cpu.abi", check=False).stdout.strip(),
         "abilist": adb("shell", "getprop", "ro.product.cpu.abilist", check=False).stdout.strip(),
         "native_bridge": adb("shell", "getprop", "ro.dalvik.vm.native.bridge", check=False).stdout.strip(),
+        "boot_devices": adb("shell", "getprop", "ro.boot.boot_devices", check=False).stdout.strip(),
+        "logical_partitions": adb("shell", "getprop", "ro.boot.logical_partitions", check=False).stdout.strip(),
+        "vbmeta_device_state": adb("shell", "getprop", "ro.boot.vbmeta.device_state", check=False).stdout.strip(),
         "model": adb("shell", "getprop", "ro.product.model", check=False).stdout.strip(),
         "resolution": adb("shell", "wm", "size", check=False).stdout.strip(),
         "density": adb("shell", "wm", "density", check=False).stdout.strip(),
