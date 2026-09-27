@@ -284,6 +284,13 @@ class WarBotWindow(QMainWindow):
         runtime_row.addWidget(self.check_android_button)
         card.layout.addLayout(runtime_row)
 
+        bootstrap_row = QHBoxLayout()
+        self.bootstrap_button = QPushButton("★ Подготовить Android + игру")
+        self.bootstrap_button.setObjectName("primary")
+        self.bootstrap_button.clicked.connect(self.bootstrap_android_game)
+        bootstrap_row.addWidget(self.bootstrap_button)
+        card.layout.addLayout(bootstrap_row)
+
         app_row = QHBoxLayout()
         self.install_game_button = QPushButton("Установить игру")
         self.launch_game_button = QPushButton("▶ Запустить игру")
@@ -406,6 +413,17 @@ class WarBotWindow(QMainWindow):
 
     def check_android_status(self):
         self.run_device_cli("status")
+
+    def bootstrap_android_game(self):
+        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
+            QMessageBox.information(
+                self, "WAR BOT", "Подготовка доступна только для Native ARM64 emulator."
+            )
+            return
+        self.run_device_cli(
+            "bootstrap",
+            ["--output", os.path.join(ROOT, "debug", "bootstrap-frame.png")],
+        )
 
     def install_game(self):
         if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
