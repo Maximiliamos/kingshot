@@ -25,7 +25,8 @@ PID_FILE = os.path.join(ROOT, "bot.pid")
 PHASE_NAMES = {
     "rename_governor": "Переименование губернатора",
     "create_character": "Создание персонажа",
-    "tutorial_new_character": "Обучение нового персонажа",
+    "tutorial_new_character": "Обязательное обучение",
+    "reset_cycle": "Сброс данных и новый цикл",
 }
 
 
@@ -161,9 +162,15 @@ class WarBotWindow(QMainWindow):
         self.step_value = QLabel("—")
         self.name_value = QLabel("—")
         self.created_value = QLabel("0")
+        self.cycle_value = QLabel("1")
+        self.cycle_created_value = QLabel("0")
+        self.stop_reason_value = QLabel("—")
+        self.stop_reason_value.setWordWrap(True)
         for row, (name, widget) in enumerate((
             ("Режим", self.phase_value), ("Шаг", self.step_value),
-            ("Следующее имя", self.name_value), ("Создано", self.created_value),
+            ("Следующее имя", self.name_value), ("Создано всего", self.created_value),
+            ("Цикл", self.cycle_value), ("В этом цикле", self.cycle_created_value),
+            ("Последняя остановка", self.stop_reason_value),
         )):
             caption = QLabel(name)
             caption.setObjectName("muted")
@@ -191,6 +198,13 @@ class WarBotWindow(QMainWindow):
         self.target_state = QSpinBox()
         self.target_state.setRange(3, 3)
         self.target_state.setValue(3)
+        self.characters_per_cycle = QSpinBox()
+        self.characters_per_cycle.setRange(1, 20)
+        self.characters_per_cycle.setValue(4)
+        self.auto_reset_data = QCheckBox(
+            "После заданного числа персонажей очистить данные игры и начать новый чистый цикл"
+        )
+        self.auto_reset_data.setChecked(False)
         self.infinite_cycle = QCheckBox("Повторять цикл непрерывно")
         self.infinite_cycle.setChecked(True)
         self.auto_tutorial = QCheckBox("Проходить обязательное обучение")
@@ -199,19 +213,25 @@ class WarBotWindow(QMainWindow):
             ("Шаблон имени", self.name_prefix),
             ("Следующий номер", self.next_number),
             ("Государство", self.target_state),
+            ("Персонажей до сброса", self.characters_per_cycle),
         )
         for row, (label, widget) in enumerate(fields):
             form.addWidget(QLabel(label), row, 0)
             form.addWidget(widget, row, 1)
-        form.addWidget(self.infinite_cycle, 3, 0, 1, 2)
-        form.addWidget(self.auto_tutorial, 4, 0, 1, 2)
+        form.addWidget(self.auto_reset_data, 4, 0, 1, 2)
+        form.addWidget(self.infinite_cycle, 5, 0, 1, 2)
+        form.addWidget(self.auto_tutorial, 6, 0, 1, 2)
         card.layout.addLayout(form)
         save = QPushButton("Сохранить настройки")
         save.setObjectName("primary")
         save.clicked.connect(self.save_config)
         card.layout.addWidget(save)
         layout.addWidget(card)
-        note = QLabel("MVP поддерживает проверенный сценарий государства №3. Другие государства потребуют отдельной проверки экрана подтверждения.")
+        note = QLabel(
+            "MVP работает только с государством №3. Автосброс выключен по умолчанию. "
+            "Если игра или сервер сообщат о лимите/ограничении, бот остановится и не будет "
+            "использовать очистку данных как способ обхода ограничения."
+        )
         note.setWordWrap(True)
         note.setObjectName("muted")
         layout.addWidget(note)
@@ -470,6 +490,11 @@ class WarBotWindow(QMainWindow):
         self.step_value.setText(str(state.get("step", "—")))
         self.name_value.setText(f"{self.name_prefix.text()} {state.get('next_nickname', 1)}")
         self.created_value.setText(str(state.get("characters_created", 0)))
+        self.cycle_value.setText(str(state.get("current_cycle", 1)))
+        per_cycle = max(1, int(state.get("characters_per_cycle", 4)))
+        cycle_created = int(state.get("characters_created_cycle", 0))
+        self.cycle_created_value.setText(f"{cycle_created} / {per_cycle}")
+        self.stop_reason_value.setText(str(state.get("last_stop_reason", "") or "—"))
         running_pid = bot_pid()
         self.start_button.setEnabled(running_pid is None)
         if running_pid is not None:
@@ -533,6 +558,12 @@ class WarBotWindow(QMainWindow):
         self.name_prefix.setText(config.get("name_prefix", "Тугарин"))
         self.next_number.setValue(int(state.get("next_nickname", config.get("next_number", 1))))
         self.target_state.setValue(int(state.get("target_state", config.get("target_state", 3))))
+        self.characters_per_cycle.setValue(
+            int(state.get("characters_per_cycle", config.get("characters_per_cycle", 4)))
+        )
+        self.auto_reset_data.setChecked(
+            bool(state.get("auto_reset_data", config.get("auto_reset_data", False)))
+        )
         self.infinite_cycle.setChecked(bool(config.get("infinite_cycle", True)))
         self.auto_tutorial.setChecked(bool(config.get("auto_tutorial", True)))
         backend = config.get("backend", "native_arm64")
@@ -547,6 +578,8 @@ class WarBotWindow(QMainWindow):
             "name_prefix": self.name_prefix.text().strip() or "Тугарин",
             "next_number": self.next_number.value(),
             "target_state": self.target_state.value(),
+            "characters_per_cycle": self.characters_per_cycle.value(),
+            "auto_reset_data": self.auto_reset_data.isChecked(),
             "infinite_cycle": self.infinite_cycle.isChecked(),
             "auto_tutorial": self.auto_tutorial.isChecked(),
             "backend": self.backend_mode.currentData() or "native_arm64",
@@ -557,6 +590,8 @@ class WarBotWindow(QMainWindow):
         atomic_json(GUI_CONFIG_FILE, config)
         state = read_json(bot.STATE_FILE, dict(bot.DEFAULT_STATE))
         state["target_state"] = config["target_state"]
+        state["characters_per_cycle"] = config["characters_per_cycle"]
+        state["auto_reset_data"] = config["auto_reset_data"]
         if int(state.get("characters_created", 0)) == 0:
             state["next_nickname"] = config["next_number"]
         atomic_json(bot.STATE_FILE, state)
