@@ -556,37 +556,45 @@ def build_dynamic_partition_dtb(base_path: Path, output_path: Path):
 
 
 def ensure_dynamic_partition_dtb(cmd: list[str], *, wipe=False) -> Path:
-    paths = runtime_paths()
-    if wipe or not paths["dtb"].is_file():
-        paths["base_dtb"].unlink(missing_ok=True)
-        dump_cmd = list(cmd)
-        machine_index = dump_cmd.index("type=ranchu")
-        dump_cmd[machine_index] = f"type=ranchu,dumpdtb={paths['base_dtb'].as_posix()}"
+    dump_cmd = list(cmd)
+    machine_arg_index = dump_cmd.index("-machine") + 1
+    machine_arg = str(dump_cmd[machine_arg_index])
+    machine = machine_arg.split(",", 1)[0].split("=", 1)[-1]
+    base_dtb = RUNTIME_ROOT / f"{machine}-base.dtb"
+    patched_dtb = RUNTIME_ROOT / f"{machine}-warbot.dtb"
+
+    if wipe or not patched_dtb.is_file():
+        base_dtb.unlink(missing_ok=True)
+        dump_cmd[machine_arg_index] = (
+            f"type={machine},dumpdtb={base_dtb.as_posix()}"
+        )
         proc = subprocess.Popen(
             dump_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             env=qemu_environment(),
         )
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
-            if paths["base_dtb"].is_file() and paths["base_dtb"].stat().st_size:
+            if base_dtb.is_file() and base_dtb.stat().st_size:
                 break
             if proc.poll() is not None:
-                raise RuntimeError("Google ranchu exited before producing its base DTB")
+                raise RuntimeError(
+                    f"Google {machine} exited before producing its base DTB"
+                )
             time.sleep(0.2)
         else:
-            raise RuntimeError("Timed out while dumping Google ranchu DTB")
+            raise RuntimeError(f"Timed out while dumping Google {machine} DTB")
         proc.terminate()
         try:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(timeout=5)
-        build_dynamic_partition_dtb(paths["base_dtb"], paths["dtb"])
-    return paths["dtb"]
+        build_dynamic_partition_dtb(base_dtb, patched_dtb)
+    return patched_dtb
 
 def start_direct(*, window=False, wipe=False, wait=True):
     _, paths = prepare_runtime(wipe=wipe)
-    cmd = build_google_ranchu_command(window=window, wipe=False)
+    cmd = build_google_arm64_command(window=window, wipe=False)
     dtb = ensure_dynamic_partition_dtb(cmd, wipe=wipe)
     cmd += ["-dtb", str(dtb)]
     log = open(paths["stdout"], "w", encoding="utf-8", errors="replace")
