@@ -327,18 +327,69 @@ if (-not $SkipInstall) {
             throw "Install.ps1 was not found in extracted WSABuilds package."
         }
 
-        Write-Log "Registering Windows Subsystem for Android."
+        # WSABuilds' optional MakePri merge can fail with PRI175/0x80073b26
+        # on Windows 10 resource packages. Their own installer treats this as
+        # non-fatal (WSA Settings may remain English) and continues. For WAR
+        # BOT we do not need localized WSA Settings, so register the package
+        # non-interactively without running the optional MakePri merge.
+        Write-Log "Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge)."
         Push-Location $packageDir
         try {
-            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installScript 2>&1 | Tee-Object -FilePath (Join-Path $stage "wsa-install.txt") | Write-Host
-            $installExit = $LASTEXITCODE
+            [xml]$manifestXml = Get-Content -LiteralPath ".\AppxManifest.xml"
+            $packageName = [string]$manifestXml.Package.Identity.Name
+            $processorArchitecture = [string]$manifestXml.Package.Identity.ProcessorArchitecture
+            $dependencies = @($manifestXml.Package.Dependencies.PackageDependency)
+
+            foreach ($dep in $dependencies) {
+                if ($null -eq $dep) { continue }
+                $depName = [string]$dep.Name
+                $minVersion = [version]([string]$dep.MinVersion)
+                $installedDep = Get-AppxPackage -Name $depName | Where-Object {
+                    $_.Architecture.ToString() -eq $processorArchitecture
+                } | Sort-Object Version | Select-Object -Last 1
+
+                $needDep = ($null -eq $installedDep)
+                if (-not $needDep) {
+                    $needDep = ([version]$installedDep.Version -lt $minVersion)
+                }
+
+                if ($needDep) {
+                    $depPath = Join-Path $packageDir ("{0}_{1}.appx" -f $depName, $processorArchitecture)
+                    if (-not (Test-Path $depPath)) {
+                        throw "Required WSA dependency package is missing: $depPath"
+                    }
+                    Write-Log "Installing dependency $depName $processorArchitecture (minimum $minVersion)."
+                    Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Path $depPath -ErrorAction Stop
+                }
+                else {
+                    Write-Log "Dependency $depName already satisfies minimum $minVersion."
+                }
+            }
+
+            $wsaClient = Get-Command WsaClient.exe -ErrorAction SilentlyContinue
+            if ($wsaClient) {
+                try {
+                    Start-Process $wsaClient.Source -Wait -ArgumentList "/shutdown" -ErrorAction SilentlyContinue
+                }
+                catch {}
+            }
+            Stop-Process -Name "WsaClient" -Force -ErrorAction SilentlyContinue
+
+            Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register ".\AppxManifest.xml" -ErrorAction Stop
+            Write-Log "WSA AppX registration completed."
+        }
+        catch {
+            try {
+                Get-WinEvent -LogName "Microsoft-Windows-AppXDeploymentServer/Operational" -MaxEvents 80 |
+                    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+                    Format-List | Out-String |
+                    Set-Content -Encoding UTF8 (Join-Path $stage "appx-deployment-events.txt")
+            }
+            catch {}
+            throw
         }
         finally {
             Pop-Location
-        }
-        if ($installExit -ne 0) {
-            Finish-Report -State "WSA_INSTALL_FAILED" -ExitCode $installExit
-            throw "WSABuilds Install.ps1 failed with exit code $installExit."
         }
     }
 }
