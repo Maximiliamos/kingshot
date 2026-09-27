@@ -75,6 +75,9 @@ class WarBotWindow(QMainWindow):
         self.runtime_process = QProcess(self)
         self.runtime_process.setProcessChannelMode(QProcess.MergedChannels)
         self.runtime_process.readyReadStandardOutput.connect(self.read_runtime_output)
+        self.device_process = QProcess(self)
+        self.device_process.setProcessChannelMode(QProcess.MergedChannels)
+        self.device_process.readyReadStandardOutput.connect(self.read_device_output)
         self.process.readyReadStandardOutput.connect(self.read_process_output)
         self.process.finished.connect(self.process_finished)
         self.capture = None
@@ -252,11 +255,29 @@ class WarBotWindow(QMainWindow):
         runtime_row = QHBoxLayout()
         self.start_android_button = QPushButton("▶ Запустить ARM64 Android")
         self.stop_android_button = QPushButton("■ Остановить Android")
+        self.check_android_button = QPushButton("Проверить Android")
         self.start_android_button.clicked.connect(self.start_android_runtime)
         self.stop_android_button.clicked.connect(self.stop_android_runtime)
+        self.check_android_button.clicked.connect(self.check_android_status)
         runtime_row.addWidget(self.start_android_button)
         runtime_row.addWidget(self.stop_android_button)
+        runtime_row.addWidget(self.check_android_button)
         card.layout.addLayout(runtime_row)
+
+        app_row = QHBoxLayout()
+        self.install_game_button = QPushButton("Установить игру")
+        self.launch_game_button = QPushButton("▶ Запустить игру")
+        self.stop_game_button = QPushButton("■ Остановить игру")
+        self.clear_game_button = QPushButton("Очистить данные")
+        self.install_game_button.clicked.connect(self.install_game)
+        self.launch_game_button.clicked.connect(self.launch_game)
+        self.stop_game_button.clicked.connect(self.stop_game)
+        self.clear_game_button.clicked.connect(self.clear_game_data)
+        app_row.addWidget(self.install_game_button)
+        app_row.addWidget(self.launch_game_button)
+        app_row.addWidget(self.stop_game_button)
+        app_row.addWidget(self.clear_game_button)
+        card.layout.addLayout(app_row)
 
         layout.addWidget(card)
         note = QLabel(
@@ -334,6 +355,71 @@ class WarBotWindow(QMainWindow):
         raw = bytes(self.runtime_process.readAllStandardOutput()).decode("utf-8", errors="replace")
         for line in raw.splitlines():
             self.append_log("[Android] " + line)
+
+    def _device_cli_args(self, action, extra=None):
+        args = [
+            os.path.join(ROOT, "warbot_cli.py"),
+            action,
+            "--backend", str(self.backend_mode.currentData() or "native_arm64"),
+            "--serial", self.android_serial.text().strip() or "127.0.0.1:5561",
+        ]
+        adb_path = self.adb_path.text().strip()
+        if adb_path:
+            args += ["--adb", adb_path]
+        if extra:
+            args += list(extra)
+        return args
+
+    def run_device_cli(self, action, extra=None):
+        if self.device_process.state() != QProcess.NotRunning:
+            QMessageBox.information(self, "WAR BOT", "Предыдущая Android-команда ещё выполняется.")
+            return
+        self.save_config(show_message=False)
+        self.device_process.setWorkingDirectory(ROOT)
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("PYTHONIOENCODING", "utf-8")
+        self.device_process.setProcessEnvironment(env)
+        self.device_process.start(
+            self.python_path.text().strip(),
+            self._device_cli_args(action, extra),
+        )
+
+    def check_android_status(self):
+        self.run_device_cli("status")
+
+    def install_game(self):
+        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
+            QMessageBox.information(
+                self,
+                "WAR BOT",
+                "Установка игры через GUI разрешена только для Native ARM64, "
+                "чтобы обязательный ARM64 gate нельзя было случайно обойти.",
+            )
+            return
+        self.run_device_cli("install-game")
+
+    def launch_game(self):
+        self.run_device_cli("launch-game")
+
+    def stop_game(self):
+        self.run_device_cli("stop-game")
+
+    def clear_game_data(self):
+        answer = QMessageBox.question(
+            self,
+            "WAR BOT",
+            "Очистить все данные com.got.globalru? Это сбросит локальное состояние игры.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if answer != QMessageBox.Yes:
+            return
+        self.run_device_cli("clear-game-data", ["--yes"])
+
+    def read_device_output(self):
+        raw = bytes(self.device_process.readAllStandardOutput()).decode("utf-8", errors="replace")
+        for line in raw.splitlines():
+            self.append_log("[Device] " + line)
 
     def toggle_pause(self):
         control = read_json(CONTROL_FILE, {})
