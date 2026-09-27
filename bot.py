@@ -593,6 +593,9 @@ def validate_templates():
 
 OCR_ACTIONS = {
     "пропустить": ("tutorial_skip", "skip"),
+    "далее": ("tutorial_continue", "continue"),
+    "продолжить": ("tutorial_continue", "continue"),
+    "нажмитечтобыпродолжить": ("tutorial_continue", "continue"),
     "призвать": ("tutorial_summon", "summon"),
     "вернутьсявгород": ("tutorial_return_city", "return_city"),
     "улучшить": ("tutorial_upgrade", "upgrade"),
@@ -674,6 +677,10 @@ def ocr_action_is_safe(phone, target):
     action = target["action"]
     if action == "skip":
         return cx >= width * 0.52 and cy <= height * 0.26
+    if action == "continue":
+        # Only trust explicit continuation text in the lower dialogue region.
+        # This avoids turning arbitrary OCR text into a blind Unity tap.
+        return width * 0.12 <= cx <= width * 0.88 and cy >= height * 0.52
     if action == "upgrade":
         if not (width * 0.55 <= cx <= width * 0.97 and height * 0.42 <= cy <= height * 0.82):
             return False
@@ -728,6 +735,8 @@ def handle_tutorial_ocr(phone, state):
         tap_match(phone, target)
     if action == "skip":
         state["skip_locked"] = True
+    elif action == "continue":
+        pass
     elif action == "summon":
         set_step(state, "tutorial_wait_summon")
     elif action == "return_city":
