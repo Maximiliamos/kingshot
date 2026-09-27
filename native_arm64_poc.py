@@ -307,6 +307,8 @@ def runtime_paths() -> dict[str, Path]:
         "encryptionkey": RUNTIME_ROOT / "encryptionkey-qemu.qcow2",
         "hw": RUNTIME_ROOT / "hardware-qemu.ini",
         "stdout": RUNTIME_ROOT / "qemu-arm64.log",
+        "upstream_stdout": RUNTIME_ROOT / "upstream-qemu-arm64.log",
+        "upstream_report": RUNTIME_ROOT / "upstream-diagnostic.json",
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
         "machine_stamp": RUNTIME_ROOT / "machine.txt",
         "crash": RUNTIME_ROOT / "game-crash.txt",
@@ -417,7 +419,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         str(UPSTREAM_QEMU_ARM64),
         "-machine", "virt",
         "-cpu", CPU_MODEL,
-        "-accel", "tcg,thread=multi",
+        "-accel", f"tcg,thread={TCG_THREAD_MODE or 'multi'}",
         "-smp", str(CPU_CORES),
         "-m", str(RAM_MB),
         "-kernel", inv["kernel"],
@@ -443,6 +445,107 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     ]
     cmd += ["-display", "sdl" if window else "none"]
     return cmd
+
+
+def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]:
+    """A/B probe using modern upstream QEMU virt.
+
+    This deliberately does not require ADB or graphics. It answers one narrow
+    question: does the same Android userspace still crash zygote/app_process64
+    under a different QEMU core with the same kernel/system images and CPU
+    model? That separates Google-QEMU device glue from generic TCG/userspace
+    behavior.
+    """
+    validate_tools(require_image=True, require_upstream=True)
+    _, paths = prepare_runtime(wipe=wipe)
+    cmd = build_direct_qemu_command(window=False, wipe=False)
+
+    paths["upstream_stdout"].unlink(missing_ok=True)
+    paths["upstream_report"].unlink(missing_ok=True)
+
+    log = open(paths["upstream_stdout"], "w", encoding="utf-8", errors="replace")
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+    proc = subprocess.Popen(
+        cmd,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        creationflags=flags,
+        env=qemu_environment(),
+    )
+
+    started = time.monotonic()
+    outcome = "timeout-no-zygote-sigsegv"
+    crash_lines: list[str] = []
+    framework_lines: list[str] = []
+
+    try:
+        while time.monotonic() - started < duration_seconds:
+            if proc.poll() is not None:
+                outcome = f"qemu-exited-{proc.returncode}"
+                break
+            time.sleep(2)
+            if not paths["upstream_stdout"].is_file():
+                continue
+            text = paths["upstream_stdout"].read_text(
+                encoding="utf-8", errors="replace"
+            )
+            lines = text.splitlines()
+            low = text.lower()
+            framework_lines = [
+                line for line in lines
+                if any(token in line.lower() for token in (
+                    "starting service 'zygote'",
+                    "starting service 'surfaceflinger'",
+                    "starting service 'adbd'",
+                    "sys.boot_completed",
+                ))
+            ][-80:]
+            crash_lines = [
+                line for line in lines
+                if "received signal 11" in line.lower()
+                or "sigsegv" in line.lower()
+            ][-80:]
+            if any(
+                "zygote" in line.lower() and "signal 11" in line.lower()
+                for line in crash_lines
+            ):
+                outcome = "zygote-sigsegv"
+                break
+    finally:
+        if proc.poll() is None:
+            if os.name == "nt":
+                run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], check=False)
+            else:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+        log.close()
+
+    elapsed = int(time.monotonic() - started)
+    report = {
+        "experiment": os.environ.get(
+            "WAR_BOT_RUNTIME_EXPERIMENT", "upstream-virt-diagnostic"
+        ),
+        "qemu": str(UPSTREAM_QEMU_ARM64),
+        "machine": "virt",
+        "cpu": CPU_MODEL,
+        "cpu_cores": CPU_CORES,
+        "tcg_thread_mode": TCG_THREAD_MODE or "multi",
+        "duration_seconds": elapsed,
+        "outcome": outcome,
+        "zygote_sigsegv": outcome == "zygote-sigsegv",
+        "framework_lines": framework_lines,
+        "crash_lines": crash_lines,
+        "log": str(paths["upstream_stdout"]),
+    }
+    paths["upstream_report"].write_text(
+        json.dumps(report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print_json(report)
+    return report
 
 
 def google_arm64_machine() -> str:
@@ -1409,13 +1512,14 @@ def main():
         "action",
         choices=(
             "probe", "config", "install-image", "prepare", "command", "start",
-            "status", "verify-native", "install-game", "launch",
+            "upstream-diagnose", "status", "verify-native", "install-game", "launch",
             "verify-game", "capture", "boot-report", "stop", "all",
         ),
     )
     parser.add_argument("--window", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument("--wait-seconds", type=int, default=45)
+    parser.add_argument("--duration-seconds", type=int, default=300)
     args = parser.parse_args()
 
     if args.action == "probe":
@@ -1431,6 +1535,8 @@ def main():
         print_json(build_google_ranchu_command(window=args.window, wipe=args.wipe))
     elif args.action == "start":
         start_direct(window=args.window, wipe=args.wipe)
+    elif args.action == "upstream-diagnose":
+        upstream_diagnostic(args.duration_seconds, wipe=True)
     elif args.action == "status":
         print_json(guest_status())
     elif args.action == "verify-native":
