@@ -174,8 +174,9 @@ class ActionGate:
 
 
 DEFAULT_STATE = {
-    "phase": "create_character",
-    "step": "home",
+    # A freshly installed/cleared game starts in the mandatory intro tutorial.
+    "phase": "tutorial_new_character",
+    "step": "tutorial_intro",
     "target_state": 3,
     "next_nickname": 1,
     "pending_nickname": 1,
@@ -517,7 +518,8 @@ def type_tugarin_on_russian_keyboard(phone, number):
     }
     for char in "тугарин":
         tap_client(phone, *keys[char])
-    tap_client(phone, 0.50, 0.953)
+    # Switch straight to the numeric layer. Do not press the space bar:
+    # the required nickname is "Тугарин1", not "Тугарин 1".
     tap_client(phone, 0.06, 0.953)
     digit_x = {
         "1": 0.055, "2": 0.154, "3": 0.254, "4": 0.352, "5": 0.451,
@@ -1115,7 +1117,7 @@ def handle_rename_governor(phone, state):
             hit = match(phone, tpl("governor_rename_dialog_large.png"), 0.94)
         if not hit:
             return False
-        nickname = f"Тугарин {int(state.get('pending_nickname', state.get('next_nickname', 1)))}"
+        nickname = f"Тугарин{int(state.get('pending_nickname', state.get('next_nickname', 1)))}"
         debug(phone, hit, "governor_rename_dialog")
         log(f"Переименовываю губернатора в «{nickname}».")
         tap_match_relative(phone, hit, 0.50, 0.30)
