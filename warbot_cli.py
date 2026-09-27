@@ -18,7 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
         "action",
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
-            "clear-game-data", "tap", "swipe", "ui-dump",
+            "clear-game-data", "clean-start", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -137,6 +137,45 @@ def main(argv=None) -> int:
         if not args.yes:
             raise BackendError("Refusing pm clear without --yes")
         print(backend.clear_app_data().strip())
+        return 0
+
+    if args.action == "clean-start":
+        if not args.yes:
+            raise BackendError("Refusing clean start without --yes")
+        backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+        if not getattr(backend, "package_installed", lambda: False)():
+            raise BackendError("Game is not installed; run bootstrap/install-game first.")
+
+        backend.stop_app()
+        clear_result = backend.clear_app_data()
+
+        # Keep PC-side nickname history/config but reset only the workflow that
+        # belongs to the freshly-cleared Android app.
+        import bot
+        old = bot.load_state()
+        fresh = dict(bot.DEFAULT_STATE)
+        for key in (
+            "next_nickname", "characters_created", "current_cycle",
+            "characters_per_cycle", "auto_reset_data", "repeat_cycles",
+            "target_state",
+        ):
+            if key in old:
+                fresh[key] = old[key]
+        fresh["pending_nickname"] = int(fresh.get("next_nickname", 1))
+        fresh["characters_created_cycle"] = 0
+        fresh["last_stop_reason"] = ""
+        fresh["tutorial_origin"] = "initial"
+        bot.save_state(fresh)
+
+        backend.launch_app()
+        print(json.dumps({
+            "clear_result": clear_result.strip(),
+            "next_nickname": fresh["next_nickname"],
+            "characters_created": fresh["characters_created"],
+            "current_cycle": fresh["current_cycle"],
+            "phase": fresh["phase"],
+            "step": fresh["step"],
+        }, ensure_ascii=False, indent=2))
         return 0
 
     if args.action == "tap":
