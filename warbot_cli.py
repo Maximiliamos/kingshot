@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "action",
         choices=(
-            "status", "screenshot", "install-game", "launch-game", "stop-game",
+            "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "clear-game-data", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
@@ -28,6 +28,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", default="warbot-frame.png")
     parser.add_argument("--apks-dir", default=None)
     parser.add_argument("--wipe", action="store_true")
+    parser.add_argument(
+        "--clean-game",
+        action="store_true",
+        help="Explicitly clear game app data after install/readiness gate.",
+    )
     parser.add_argument("--window", action="store_true")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("coords", nargs="*", type=int)
@@ -64,6 +69,49 @@ def main(argv=None) -> int:
         if not cv2.imwrite(str(output), frame):
             raise BackendError(f"Could not save screenshot: {output}")
         print(output.resolve())
+        return 0
+
+    if args.action == "bootstrap":
+        if not isinstance(backend, NativeArm64Backend):
+            raise BackendError("bootstrap requires --backend native_arm64")
+
+        health = backend.health()
+        if not health.ready:
+            # A failed pre-ADB guest can leave QEMU alive. Stop only the
+            # WAR BOT runtime identified by its pid file before retrying.
+            try:
+                backend.stop_runtime()
+            except Exception:
+                pass
+            backend.start_runtime(wipe=args.wipe, window=args.window)
+
+        health = backend.require_ready(native_arm64=True)
+        installed_now = False
+        if not backend.package_installed():
+            backend.install_verified_game(args.apks_dir)
+            installed_now = True
+
+        if args.clean_game:
+            backend.clear_app_data()
+
+        backend.launch_app()
+        pid = backend.wait_package_running(timeout=90)
+        frame = backend.frame()
+        output = Path(args.output)
+        if not cv2.imwrite(str(output), frame):
+            raise BackendError(f"Could not save bootstrap screenshot: {output}")
+
+        print(json.dumps({
+            "ready": True,
+            "native_arm64": health.native_arm64,
+            "serial": health.serial,
+            "android": health.android,
+            "abi": health.abi,
+            "installed_now": installed_now,
+            "clean_game": bool(args.clean_game),
+            "game_pid": pid,
+            "screenshot": str(output.resolve()),
+        }, ensure_ascii=False, indent=2))
         return 0
 
     if args.action == "install-game":
