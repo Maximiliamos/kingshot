@@ -18,7 +18,8 @@ Write-Host "=== WAR BOT MVP VERIFY ==="
 Write-Host "1/3 Native ARM64 Android + game bootstrap"
 
 & python @args
-if ($LASTEXITCODE -ne 0) {
+$bootstrapExit = $LASTEXITCODE
+if ($bootstrapExit -ne 0) {
     Write-Host ""
     Write-Host "Bootstrap failed. Collecting deterministic boot diagnostics..."
     & python .\native_arm64_poc.py boot-report
@@ -27,7 +28,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "  C:\warbot_arm64_runtime\zygote-crash.txt"
     Write-Host "  C:\warbot_arm64_runtime\boot-diagnostic.json"
     Write-Host "  C:\warbot_arm64_runtime\qemu-arm64.log"
-    exit $LASTEXITCODE
+    exit $bootstrapExit
 }
 
 Write-Host ""
