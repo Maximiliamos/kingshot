@@ -1,4 +1,6 @@
 param(
+    [ValidateSet("wsa", "native_arm64")]
+    [string]$Backend = "wsa",
     [switch]$WipeRuntime,
     [switch]$CleanGame,
     [switch]$SkipPull
@@ -33,6 +35,7 @@ if (-not $SkipPull) {
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-File", $PSCommandPath,
+            "-Backend", $Backend,
             "-SkipPull"
         )
         if ($WipeRuntime) { $reexec += "-WipeRuntime" }
@@ -43,6 +46,21 @@ if (-not $SkipPull) {
 }
 
 $commit = (& git rev-parse HEAD).Trim()
+
+# WSA is the primary MVP path. Its installer performs the host bootstrap,
+# current-user AppX registration, Android/game verification and report upload
+# as one bounded workflow. Keep the native-QEMU experiment below available
+# only when explicitly requested with -Backend native_arm64.
+if ($Backend -eq "wsa") {
+    $wsaArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1")
+    )
+    if ($CleanGame) { $wsaArgs += "-CleanGame" }
+    & powershell @wsaArgs
+    exit $LASTEXITCODE
+}
 
 # Evidence-driven experiment for the current blocker:
 # Upstream QEMU avoids the Google-QEMU SIGSEGV but cannot provide the Android
