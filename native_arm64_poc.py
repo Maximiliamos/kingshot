@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -291,6 +292,8 @@ def runtime_paths() -> dict[str, Path]:
         "stdout": RUNTIME_ROOT / "qemu-arm64.log",
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
         "crash": RUNTIME_ROOT / "game-crash.txt",
+        "boot_crash": RUNTIME_ROOT / "zygote-crash.txt",
+        "boot_report": RUNTIME_ROOT / "boot-diagnostic.json",
         "frame": RUNTIME_ROOT / "frame.png",
         "pstore": RUNTIME_ROOT / "pstore.bin",
         "base_dtb": RUNTIME_ROOT / "ranchu-base.dtb",
@@ -571,6 +574,138 @@ def _qemu_log_tail(lines=120):
     )
 
 
+def collect_boot_crash() -> dict[str, object]:
+    """Extract the first useful Android boot crash from the serial/QEMU log.
+
+    The native guest can fail before ADB is available, so serial output is the
+    authoritative channel.  This collector deliberately does not modify the
+    guest or skip any service; it only preserves evidence for diagnosis.
+    """
+    paths = runtime_paths()
+    log_path = paths["stdout"]
+    report: dict[str, object] = {
+        "log": str(log_path),
+        "crash_file": str(paths["boot_crash"]),
+        "found": False,
+        "process": "",
+        "signal": "",
+        "si_code": "",
+        "fault_addr": "",
+        "pc": "",
+        "lr": "",
+        "library": "",
+        "build_id": "",
+        "backtrace": [],
+    }
+    if not log_path.is_file():
+        return report
+
+    lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    # Prefer crashes tied to zygote/app_process; otherwise retain a Codec2
+    # crash because it is the current reproducible blocker.
+    candidates = []
+    for i, line in enumerate(lines):
+        low = line.lower()
+        if "signal 11" in low or "sigsegv" in low:
+            window = "\n".join(lines[max(0, i - 25): min(len(lines), i + 180)]).lower()
+            score = 0
+            if "zygote" in window or "app_process64" in window:
+                score += 4
+            if "libcodec2_vndk.so" in window:
+                score += 3
+            if "backtrace:" in window:
+                score += 2
+            candidates.append((score, i))
+    if not candidates:
+        return report
+
+    _, start_index = max(candidates, key=lambda item: item[0])
+    start = max(0, start_index - 35)
+    end = min(len(lines), start_index + 220)
+    block_lines = lines[start:end]
+    block = "\n".join(block_lines)
+
+    # Trim at the beginning of a later unrelated fatal block if present.
+    fatal_seen = 0
+    trimmed = []
+    for line in block_lines:
+        if "fatal signal" in line.lower() or re.search(r"\bsignal\s+11\b", line.lower()):
+            fatal_seen += 1
+            if fatal_seen > 2 and len(trimmed) > 25:
+                break
+        trimmed.append(line)
+    block = "\n".join(trimmed)
+
+    def first(pattern: str, flags=re.IGNORECASE) -> str:
+        match = re.search(pattern, block, flags)
+        return match.group(1).strip() if match else ""
+
+    report["found"] = True
+    report["process"] = (
+        first(r"(?:Cmdline:|>>>)[ \t]*(?:>>>[ \t]*)?([^\n<]+)")
+        or ("zygote64" if "zygote64" in block.lower() else
+            "zygote" if "zygote" in block.lower() else
+            "app_process64" if "app_process64" in block.lower() else "")
+    )
+    report["signal"] = first(r"(signal\s+\d+\s*\([^\n]+?\))")
+    report["si_code"] = first(r"(?:code|si_code)[=: ]+([^,\n]+)")
+    report["fault_addr"] = first(r"(?:fault addr|si_addr)[=: ]+([^,\s\n]+)")
+    report["pc"] = first(r"\bpc\s+([0-9a-fx]+)")
+    report["lr"] = first(r"\blr\s+([0-9a-fx]+)")
+    report["build_id"] = first(r"libcodec2_vndk\.so[^\n]*BuildId:\s*([0-9a-f]+)")
+    report["library"] = "libcodec2_vndk.so" if "libcodec2_vndk.so" in block else ""
+
+    frames = []
+    for line in trimmed:
+        if re.search(r"#\d+\s+pc\s+", line) or (
+            "libcodec2_vndk.so" in line and " pc " in line.lower()
+        ):
+            frames.append(line.strip())
+    report["backtrace"] = frames[:80]
+
+    header = [
+        "WAR BOT native ARM64 boot crash",
+        f"process: {report['process']}",
+        f"signal: {report['signal']}",
+        f"si_code: {report['si_code']}",
+        f"fault_addr: {report['fault_addr']}",
+        f"pc: {report['pc']}",
+        f"lr: {report['lr']}",
+        f"library: {report['library']}",
+        f"build_id: {report['build_id']}",
+        "",
+        "---- captured serial context ----",
+        block,
+        "",
+    ]
+    paths["boot_crash"].write_text("\n".join(header), encoding="utf-8", errors="replace")
+    return report
+
+
+def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, object]:
+    report = {
+        "runtime_root": str(RUNTIME_ROOT),
+        "serial": SERIAL,
+        "system_image": DEFAULT_SYSTEM_IMAGE,
+        "cpu": CPU_MODEL,
+        "cpu_cores": CPU_CORES,
+        "ram_mb": RAM_MB,
+        "gpu": GPU_MODE,
+        "boot_device": RANCHU_BOOT_DEVICE,
+        "codec2_disabled": True,
+        "guest": guest_status(),
+        "boot_crash": collect_boot_crash(),
+        "critical_lines": _qemu_critical_lines(),
+    }
+    if extra:
+        report.update(extra)
+    runtime_paths()["boot_report"].write_text(
+        json.dumps(report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return report
+
+
 def _qemu_critical_lines():
     log_path = runtime_paths()["stdout"]
     if not log_path.is_file():
@@ -594,8 +729,15 @@ def wait_for_boot(timeout=1200, process=None):
         if process is not None:
             code = process.poll()
             if code is not None:
+                crash = collect_boot_crash()
+                write_boot_report({"qemu_exit_code": code})
+                crash_hint = (
+                    f"\nBoot crash: {runtime_paths()['boot_crash']}"
+                    if crash.get("found") else ""
+                )
                 raise RuntimeError(
-                    f"ARM64 QEMU exited before Android boot; exit_code={code}\n"
+                    f"ARM64 QEMU exited before Android boot; exit_code={code}"
+                    f"{crash_hint}\n"
                     f"QEMU critical lines:\n{_qemu_critical_lines()}\n\n"
                     f"QEMU log tail:\n{_qemu_log_tail()}"
                 )
@@ -616,8 +758,15 @@ def wait_for_boot(timeout=1200, process=None):
                 print(f"ARM64 Android booted: {SERIAL}")
                 return
         time.sleep(3)
+    crash = collect_boot_crash()
+    write_boot_report({"timeout_seconds": timeout, "adb_state": last_state})
+    crash_hint = (
+        f"\nBoot crash: {runtime_paths()['boot_crash']}"
+        if crash.get("found") else ""
+    )
     raise TimeoutError(
-        f"ARM64 guest did not boot; adb_state={last_state!r}\n"
+        f"ARM64 guest did not boot; adb_state={last_state!r}"
+        f"{crash_hint}\n"
         f"QEMU log tail:\n{_qemu_log_tail()}"
     )
 
@@ -753,7 +902,7 @@ def main():
         choices=(
             "probe", "install-image", "prepare", "command", "start",
             "status", "verify-native", "install-game", "launch",
-            "verify-game", "capture", "stop", "all",
+            "verify-game", "capture", "boot-report", "stop", "all",
         ),
     )
     parser.add_argument("--window", action="store_true")
@@ -784,6 +933,8 @@ def main():
         verify_game(args.wait_seconds)
     elif args.action == "capture":
         capture()
+    elif args.action == "boot-report":
+        print_json(write_boot_report())
     elif args.action == "stop":
         stop()
     elif args.action == "all":
