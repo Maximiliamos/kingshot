@@ -690,6 +690,7 @@ def collect_boot_crash() -> dict[str, object]:
 
 
 def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, object]:
+    RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
     try:
         guest = guest_status()
     except Exception as exc:
