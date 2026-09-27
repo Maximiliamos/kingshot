@@ -162,3 +162,27 @@ block devices and the GPT `super` partition, but first-stage init currently
 stops at `partition(s) not found: system`. HDA is therefore resolved, while
 A1/A2 remain FAIL until the launcher-equivalent dynamic-partition mapping is
 reproduced and ADB reaches `device` with `sys.boot_completed=1`.
+
+
+### Evidence update — partition ordering fix
+
+AOSP's ARM64 emulator target intentionally emits block images in the order
+`vendor -> encryption -> userdata -> cache -> system`. On ARM/ranchu the
+virtio-MMIO transport assignment is effectively reversed: command-line
+`-device` entries are attached to decreasing MMIO addresses. With five block
+devices this puts the fifth device (system/super) at
+`a003600.virtio_mmio`, which matches the image's verified-boot
+`androidboot.boot_devices` value.
+
+The direct `-fuchsia` command had accidentally used the opposite device
+order (`system ... vendor`). That made `a003600.virtio_mmio` point at the
+vendor disk while first-stage init searched there for the dynamic-partition
+backing device and failed with `partition(s) not found: system`.
+
+The PoC now mirrors the launcher order and drive indices exactly:
+`vendor(0), encrypt(1), userdata(2), cache(3), system(4)`, while retaining
+`androidboot.boot_devices=a003600.virtio_mmio`. Unit tests pin both the
+ordering and the boot-device value.
+
+Next real-host gate: rerun `start --wipe`. PASS requires ADB `device`,
+`sys.boot_completed=1`, ARM64 ABI, no native bridge, and a valid screenshot.
