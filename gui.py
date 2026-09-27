@@ -401,6 +401,7 @@ class WarBotWindow(QMainWindow):
                 if self.capture is not None:
                     self.capture.close()
                 if mode == "scrcpy":
+                    bot.SCRCPY_VIDEO_TITLE = self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE
                     self.capture = bot.ScrcpyCapture()
                 else:
                     backend = create_backend(mode, serial=serial, adb_path=adb_path)
