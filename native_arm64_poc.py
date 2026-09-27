@@ -751,6 +751,7 @@ def write_boot_report(extra: dict[str, object] | None = None) -> dict[str, objec
         "cpu_cores": CPU_CORES,
         "ram_mb": RAM_MB,
         "gpu": GPU_MODE,
+        "machine": google_arm64_machine(),
         "boot_device": RANCHU_BOOT_DEVICE,
         "codec2_disabled": True,
         "guest": guest,
@@ -787,12 +788,25 @@ def _boot_milestone() -> str:
     if not log_path.is_file():
         return "qemu-start"
     text = log_path.read_text(encoding="utf-8", errors="replace").lower()
-    if "sys.boot_completed=1" in text or "boot_completed" in text and "setprop" in text:
+
+    # Only the real property is a boot-complete signal. The previous heuristic
+    # accidentally matched lines such as:
+    #   setprop sys.bootstat.first_boot_completed 0
+    # and messages saying a process crashed "before boot completed".
+    if (
+        "sys.boot_completed=1" in text
+        or re.search(r"setprop\s+sys\.boot_completed\s+1(?:\s|$)", text)
+    ):
         return "android-boot-complete"
+
+    adbd = (
+        "starting service 'adbd'" in text
+        or 'starting service "adbd"' in text
+    )
     if "zygote" in text or "app_process64" in text:
-        return "zygote"
+        return "zygote+adbd" if adbd else "zygote"
     if "surfaceflinger" in text:
-        return "surfaceflinger"
+        return "surfaceflinger+adbd" if adbd else "surfaceflinger"
     if "product" in text and "system_ext" in text and "vendor" in text:
         return "logical-partitions-mounted"
     if "super" in text:
