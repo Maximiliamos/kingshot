@@ -54,6 +54,25 @@ $env:WAR_BOT_ARM64_TCG_THREAD = "single"
 $env:WAR_BOT_ARM64_POST_ADB_TIMEOUT = "150"
 $WipeRuntime = $true
 
+$configJson = (& python .\native_arm64_poc.py config | Out-String)
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to read effective native ARM64 runtime config."
+}
+$config = $configJson | ConvertFrom-Json
+Write-Host "Runtime experiment: $($config.experiment)"
+Write-Host "Runtime CPU cores:  $($config.cpu_cores)"
+Write-Host "TCG thread mode:    $($config.tcg_thread_mode)"
+if (
+    $config.experiment -ne "virt-1cpu-single-tcg" -or
+    [int]$config.cpu_cores -ne 1 -or
+    $config.tcg_thread_mode -ne "single"
+) {
+    throw (
+        "Experiment propagation guard failed. Refusing expensive host run. " +
+        "Expected virt-1cpu-single-tcg / 1 CPU / single TCG."
+    )
+}
+
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $stage = Join-Path $env:TEMP ("warbot-runtime-report-" + $stamp + "-" + $PID)
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
