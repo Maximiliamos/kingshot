@@ -372,6 +372,30 @@ class AdbDeviceBackend(DeviceBackend):
             f"{self.package} did not stay running within {timeout}s"
         )
 
+    def wait_package_stable(
+        self,
+        stability_seconds: int = 45,
+        *,
+        expected_pid: str | None = None,
+    ) -> str:
+        pid = expected_pid or self.wait_package_running(timeout=90)
+        deadline = time.monotonic() + max(1, stability_seconds)
+        while time.monotonic() < deadline:
+            try:
+                current = self.shell(["pidof", self.package], timeout=10).strip()
+            except BackendError:
+                current = ""
+            if not current:
+                raise BackendError(
+                    f"{self.package} exited during the {stability_seconds}s stability gate"
+                )
+            if current != pid:
+                raise BackendError(
+                    f"{self.package} restarted during stability gate: {pid} -> {current}"
+                )
+            time.sleep(2.0)
+        return pid
+
     def _uiautomator(self):
         if self._u2_attempted:
             return self._u2
