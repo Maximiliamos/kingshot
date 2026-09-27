@@ -241,7 +241,8 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("-fuchsia", cmd)
         self.assertIn("-machine type=ranchu", joined)
         self.assertIn("-android-ports 5560,5561", joined)
-        self.assertIn("androidboot.boot_devices=a003600.virtio_mmio", joined)
+        self.assertIn("androidboot.boot_devices=a003e00.virtio_mmio", joined)
+        self.assertIn("androidboot.logical_partitions=1", joined)
         block_devices = [
             cmd[i + 1]
             for i, value in enumerate(cmd[:-1])
