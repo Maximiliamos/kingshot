@@ -80,12 +80,14 @@ class WarBotWindow(QMainWindow):
         self.device_process = QProcess(self)
         self.device_process.setProcessChannelMode(QProcess.MergedChannels)
         self.device_process.readyReadStandardOutput.connect(self.read_device_output)
+        self.device_process.finished.connect(self.device_process_finished)
         self.process.readyReadStandardOutput.connect(self.read_process_output)
         self.process.finished.connect(self.process_finished)
         self.capture = None
         self.capture_signature = None
         self.last_log_size = 0
         self.paused = False
+        self.pending_bot_start = False
         self.build_ui()
         self.load_config()
         self.apply_style()
@@ -337,13 +339,8 @@ class WarBotWindow(QMainWindow):
     def write_control(self, paused=False, stop=False):
         atomic_json(CONTROL_FILE, {"paused": paused, "stop": stop})
 
-    def start_bot(self):
-        self.save_config(show_message=False)
+    def _launch_bot_process(self):
         self.write_control(False, False)
-        if self.process.state() != QProcess.NotRunning:
-            self.paused = False
-            self.pause_button.setText("Ⅱ  ПАУЗА")
-            return
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONIOENCODING", "utf-8")
         env.insert("WAR_BOT_BACKEND", str(self.backend_mode.currentData() or "native_arm64"))
@@ -354,6 +351,30 @@ class WarBotWindow(QMainWindow):
         self.process.setWorkingDirectory(ROOT)
         self.process.start(self.python_path.text().strip(), [os.path.join(ROOT, "bot.py")])
         self.start_button.setEnabled(False)
+
+    def start_bot(self):
+        self.save_config(show_message=False)
+        if self.process.state() != QProcess.NotRunning:
+            self.paused = False
+            self.pause_button.setText("Ⅱ  ПАУЗА")
+            return
+
+        mode = str(self.backend_mode.currentData() or "native_arm64")
+        if mode == "native_arm64":
+            self.pending_bot_start = True
+            self.start_button.setEnabled(False)
+            self.start_button.setText("●  ПОДГОТОВКА ANDROID + ИГРЫ…")
+            started = self.run_device_cli(
+                "bootstrap",
+                ["--output", os.path.join(ROOT, "debug", "bootstrap-frame.png")],
+                quiet_busy=True,
+            )
+            if not started:
+                self.pending_bot_start = False
+                self.start_button.setEnabled(True)
+            return
+
+        self._launch_bot_process()
 
     def start_android_runtime(self):
         if self.runtime_process.state() != QProcess.NotRunning:
@@ -399,10 +420,11 @@ class WarBotWindow(QMainWindow):
             args += list(extra)
         return args
 
-    def run_device_cli(self, action, extra=None):
+    def run_device_cli(self, action, extra=None, quiet_busy=False):
         if self.device_process.state() != QProcess.NotRunning:
-            QMessageBox.information(self, "WAR BOT", "Предыдущая Android-команда ещё выполняется.")
-            return
+            if not quiet_busy:
+                QMessageBox.information(self, "WAR BOT", "Предыдущая Android-команда ещё выполняется.")
+            return False
         self.save_config(show_message=False)
         self.device_process.setWorkingDirectory(ROOT)
         env = QProcessEnvironment.systemEnvironment()
@@ -412,6 +434,7 @@ class WarBotWindow(QMainWindow):
             self.python_path.text().strip(),
             self._device_cli_args(action, extra),
         )
+        return True
 
     def check_android_status(self):
         self.run_device_cli("status")
@@ -460,6 +483,20 @@ class WarBotWindow(QMainWindow):
         raw = bytes(self.device_process.readAllStandardOutput()).decode("utf-8", errors="replace")
         for line in raw.splitlines():
             self.append_log("[Device] " + line)
+
+    def device_process_finished(self, exit_code, _exit_status):
+        if not self.pending_bot_start:
+            return
+        self.pending_bot_start = False
+        if exit_code == 0:
+            self.append_log("[Device] Android и игра готовы — запускаю WAR BOT.")
+            self._launch_bot_process()
+        else:
+            self.start_button.setEnabled(True)
+            self.start_button.setText("▶  ЗАПУСТИТЬ")
+            self.append_log(
+                f"[Device] Подготовка завершилась ошибкой {exit_code}; бот не запущен."
+            )
 
     def toggle_pause(self):
         control = read_json(CONTROL_FILE, {})
