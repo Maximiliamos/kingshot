@@ -208,7 +208,17 @@ def fs():
 
 def log(msg):
     line = f"[{ts()}] {msg}"
-    print(line, flush=True)
+    try:
+        print(line, flush=True)
+    except UnicodeEncodeError:
+        # Windows CI/legacy consoles may still expose cp1252. Logging must
+        # never crash the automation because a Russian status line cannot be
+        # encoded by the host terminal.
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe = (line + "\n").encode(encoding, errors="replace")
+        if hasattr(sys.stdout, "buffer"):
+            sys.stdout.buffer.write(safe)
+            sys.stdout.buffer.flush()
     try:
         with open(os.path.join(LOG_DIR, "bot.log"), "a", encoding="utf-8") as f:
             f.write(line + "\n")
