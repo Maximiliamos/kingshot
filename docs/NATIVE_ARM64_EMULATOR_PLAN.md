@@ -171,11 +171,11 @@ AOSP's ARM64 emulator target intentionally emits block images in the order
 virtio-MMIO transport assignment is effectively reversed: command-line
 `-device` entries are attached to decreasing MMIO addresses. With five block
 devices this puts the fifth device (system/super) at
-`a003600.virtio_mmio`, which matches the image's verified-boot
+`a003e00.virtio_mmio`, which matches the image's verified-boot
 `androidboot.boot_devices` value.
 
 The direct `-fuchsia` command had accidentally used the opposite device
-order (`system ... vendor`). That made `a003600.virtio_mmio` point at the
+order (`system ... vendor`). That made `a003e00.virtio_mmio` point at the
 vendor disk while first-stage init searched there for the dynamic-partition
 backing device and failed with `partition(s) not found: system`.
 
@@ -186,3 +186,28 @@ ordering and the boot-device value.
 
 Next real-host gate: rerun `start --wipe`. PASS requires ADB `device`,
 `sys.boot_completed=1`, ARM64 ABI, no native bridge, and a valid screenshot.
+
+
+### Evidence update — logical partitions vs. DTB
+
+The latest real-host run confirmed that `a003e00.virtio_mmio` is the correct
+boot-device transport for the physical disk containing the GPT `super`
+partition. The remaining failure still asked for a physical `system`
+partition.
+
+AOSP first-stage mount has an explicit, independent gate for dynamic/logical
+partitions: it enables dm-linear only when the kernel command line contains
+`androidboot.logical_partitions=1`. The build system adds that flag whenever
+logical partitions are enabled. Without it, init can fall back to looking for
+physical partitions such as `system`, even though the backing disk exposes
+`super`.
+
+The direct ranchu command now adds `androidboot.logical_partitions=1` and
+defaults the confirmed boot-device to `a003e00.virtio_mmio`.
+
+Do **not** inject a guessed `default.dtb` yet. Ranchu generates its device
+tree at runtime, and the Android QEMU glue has its own device-tree callback.
+An external DTB could replace hardware nodes required by ranchu/goldfish.
+Only revisit DTB/vbmeta if the next boot explicitly reports missing
+`vbmeta/compatible`, `vbmeta/parts`, or AVB setup failure after logical
+partition creation is enabled.
