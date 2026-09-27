@@ -1,0 +1,5 @@
+﻿[2026-09-28T02:22:10.3227136+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T02:22:12.4341088+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T02:22:13.3891140+03:00] WAR BOT WSA package is already registered; keeping it.
+[2026-09-28T02:22:13.6503045+03:00] Launching Android subsystem settings and waking the Android environment.
+[2026-09-28T02:22:13.7268937+03:00] Requested Android Settings launch to wake the Android environment.

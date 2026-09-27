@@ -1,0 +1,8 @@
+﻿Невозможно вызвать метод для выражения со значением NULL.
+C:\warbot_git\scripts\install_wsa_poc.ps1:440 знак:48
++ ... est-Path $stderrPath) { (Get-Content -Raw $stderrPath).Trim() } else  ...
++                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : InvokeMethodOnNull
+ 
+
