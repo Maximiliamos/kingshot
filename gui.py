@@ -27,6 +27,7 @@ PHASE_NAMES = {
     "create_character": "Создание персонажа",
     "tutorial_new_character": "Обязательное обучение",
     "reset_cycle": "Сброс данных и новый цикл",
+    "complete": "Цикл завершён",
 }
 
 
@@ -207,8 +208,9 @@ class WarBotWindow(QMainWindow):
         self.auto_reset_data.setChecked(False)
         self.infinite_cycle = QCheckBox("Повторять цикл непрерывно")
         self.infinite_cycle.setChecked(True)
-        self.auto_tutorial = QCheckBox("Проходить обязательное обучение")
+        self.auto_tutorial = QCheckBox("Обязательное обучение (всегда)")
         self.auto_tutorial.setChecked(True)
+        self.auto_tutorial.setEnabled(False)
         fields = (
             ("Шаблон имени", self.name_prefix),
             ("Следующий номер", self.next_number),
@@ -582,7 +584,9 @@ class WarBotWindow(QMainWindow):
         self.auto_reset_data.setChecked(
             bool(state.get("auto_reset_data", config.get("auto_reset_data", False)))
         )
-        self.infinite_cycle.setChecked(bool(config.get("infinite_cycle", True)))
+        self.infinite_cycle.setChecked(
+            bool(state.get("repeat_cycles", config.get("infinite_cycle", True)))
+        )
         self.auto_tutorial.setChecked(bool(config.get("auto_tutorial", True)))
         backend = config.get("backend", "native_arm64")
         index = self.backend_mode.findData(backend)
@@ -610,6 +614,7 @@ class WarBotWindow(QMainWindow):
         state["target_state"] = config["target_state"]
         state["characters_per_cycle"] = config["characters_per_cycle"]
         state["auto_reset_data"] = config["auto_reset_data"]
+        state["repeat_cycles"] = config["infinite_cycle"]
         if int(state.get("characters_created", 0)) == 0:
             state["next_nickname"] = config["next_number"]
         atomic_json(bot.STATE_FILE, state)
