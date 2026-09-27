@@ -90,6 +90,13 @@ class TutorialVisionTests(unittest.TestCase):
 
         self.assertEqual(gate.observe(after), "changed")
 
+    def test_ocr_continue_requires_explicit_lower_dialogue_text(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        safe = {"action": "continue", "loc": (140, 700), "w": 120, "h": 30}
+        unsafe = {"action": "continue", "loc": (140, 100), "w": 120, "h": 30}
+        self.assertTrue(bot.ocr_action_is_safe(phone, safe))
+        self.assertFalse(bot.ocr_action_is_safe(phone, unsafe))
+
     def test_ocr_upgrade_outside_construction_area_is_rejected(self):
         phone = np.zeros((807, 360, 3), dtype=np.uint8)
         target = {"action": "upgrade", "loc": (180, 775), "w": 120, "h": 25}
