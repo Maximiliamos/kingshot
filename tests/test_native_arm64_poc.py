@@ -314,6 +314,31 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertNotIn("-soundhw", joined)
         self.assertNotIn(" hda", joined)
 
+    def test_google_virt_supports_single_thread_tcg_diagnostic_mode(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "virt"), \
+                patch.object(arm64, "TCG_THREAD_MODE", "single"), \
+                patch.object(arm64, "CPU_CORES", 1):
+            cmd = arm64.build_google_arm64_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-accel tcg,thread=single", joined)
+        self.assertIn("-smp cores=1", joined)
+
     def test_legacy_ranchu_is_explicit_fallback_only(self):
         inv = {
             "kernel": r"C:\image\kernel-ranchu",
