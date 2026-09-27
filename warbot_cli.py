@@ -22,7 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
             "start-runtime", "stop-runtime",
         ),
     )
-    parser.add_argument("--backend", default="native_arm64")
+    parser.add_argument("--backend", default="wsa")
     parser.add_argument("--serial", default=None)
     parser.add_argument("--adb", default=None)
     parser.add_argument("--output", default="warbot-frame.png")

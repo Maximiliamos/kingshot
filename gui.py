@@ -264,10 +264,12 @@ class WarBotWindow(QMainWindow):
         card = Card("ANDROID BACKEND")
         grid = QGridLayout()
         self.backend_mode = QComboBox()
+        self.backend_mode.addItem("Windows Subsystem for Android (WSA)", "wsa")
         self.backend_mode.addItem("Native ARM64 emulator", "native_arm64")
         self.backend_mode.addItem("ADB device", "adb")
         self.backend_mode.addItem("Legacy scrcpy (диагностика)", "scrcpy")
-        self.android_serial = QLineEdit("127.0.0.1:5561")
+        self.android_serial = QLineEdit("127.0.0.1:58526")
+        self.backend_mode.currentIndexChanged.connect(self.backend_changed)
         self.adb_path = QLineEdit(os.environ.get("WAR_BOT_ADB", r"C:\Android\Sdk\platform-tools\adb.exe"))
         self.window_title = QLineEdit(bot.SCRCPY_VIDEO_TITLE)
         self.python_path = QLineEdit(sys.executable)
@@ -284,7 +286,7 @@ class WarBotWindow(QMainWindow):
         card.layout.addLayout(grid)
 
         runtime_row = QHBoxLayout()
-        self.start_android_button = QPushButton("▶ Запустить ARM64 Android")
+        self.start_android_button = QPushButton("▶ Запустить Android")
         self.stop_android_button = QPushButton("■ Остановить Android")
         self.check_android_button = QPushButton("Проверить Android")
         self.start_android_button.clicked.connect(self.start_android_runtime)
@@ -319,8 +321,8 @@ class WarBotWindow(QMainWindow):
 
         layout.addWidget(card)
         note = QLabel(
-            "Основной режим — Native ARM64. ADB device нужен для диагностики уже "
-            "загруженного Android; scrcpy оставлен только как legacy-источник кадров."
+            "Основной Windows-only режим — WSA. Native ARM64 сохранён как "
+            "диагностический PoC; scrcpy оставлен только как legacy-источник кадров."
         )
         note.setWordWrap(True)
         note.setObjectName("muted")
@@ -343,6 +345,17 @@ class WarBotWindow(QMainWindow):
         if index >= 0:
             self.pages.setCurrentIndex(index)
 
+    def backend_changed(self):
+        mode = str(self.backend_mode.currentData() or "wsa")
+        current = self.android_serial.text().strip()
+        if mode == "wsa" and current in ("", "127.0.0.1:5561"):
+            self.android_serial.setText("127.0.0.1:58526")
+        elif mode == "native_arm64" and current in ("", "127.0.0.1:58526"):
+            self.android_serial.setText("127.0.0.1:5561")
+        is_runtime = mode in ("wsa", "native_arm64")
+        self.start_android_button.setEnabled(is_runtime)
+        self.stop_android_button.setEnabled(mode == "native_arm64")
+
     def write_control(self, paused=False, stop=False):
         atomic_json(CONTROL_FILE, {"paused": paused, "stop": stop})
 
@@ -350,8 +363,8 @@ class WarBotWindow(QMainWindow):
         self.write_control(False, False)
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONIOENCODING", "utf-8")
-        env.insert("WAR_BOT_BACKEND", str(self.backend_mode.currentData() or "native_arm64"))
-        env.insert("WAR_BOT_ANDROID_SERIAL", self.android_serial.text().strip() or "127.0.0.1:5561")
+        env.insert("WAR_BOT_BACKEND", str(self.backend_mode.currentData() or "wsa"))
+        env.insert("WAR_BOT_ANDROID_SERIAL", self.android_serial.text().strip() or "127.0.0.1:58526")
         env.insert("WAR_BOT_ADB", self.adb_path.text().strip())
         env.insert("WAR_BOT_SCRCPY_TITLE", self.window_title.text().strip())
         self.process.setProcessEnvironment(env)
@@ -366,8 +379,8 @@ class WarBotWindow(QMainWindow):
             self.pause_button.setText("Ⅱ  ПАУЗА")
             return
 
-        mode = str(self.backend_mode.currentData() or "native_arm64")
-        if mode == "native_arm64":
+        mode = str(self.backend_mode.currentData() or "wsa")
+        if mode in ("native_arm64", "wsa"):
             self.pending_bot_start = True
             self.start_button.setEnabled(False)
             self.start_button.setText("●  ПОДГОТОВКА ANDROID + ИГРЫ…")
@@ -386,8 +399,12 @@ class WarBotWindow(QMainWindow):
     def start_android_runtime(self):
         if self.runtime_process.state() != QProcess.NotRunning:
             return
-        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
-            QMessageBox.information(self, "WAR BOT", "Выберите Native ARM64 emulator.")
+        mode = str(self.backend_mode.currentData() or "wsa")
+        if mode not in ("native_arm64", "wsa"):
+            QMessageBox.information(self, "WAR BOT", "Выберите WSA или Native ARM64 emulator.")
+            return
+        if mode == "wsa":
+            self.run_device_cli("start-runtime")
             return
         self.save_config(show_message=False)
         env = QProcessEnvironment.systemEnvironment()
@@ -402,6 +419,11 @@ class WarBotWindow(QMainWindow):
         )
 
     def stop_android_runtime(self):
+        if (self.backend_mode.currentData() or "wsa") == "wsa":
+            QMessageBox.information(
+                self, "WAR BOT", "Жизненным циклом WSA управляет Windows; остановка не требуется."
+            )
+            return
         QProcess.startDetached(
             self.python_path.text().strip(),
             [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
@@ -417,8 +439,8 @@ class WarBotWindow(QMainWindow):
         args = [
             os.path.join(ROOT, "warbot_cli.py"),
             action,
-            "--backend", str(self.backend_mode.currentData() or "native_arm64"),
-            "--serial", self.android_serial.text().strip() or "127.0.0.1:5561",
+            "--backend", str(self.backend_mode.currentData() or "wsa"),
+            "--serial", self.android_serial.text().strip() or "127.0.0.1:58526",
         ]
         adb_path = self.adb_path.text().strip()
         if adb_path:
@@ -447,9 +469,9 @@ class WarBotWindow(QMainWindow):
         self.run_device_cli("status")
 
     def bootstrap_android_game(self):
-        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
+        if (self.backend_mode.currentData() or "wsa") not in ("native_arm64", "wsa"):
             QMessageBox.information(
-                self, "WAR BOT", "Подготовка доступна только для Native ARM64 emulator."
+                self, "WAR BOT", "Подготовка доступна для WSA или Native ARM64 emulator."
             )
             return
         self.run_device_cli(
@@ -458,12 +480,12 @@ class WarBotWindow(QMainWindow):
         )
 
     def install_game(self):
-        if (self.backend_mode.currentData() or "native_arm64") != "native_arm64":
+        if (self.backend_mode.currentData() or "wsa") not in ("native_arm64", "wsa"):
             QMessageBox.information(
                 self,
                 "WAR BOT",
-                "Установка игры через GUI разрешена только для Native ARM64, "
-                "чтобы обязательный ARM64 gate нельзя было случайно обойти.",
+                "Установка игры через GUI разрешена только для управляемых "
+                "runtime WSA и Native ARM64.",
             )
             return
         self.run_device_cli("install-game")
@@ -615,8 +637,8 @@ class WarBotWindow(QMainWindow):
         self.device_status.setStyleSheet("color: #ff7185")
 
     def refresh_capture(self):
-        mode = str(self.backend_mode.currentData() or "native_arm64")
-        serial = self.android_serial.text().strip() or "127.0.0.1:5561"
+        mode = str(self.backend_mode.currentData() or "wsa")
+        serial = self.android_serial.text().strip() or "127.0.0.1:58526"
         adb_path = self.adb_path.text().strip()
         signature = (mode, serial, adb_path, self.window_title.text().strip())
 
@@ -702,10 +724,10 @@ class WarBotWindow(QMainWindow):
             bool(state.get("repeat_cycles", config.get("infinite_cycle", True)))
         )
         self.auto_tutorial.setChecked(bool(config.get("auto_tutorial", True)))
-        backend = config.get("backend", "native_arm64")
+        backend = config.get("backend", "wsa")
         index = self.backend_mode.findData(backend)
         self.backend_mode.setCurrentIndex(index if index >= 0 else 0)
-        self.android_serial.setText(config.get("android_serial", "127.0.0.1:5561"))
+        self.android_serial.setText(config.get("android_serial", "127.0.0.1:58526"))
         self.adb_path.setText(config.get("adb_path", os.environ.get("WAR_BOT_ADB", r"C:\Android\Sdk\platform-tools\adb.exe")))
         self.window_title.setText(config.get("window_title", bot.SCRCPY_VIDEO_TITLE))
 
@@ -718,8 +740,8 @@ class WarBotWindow(QMainWindow):
             "auto_reset_data": self.auto_reset_data.isChecked(),
             "infinite_cycle": self.infinite_cycle.isChecked(),
             "auto_tutorial": self.auto_tutorial.isChecked(),
-            "backend": self.backend_mode.currentData() or "native_arm64",
-            "android_serial": self.android_serial.text().strip() or "127.0.0.1:5561",
+            "backend": self.backend_mode.currentData() or "wsa",
+            "android_serial": self.android_serial.text().strip() or "127.0.0.1:58526",
             "adb_path": self.adb_path.text().strip(),
             "window_title": self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE,
         }

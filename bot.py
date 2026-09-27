@@ -20,8 +20,8 @@ from device_backend import BackendCapture, BackendError, create_backend
 
 
 ADB = os.environ.get("WAR_BOT_ADB", "")
-BACKEND_NAME = os.environ.get("WAR_BOT_BACKEND", "native_arm64").strip().lower()
-ANDROID_SERIAL = os.environ.get("WAR_BOT_ANDROID_SERIAL", "127.0.0.1:5561")
+BACKEND_NAME = os.environ.get("WAR_BOT_BACKEND", "wsa").strip().lower()
+ANDROID_SERIAL = os.environ.get("WAR_BOT_ANDROID_SERIAL", "127.0.0.1:58526")
 DEVICE_BACKEND = None
 TESSERACT = os.path.join(
     os.environ.get("LOCALAPPDATA", ""), "Programs", "Tesseract-OCR", "tesseract.exe"
