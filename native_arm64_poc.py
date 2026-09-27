@@ -55,6 +55,8 @@ UPSTREAM_QEMU_ARM64 = Path(os.environ.get(
     r"C:\Program Files\qemu\qemu-system-aarch64.exe",
 ))
 UPSTREAM_QEMU_IMG = UPSTREAM_QEMU_ARM64.with_name("qemu-img.exe")
+SDK_QEMU_IMG = SDK_ROOT / "emulator" / "qemu-img.exe"
+QEMU_IMG = SDK_QEMU_IMG if SDK_QEMU_IMG.is_file() else UPSTREAM_QEMU_IMG
 MKE2FS = SDK_ROOT / "platform-tools" / "mke2fs.exe"
 DATA_SIZE_BYTES = int(os.environ.get("WAR_BOT_ARM64_DATA_BYTES", str(8 * 1024**3)))
 
@@ -250,10 +252,15 @@ def probe() -> dict[str, object]:
     }
 
 
-def validate_tools(require_image=False):
-    missing = [str(p) for p in (ADB, SDKMANAGER, UPSTREAM_QEMU_ARM64, UPSTREAM_QEMU_IMG, MKE2FS) if not p.is_file()]
+def validate_tools(require_image=False, require_upstream=False):
+    required = [
+        ADB, SDKMANAGER, QEMU_ARM64, QEMU_ARM64_HEADLESS, QEMU_IMG, MKE2FS,
+    ]
+    if require_upstream:
+        required.append(UPSTREAM_QEMU_ARM64)
+    missing = [str(p) for p in required if not p.is_file()]
     if missing:
-        raise RuntimeError("Missing Android SDK tools:\n" + "\n".join(missing))
+        raise RuntimeError("Missing Android/QEMU tools:\n" + "\n".join(missing))
     if require_image:
         inv = image_inventory(package_dir())
         required = ("kernel", "ramdisk", "system", "userdata")
@@ -341,7 +348,7 @@ def prepare_runtime(wipe=False):
     if wipe or not paths["userdata"].is_file():
         if paths["userdata"].is_file():
             paths["userdata"].unlink()
-        run([UPSTREAM_QEMU_IMG, "create", "-f", "raw", paths["userdata"], DATA_SIZE_BYTES])
+        run([QEMU_IMG, "create", "-f", "raw", paths["userdata"], DATA_SIZE_BYTES])
         blocks = DATA_SIZE_BYTES // 4096
         run([
             MKE2FS, "-t", "ext4", "-F", "-b", "4096", "-L", "data",
@@ -353,12 +360,12 @@ def prepare_runtime(wipe=False):
     if wipe or not paths["cache"].is_file():
         if paths["cache"].is_file():
             paths["cache"].unlink()
-        run([UPSTREAM_QEMU_IMG, "create", "-f", "qcow2", paths["cache"], "256M"])
+        run([QEMU_IMG, "create", "-f", "qcow2", paths["cache"], "256M"])
     if wipe or not paths["encryptionkey"].is_file():
         if paths["encryptionkey"].is_file():
             paths["encryptionkey"].unlink()
         run([
-            UPSTREAM_QEMU_IMG, "create", "-f", "qcow2", "-F", "raw",
+            QEMU_IMG, "create", "-f", "qcow2", "-F", "raw",
             "-b", inv["encryptionkey"], paths["encryptionkey"],
         ])
     write_hw_ini(paths["hw"], inv, paths)
