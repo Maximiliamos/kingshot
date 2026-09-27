@@ -43,18 +43,22 @@ Confirmed progress:
 - boot reaches zygote/SurfaceFlinger;
 - no game APK has been installed before the native ARM64 gate.
 
-Current runtime blocker:
+Latest runtime hypothesis/fix:
 
-- `app_process64` repeatedly crashes with SIGSEGV while executing inside
-  `libcodec2_vndk.so`;
-- ADB therefore does not yet reach stable `device`;
-- `sys.boot_completed` is not yet `1`;
-- A1/A2 remain FAIL.
+- the second-agent baseline isolated a reproducible `app_process64`/zygote
+  SIGSEGV in `libcodec2_vndk.so`;
+- AOSP goldfish/ranchu explicitly disables Codec2 by default because this
+  emulator configuration does not provide the ION path Codec2 expects;
+- our direct launcher had omitted the supported
+  `qemu.media.ccodec=0` boot property;
+- both ARM64 launch paths now carry that property;
+- pre-ADB crashes are automatically collected into `zygote-crash.txt` and
+  `boot-diagnostic.json`.
 
-The runtime diagnosis should continue independently: collect reproducible
-zygote crashes, symbolize the exact PC/offset and perform the planned
-Google-ranchu vs upstream-QEMU comparison before changing more CPU models or
-guest libraries.
+The code/CI side is complete for this hypothesis. The remaining runtime gate
+is one real Windows-host boot proving ADB=`device` and
+`sys.boot_completed=1`. If it still fails, the generated crash files become
+the evidence for the next isolated fix rather than another parameter sweep.
 
 ## What becomes immediately usable after A1/A2
 
@@ -90,11 +94,11 @@ No second transport rewrite should be necessary.
 | Input | CODE READY | tap/swipe changes real guest frame |
 | Game install | CODE READY, GATED | install-multiple after ARM64 gate |
 | Game launch | CODE READY, GATED | Unity stays alive |
-| Tutorial/state machine | PARTIAL | complete real native-emulator flow |
-| Exact State #3 | NEEDS REAL VERIFICATION | never select #23 |
-| Rename/counter loop | PARTIAL | verified repeated cycle |
-| App-data reset/repeat | SAFE API READY | integrate after cycle validation |
-| GUI integration | IMPLEMENTED | validate against booted guest |
+| Tutorial/state machine | CODE COMPLETE / REAL FLOW PENDING | validate actual native-emulator screens |
+| Exact State #3 | DOUBLE VISUAL GATE / REAL VERIFY PENDING | row + explicit confirm template |
+| Rename/counter loop | CODE COMPLETE / REAL VERIFY PENDING | exact `Тугарин<N>` with no space |
+| App-data reset/repeat | IMPLEMENTED | PC counter preserved; server limits stop |
+| GUI integration | IMPLEMENTED | Start auto-bootstraps Android + game |
 
 ## Safety
 
