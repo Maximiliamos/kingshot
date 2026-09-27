@@ -258,7 +258,7 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertNotIn("houdini", joined)
         self.assertNotIn("ndk_translation", joined)
 
-    def test_google_ranchu_command_bypasses_launcher_hda(self):
+    def test_google_virt_command_bypasses_launcher_hda_and_initializes_boot_properties(self):
         inv = {
             "kernel": r"C:\image\kernel-ranchu",
             "ramdisk": r"C:\image\ramdisk.img",
@@ -274,14 +274,18 @@ class NativeArm64PocTests(unittest.TestCase):
             "hw": Path(r"C:\runtime\hardware-qemu.ini"),
             "pstore": Path(r"C:\runtime\pstore.bin"),
         }
-        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)):
-            cmd = arm64.build_google_ranchu_command()
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "virt"):
+            cmd = arm64.build_google_arm64_command()
         joined = " ".join(str(x) for x in cmd).lower()
         self.assertIn("-fuchsia", cmd)
-        self.assertIn("-machine type=ranchu", joined)
+        self.assertIn("-machine type=virt", joined)
         self.assertIn("-android-ports 5560,5561", joined)
         self.assertIn("androidboot.boot_devices=a003600.virtio_mmio", joined)
         self.assertIn("androidboot.logical_partitions=1", joined)
+        self.assertIn("-boot-property qemu.sf.lcd_density=480", joined)
+        self.assertIn("-boot-property qemu.media.ccodec=0", joined)
+        self.assertNotIn("goldfish_pstore", joined)
         block_devices = [
             cmd[i + 1]
             for i, value in enumerate(cmd[:-1])
@@ -309,6 +313,55 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertTrue(str(drive_args[4]).startswith("index=4,id=system,"))
         self.assertNotIn("-soundhw", joined)
         self.assertNotIn(" hda", joined)
+
+    def test_legacy_ranchu_is_explicit_fallback_only(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "ranchu"):
+            cmd = arm64.build_google_arm64_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-machine type=ranchu", joined)
+        self.assertIn("goldfish_pstore", joined)
+
+    def test_boot_milestone_never_confuses_first_boot_completed_zero(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "init: starting service 'zygote'...\n"
+                "init: starting service 'adbd'...\n"
+                "init: setprop sys.bootstat.first_boot_completed 0\n"
+                "init: updatable process 'zygote' exited 4 times before boot completed\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                self.assertEqual(arm64._boot_milestone(), "zygote+adbd")
+
+    def test_boot_milestone_accepts_only_real_sys_boot_completed_one(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "init: starting service 'zygote'...\n"
+                "init: setprop sys.boot_completed 1\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                self.assertEqual(arm64._boot_milestone(), "android-boot-complete")
 
     def test_dynamic_partition_dtb_declares_logical_partitions_and_vbmeta(self):
         tree = MagicMock()
