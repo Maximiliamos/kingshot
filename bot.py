@@ -562,7 +562,7 @@ def validate_templates():
         "governor_rename_button.png", "governor_rename_button_large.png",
         "governor_rename_dialog.png", "governor_rename_dialog_large.png",
         "governor_back.png",
-        "create_plus.png", "select_kingdom_title.png", "state3_row.png", "state3_modal.png",
+        "create_plus.png", "select_kingdom_title.png", "state3_row.png", "state3_modal.png", "state3_confirm.png",
         "loading_logo.png", "task_scroll.png",
         "upgrade_button.png", "newbie_offer_context.png", "offline_confirm.png",
         "invasion_title.png", "tutorial_skip.png", "tutorial_skip_small.png", "tutorial_skip_core.png", "tutorial_hand_building.png",
@@ -1067,13 +1067,20 @@ def handle_create_step(phone, state):
         return True
 
     if step == "state_confirm":
-        hit = match(phone, tpl("state3_modal.png"), 0.90)
-        if not hit:
+        modal = match(phone, tpl("state3_modal.png"), 0.90)
+        if not modal:
+            return False
+        confirm = match(phone, tpl("state3_confirm.png"), 0.91)
+        if not confirm:
             return False
 
-        debug(phone, hit, "state3_modal")
-        log("Подтверждён диалог «создать в государстве #3». Нажимаю его Confirm.")
-        tap_norm(0.710, 0.612)
+        debug(phone, modal, "state3_modal")
+        debug(phone, confirm, "state3_confirm")
+        log(
+            "Подтверждены и диалог «Государство №3», и его конкретная кнопка "
+            "подтверждения. Создаю персонажа."
+        )
+        tap_match(phone, confirm)
         begin_tutorial(state, "new_character")
         return True
 
