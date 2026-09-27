@@ -564,7 +564,7 @@ def validate_templates():
         "governor_back.png",
         "create_plus.png", "select_kingdom_title.png", "state3_row.png", "state3_modal.png", "state3_confirm.png",
         "loading_logo.png", "task_scroll.png",
-        "upgrade_button.png", "newbie_offer_context.png", "offline_confirm.png",
+        "upgrade_button.png", "newbie_offer_context.png", "newbie_offer_close.png", "offline_confirm.png",
         "invasion_title.png", "tutorial_skip.png", "tutorial_skip_small.png", "tutorial_skip_core.png", "tutorial_hand_building.png",
         "tutorial_summon_button.png", "tutorial_hand_target.png", "tutorial_hand_roof.png",
         "tutorial_hand_housing.png", "tutorial_hand_residents.png",
@@ -975,9 +975,16 @@ OVERLAYS = [
 def handle_overlay(phone):
     hit = match(phone, tpl("newbie_offer_context.png"), 0.86)
     if hit:
+        close = match(phone, tpl("newbie_offer_close.png"), 0.90)
+        if not close:
+            return False
         debug(phone, hit, "newbie_offer")
-        log(f"Контекстно найден «Ценный набор новичка» {hit['score']:.3f}")
-        tap_norm(0.852, 0.193)
+        debug(phone, close, "newbie_offer_close")
+        log(
+            f"Контекстно найден «Ценный набор новичка» {hit['score']:.3f}; "
+            "закрываю только по его конкретному X-шаблону."
+        )
+        tap_match(phone, close)
         return True
 
     hit = match(phone, tpl("offline_confirm.png"), 0.90)
