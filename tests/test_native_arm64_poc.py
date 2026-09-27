@@ -164,6 +164,26 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("x86_64", critical)
         self.assertIn("PANIC", critical)
 
+    def test_collect_boot_crash_extracts_zygote_codec2_tombstone(self):
+        sample = """01-01 00:00:01.000 263 263 F DEBUG   : Cmdline: zygote64
+01-01 00:00:01.001 263 263 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0
+01-01 00:00:01.002 263 263 F DEBUG   :     x29 0000000000000000
+01-01 00:00:01.003 263 263 F DEBUG   :     lr  0000007f11111111  sp 0000  pc 0000007f22222222  pst 0000
+01-01 00:00:01.004 263 263 F DEBUG   : backtrace:
+01-01 00:00:01.005 263 263 F DEBUG   :       #00 pc 0000000000012345  /system/lib64/libcodec2_vndk.so (SomeSymbol+8) (BuildId: abcdef1234)
+"""
+        with TemporaryDirectory() as td,                 patch.object(arm64, "RUNTIME_ROOT", Path(td)):
+            paths = arm64.runtime_paths()
+            paths["stdout"].write_text(sample, encoding="utf-8")
+            report = arm64.collect_boot_crash()
+
+            self.assertTrue(report["found"])
+            self.assertEqual(report["library"], "libcodec2_vndk.so")
+            self.assertEqual(report["fault_addr"], "0x0")
+            self.assertEqual(report["build_id"], "abcdef1234")
+            self.assertTrue(paths["boot_crash"].is_file())
+            self.assertIn("SomeSymbol", paths["boot_crash"].read_text(encoding="utf-8"))
+
     def test_wait_for_boot_fails_fast_if_qemu_exits(self):
         process = type("Process", (), {"poll": lambda self: 7})()
         with patch("native_arm64_poc._qemu_log_tail", return_value="boom"):
