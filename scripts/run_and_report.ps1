@@ -48,7 +48,7 @@ $commit = (& git rev-parse HEAD).Trim()
 # baseline Google virt + 4-vCPU MTTCG shows unrelated native processes
 # (zygote/media/storaged) all receiving SIGSEGV. This run isolates whether
 # multi-threaded TCG / SMP concurrency is causal without changing APK/system.
-$env:WAR_BOT_RUNTIME_EXPERIMENT = "virt-1cpu-single-tcg"
+$env:WAR_BOT_RUNTIME_EXPERIMENT = "upstream-virt-1cpu-single-tcg"
 $env:WAR_BOT_ARM64_CPU_CORES = "1"
 $env:WAR_BOT_ARM64_TCG_THREAD = "single"
 $env:WAR_BOT_ARM64_POST_ADB_TIMEOUT = "150"
@@ -63,13 +63,13 @@ Write-Host "Runtime experiment: $($config.experiment)"
 Write-Host "Runtime CPU cores:  $($config.cpu_cores)"
 Write-Host "TCG thread mode:    $($config.tcg_thread_mode)"
 if (
-    $config.experiment -ne "virt-1cpu-single-tcg" -or
+    $config.experiment -ne "upstream-virt-1cpu-single-tcg" -or
     [int]$config.cpu_cores -ne 1 -or
     $config.tcg_thread_mode -ne "single"
 ) {
     throw (
         "Experiment propagation guard failed. Refusing expensive host run. " +
-        "Expected virt-1cpu-single-tcg / 1 CPU / single TCG."
+        "Expected upstream-virt-1cpu-single-tcg / 1 CPU / single TCG."
     )
 }
 
@@ -89,23 +89,22 @@ Write-Host "Commit: $commit"
 Write-Host "Local report staging: $stage"
 Write-Host ""
 
-$verifyArgs = @(
-    "-NoProfile",
-    "-ExecutionPolicy", "Bypass",
-    "-File", (Join-Path $PSScriptRoot "verify_mvp.ps1")
+$probeArgs = @(
+    ".\native_arm64_poc.py",
+    "upstream-diagnose",
+    "--duration-seconds", "300"
 )
-if ($WipeRuntime) { $verifyArgs += "-WipeRuntime" }
-if ($CleanGame) { $verifyArgs += "-CleanGame" }
 
 $savedErrorAction = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 try {
-    & powershell @verifyArgs 2>&1 | Tee-Object -FilePath $consoleLog
+    & python @probeArgs 2>&1 | Tee-Object -FilePath $consoleLog
     $verifyExit = $LASTEXITCODE
 }
 finally {
     $ErrorActionPreference = $savedErrorAction
 }
+
 
 # Always ask the runtime for its latest deterministic report. Failure here
 # must not hide the original verifier result.
@@ -128,6 +127,8 @@ $knownFiles = @(
     "boot-live-state.txt",
     "game-crash.txt",
     "qemu-arm64.log",
+    "upstream-qemu-arm64.log",
+    "upstream-diagnostic.json",
     "machine.txt"
 )
 
@@ -179,7 +180,7 @@ $manifest = [ordered]@{
     finished_at = $finished.ToString("o")
     duration_seconds = [int](($finished - $started).TotalSeconds)
     verify_exit_code = $verifyExit
-    result = $(if ($verifyExit -eq 0) { "PASS" } else { "FAIL" })
+    result = "DIAGNOSTIC"
     runtime_root = $runtimeRoot
     experiment = $env:WAR_BOT_RUNTIME_EXPERIMENT
     arm64_cpu_cores = $env:WAR_BOT_ARM64_CPU_CORES
