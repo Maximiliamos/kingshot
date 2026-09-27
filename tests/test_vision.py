@@ -141,6 +141,14 @@ class TutorialVisionTests(unittest.TestCase):
         numeric_taps = [call.args[1:] for call in tap_client.call_args_list[-2:]]
         self.assertEqual(numeric_taps, [(0.154, 0.781), (0.254, 0.781)])
 
+    def test_nickname_has_no_inserted_space_before_number(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        with patch("bot.tap_client") as tap_client:
+            bot.type_tugarin_on_russian_keyboard(phone, 1)
+        taps = [call.args[1:] for call in tap_client.call_args_list]
+        self.assertNotIn((0.50, 0.953), taps)
+        self.assertEqual(taps[-2:], [(0.06, 0.953), (0.055, 0.781)])
+
     def test_shared_tutorial_hand_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         template = bot.tpl("tutorial_hand_target.png")
