@@ -241,6 +241,32 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertIn("-fuchsia", cmd)
         self.assertIn("-machine type=ranchu", joined)
         self.assertIn("-android-ports 5560,5561", joined)
+        self.assertIn("androidboot.boot_devices=a003600.virtio_mmio", joined)
+        block_devices = [
+            cmd[i + 1]
+            for i, value in enumerate(cmd[:-1])
+            if value == "-device" and str(cmd[i + 1]).startswith("virtio-blk-device,drive=")
+        ]
+        self.assertEqual(
+            block_devices,
+            [
+                "virtio-blk-device,drive=vendor",
+                "virtio-blk-device,drive=encrypt",
+                "virtio-blk-device,drive=userdata",
+                "virtio-blk-device,drive=cache",
+                "virtio-blk-device,drive=system",
+            ],
+        )
+        drive_args = [
+            cmd[i + 1]
+            for i, value in enumerate(cmd[:-1])
+            if value == "-drive" and "id=" in str(cmd[i + 1])
+        ]
+        self.assertTrue(str(drive_args[0]).startswith("index=0,id=vendor,"))
+        self.assertTrue(str(drive_args[1]).startswith("index=1,id=encrypt,"))
+        self.assertTrue(str(drive_args[2]).startswith("index=2,id=userdata,"))
+        self.assertTrue(str(drive_args[3]).startswith("index=3,id=cache,"))
+        self.assertTrue(str(drive_args[4]).startswith("index=4,id=system,"))
         self.assertNotIn("-soundhw", joined)
         self.assertNotIn(" hda", joined)
 
