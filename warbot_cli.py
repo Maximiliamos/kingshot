@@ -9,7 +9,7 @@ import sys
 
 import cv2
 
-from device_backend import BackendError, NativeArm64Backend, create_backend
+from device_backend import BackendError, NativeArm64Backend, WsaBackend, create_backend
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -73,14 +73,17 @@ def main(argv=None) -> int:
         return 0
 
     if args.action == "start-runtime":
-        if not isinstance(backend, NativeArm64Backend):
-            raise BackendError("start-runtime requires --backend native_arm64")
+        if not isinstance(backend, (NativeArm64Backend, WsaBackend)):
+            raise BackendError("start-runtime requires --backend native_arm64 or wsa")
         backend.start_runtime(wipe=args.wipe, window=args.window)
         return 0
 
     if args.action == "stop-runtime":
         if not isinstance(backend, NativeArm64Backend):
-            raise BackendError("stop-runtime requires --backend native_arm64")
+            raise BackendError(
+                "stop-runtime is supported only for --backend native_arm64; "
+                "WSA lifecycle is managed by Windows."
+            )
         backend.stop_runtime()
         return 0
 
@@ -94,20 +97,33 @@ def main(argv=None) -> int:
         return 0
 
     if args.action == "bootstrap":
-        if not isinstance(backend, NativeArm64Backend):
-            raise BackendError("bootstrap requires --backend native_arm64")
+        if not isinstance(backend, (NativeArm64Backend, WsaBackend)):
+            raise BackendError("bootstrap requires --backend native_arm64 or wsa")
 
         health = backend.health()
         if not health.ready:
-            # A failed pre-ADB guest can leave QEMU alive. Stop only the
-            # WAR BOT runtime identified by its pid file before retrying.
-            try:
-                backend.stop_runtime()
-            except Exception:
-                pass
-            backend.start_runtime(wipe=args.wipe, window=args.window)
+            if isinstance(backend, NativeArm64Backend):
+                # A failed pre-ADB guest can leave QEMU alive. Stop only the
+                # WAR BOT runtime identified by its pid file before retrying.
+                try:
+                    backend.stop_runtime()
+                except Exception:
+                    pass
+                backend.start_runtime(wipe=args.wipe, window=args.window)
+            else:
+                backend.start_runtime(wipe=False, window=True)
+                try:
+                    health = backend.wait_ready(timeout=180)
+                except BackendError as exc:
+                    raise BackendError(
+                        "WSA is installed but ADB is not ready. Open Windows "
+                        "Subsystem for Android -> Advanced settings, enable "
+                        "Developer mode, then retry. Default endpoint is "
+                        "127.0.0.1:58526."
+                    ) from exc
 
-        health = backend.require_ready(native_arm64=True)
+        native_gate = isinstance(backend, NativeArm64Backend)
+        health = backend.require_ready(native_arm64=native_gate)
         installed_now = False
         if not backend.package_installed():
             backend.install_verified_game(args.apks_dir)
@@ -138,7 +154,9 @@ def main(argv=None) -> int:
 
         print(json.dumps({
             "ready": True,
+            "backend": health.backend,
             "native_arm64": health.native_arm64,
+            "native_bridge": health.native_bridge,
             "serial": health.serial,
             "android": health.android,
             "abi": health.abi,
@@ -151,12 +169,11 @@ def main(argv=None) -> int:
         return 0
 
     if args.action == "install-game":
-        if isinstance(backend, NativeArm64Backend):
+        if isinstance(backend, (NativeArm64Backend, WsaBackend)):
             print(backend.install_verified_game(args.apks_dir))
         else:
             raise BackendError(
-                "install-game currently requires --backend native_arm64 "
-                "so the ARM64 gate is enforced."
+                "install-game requires --backend native_arm64 or wsa."
             )
         return 0
 
