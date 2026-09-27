@@ -1386,6 +1386,19 @@ def stop():
         print(f"Stopped QEMU PID {pid}")
 
 
+def runtime_config() -> dict[str, object]:
+    return {
+        "cpu": CPU_MODEL,
+        "cpu_cores": CPU_CORES,
+        "tcg_thread_mode": TCG_THREAD_MODE or "default",
+        "experiment": os.environ.get("WAR_BOT_RUNTIME_EXPERIMENT", ""),
+        "ram_mb": RAM_MB,
+        "gpu": GPU_MODE,
+        "machine": google_arm64_machine(),
+        "post_adb_timeout": POST_ADB_STALL_SECONDS,
+    }
+
+
 def print_json(value):
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
@@ -1395,7 +1408,7 @@ def main():
     parser.add_argument(
         "action",
         choices=(
-            "probe", "install-image", "prepare", "command", "start",
+            "probe", "config", "install-image", "prepare", "command", "start",
             "status", "verify-native", "install-game", "launch",
             "verify-game", "capture", "boot-report", "stop", "all",
         ),
@@ -1407,6 +1420,8 @@ def main():
 
     if args.action == "probe":
         print_json(probe())
+    elif args.action == "config":
+        print_json(runtime_config())
     elif args.action == "install-image":
         install_system_image()
     elif args.action == "prepare":
