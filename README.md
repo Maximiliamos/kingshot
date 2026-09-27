@@ -220,7 +220,15 @@ OCR видит сообщение о лимите/ограничении акк�
 
 ## Финальный real-host gate
 
-После зелёного CI остаётся один аппаратно-зависимый прогон на Windows-машине:
+После зелёного CI остаётся один аппаратно-зависимый прогон на Windows-машине.
+Рекомендуемый вариант выполняет bootstrap, строгий native gate, status и
+проверку PNG одной командой:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp.ps1
+```
+
+Низкоуровневый эквивалент:
 
 ```powershell
 python .\warbot_cli.py bootstrap --output bootstrap-frame.png
