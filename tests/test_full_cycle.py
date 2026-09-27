@@ -27,6 +27,22 @@ class FullCycleTests(unittest.TestCase):
             bot.finish_tutorial(state)
         begin.assert_called_once_with(state)
 
+    def test_state3_creation_requires_explicit_confirm_template(self):
+        state = dict(bot.DEFAULT_STATE)
+        state.update({"phase": "create_character", "step": "state_confirm"})
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        modal = {"loc": (10, 10), "w": 100, "h": 100, "score": 0.99}
+        confirm = {"loc": (100, 500), "w": 80, "h": 30, "score": 0.99}
+        with patch("bot.match", side_effect=[modal, confirm]), \
+                patch("bot.debug"), \
+                patch("bot.tap_match") as tap_match, \
+                patch("bot.begin_tutorial") as begin:
+            result = bot.handle_create_step(phone, state)
+
+        self.assertTrue(result)
+        tap_match.assert_called_once_with(phone, confirm)
+        begin.assert_called_once_with(state, "new_character")
+
     def test_rename_limit_enters_reset_cycle(self):
         state = dict(bot.DEFAULT_STATE)
         state.update({
