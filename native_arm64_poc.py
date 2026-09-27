@@ -382,6 +382,7 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
         "androidboot.logical_partitions=1 "
         "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64 "
         "qemu=1 androidboot.qemu=1 qemu.encrypt=1 "
+        "qemu.media.ccodec=0 "
         "qemu.gles=0 qemu.virtiowifi=0"
     )
     cmd = [
