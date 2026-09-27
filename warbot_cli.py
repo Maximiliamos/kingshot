@@ -77,6 +77,7 @@ def main(argv=None) -> int:
         return 0
 
     if args.action == "launch-game":
+        backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
         print(backend.launch_app().strip())
         return 0
 
