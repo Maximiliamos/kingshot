@@ -1,0 +1,1 @@
+<crash-buffer query failed: Command '['C:\\Android\\Sdk\\platform-tools\\adb.exe', '-s', '127.0.0.1:5561', 'logcat', '-b', 'crash', '-d', '-v', 'threadtime']' timed out after 12 seconds>

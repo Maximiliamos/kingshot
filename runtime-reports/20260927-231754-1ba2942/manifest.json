@@ -1,0 +1,11 @@
+﻿{
+    "schema":  1,
+    "commit":  "1ba29424738057435794f7b0709a5b65b63f0bb7",
+    "source_branch":  "feature/unified-android-backend",
+    "started_at":  "2026-09-27T23:09:02.7814411+03:00",
+    "finished_at":  "2026-09-27T23:17:53.9783491+03:00",
+    "duration_seconds":  531,
+    "verify_exit_code":  998,
+    "result":  "FAIL",
+    "runtime_root":  "C:\\warbot_arm64_runtime"
+}
