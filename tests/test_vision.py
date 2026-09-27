@@ -8,6 +8,19 @@ import bot
 
 
 class TutorialVisionTests(unittest.TestCase):
+    def test_direct_android_frame_sets_real_input_geometry(self):
+        frame = np.zeros((1600, 720, 3), dtype=np.uint8)
+        old_w, old_h = bot.INPUT_W, bot.INPUT_H
+        try:
+            with patch.object(bot, "BACKEND_NAME", "native_arm64"):
+                bot.sync_input_geometry(frame)
+            self.assertEqual((bot.INPUT_W, bot.INPUT_H), (720, 1600))
+            with patch("bot.tap") as tap:
+                bot.tap_norm(0.5, 0.25)
+            tap.assert_called_once_with(360.0, 400.0)
+        finally:
+            bot.INPUT_W, bot.INPUT_H = old_w, old_h
+
     def test_crop_phone_normalizes_any_scrcpy_window_size(self):
         frame = np.zeros((1416, 632, 3), dtype=np.uint8)
         phone, _, _ = bot.crop_phone(frame)
