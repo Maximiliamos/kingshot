@@ -60,6 +60,7 @@ class WarBotCliTests(unittest.TestCase):
                     patch.object(backend, "install_verified_game", return_value="Success") as install, \
                     patch.object(backend, "launch_app", return_value="Starting"), \
                     patch.object(backend, "wait_package_running", return_value="1234"), \
+                    patch.object(backend, "wait_package_stable", return_value="1234") as stable, \
                     patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
                 out = io.StringIO()
                 with redirect_stdout(out):
@@ -67,6 +68,7 @@ class WarBotCliTests(unittest.TestCase):
 
             self.assertEqual(code, 0)
             install.assert_called_once()
+            stable.assert_called_once_with(45, expected_pid="1234")
             self.assertTrue(Path(output).is_file())
             self.assertIn('"native_arm64": true', out.getvalue())
 
