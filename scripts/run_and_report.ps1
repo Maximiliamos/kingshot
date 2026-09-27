@@ -15,10 +15,30 @@ if (-not $SkipPull) {
         throw "Working tree is not clean. Refusing automatic pull. Commit/stash local changes first."
     }
 
+    $beforePull = (& git rev-parse HEAD).Trim()
     Write-Host "Updating feature/unified-android-backend..."
     & git pull --ff-only origin feature/unified-android-backend
     if ($LASTEXITCODE -ne 0) {
         throw "git pull failed."
+    }
+    $afterPull = (& git rev-parse HEAD).Trim()
+
+    # PowerShell parses the current script before git pull. If the pull updated
+    # this workflow itself, immediately re-exec the new on-disk version so one
+    # user command always runs the newest test/diagnostic plan.
+    if ($beforePull -ne $afterPull -and $env:WAR_BOT_REPORT_REEXEC -ne "1") {
+        Write-Host "Workflow updated; restarting with the new script..."
+        $env:WAR_BOT_REPORT_REEXEC = "1"
+        $reexec = @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", $PSCommandPath,
+            "-SkipPull"
+        )
+        if ($WipeRuntime) { $reexec += "-WipeRuntime" }
+        if ($CleanGame) { $reexec += "-CleanGame" }
+        & powershell @reexec
+        exit $LASTEXITCODE
     }
 }
 
