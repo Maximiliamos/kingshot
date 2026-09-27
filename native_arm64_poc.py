@@ -447,14 +447,13 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     return cmd
 
 
-def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]:
+def upstream_diagnostic(duration_seconds=600, *, wipe=True) -> dict[str, object]:
     """A/B probe using modern upstream QEMU virt.
 
-    This deliberately does not require ADB or graphics. It answers one narrow
-    question: does the same Android userspace still crash zygote/app_process64
-    under a different QEMU core with the same kernel/system images and CPU
-    model? That separates Google-QEMU device glue from generic TCG/userspace
-    behavior.
+    This deliberately starts without Android-specific Google QEMU devices.
+    Besides checking whether the native SIGSEGV reproduces, it now keeps the
+    guest alive long enough to see whether TCP adbd becomes usable and whether
+    Android reaches sys.boot_completed=1.
     """
     validate_tools(require_image=True, require_upstream=True)
     # Avoid mixing evidence with a still-running Google-QEMU instance from the
@@ -477,42 +476,103 @@ def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]
     )
 
     started = time.monotonic()
-    outcome = "timeout-no-zygote-sigsegv"
+    outcome = "timeout-no-native-sigsegv"
     crash_lines: list[str] = []
     framework_lines: list[str] = []
+    last_adb_state = ""
+    boot_completed = ""
+    first_adb_device_seconds: int | None = None
+    boot_completed_seconds: int | None = None
+    guest_snapshot: dict[str, object] = {}
+    next_adb_probe = started
 
     try:
         while time.monotonic() - started < duration_seconds:
             if proc.poll() is not None:
                 outcome = f"qemu-exited-{proc.returncode}"
                 break
+
             time.sleep(2)
             if not paths["upstream_stdout"].is_file():
                 continue
+
             text = paths["upstream_stdout"].read_text(
                 encoding="utf-8", errors="replace"
             )
             lines = text.splitlines()
-            low = text.lower()
             framework_lines = [
                 line for line in lines
                 if any(token in line.lower() for token in (
                     "starting service 'zygote'",
                     "starting service 'surfaceflinger'",
                     "starting service 'adbd'",
+                    "starting service 'mediaextractor'",
+                    "starting service 'storaged'",
                     "sys.boot_completed",
                 ))
-            ][-80:]
+            ][-120:]
             crash_lines = [
                 line for line in lines
-                if "received signal 11" in line.lower()
-                or "sigsegv" in line.lower()
-            ][-80:]
-            if any(
-                "zygote" in line.lower() and "signal 11" in line.lower()
-                for line in crash_lines
-            ):
-                outcome = "zygote-sigsegv"
+                if any(token in line.lower() for token in (
+                    "received signal 11",
+                    "fatal signal 11",
+                    "sigsegv",
+                ))
+            ][-120:]
+            if crash_lines:
+                outcome = "native-sigsegv"
+                break
+
+            now = time.monotonic()
+            if now < next_adb_probe:
+                continue
+            next_adb_probe = now + 5
+
+            try:
+                run([ADB, "connect", SERIAL], timeout=3, check=False)
+            except subprocess.TimeoutExpired:
+                last_adb_state = "connect-timeout"
+                continue
+
+            try:
+                state = run(
+                    [ADB, "-s", SERIAL, "get-state"],
+                    timeout=5,
+                    check=False,
+                )
+                last_adb_state = state.stdout.strip() or "missing"
+            except subprocess.TimeoutExpired:
+                last_adb_state = "unresponsive"
+                continue
+
+            if last_adb_state != "device":
+                continue
+
+            elapsed = int(now - started)
+            if first_adb_device_seconds is None:
+                first_adb_device_seconds = elapsed
+
+            try:
+                boot_completed = adb(
+                    "shell", "getprop", "sys.boot_completed",
+                    timeout=5, check=False,
+                ).stdout.strip()
+            except subprocess.TimeoutExpired:
+                boot_completed = ""
+
+            guest_snapshot = {
+                "serial": SERIAL,
+                "device_state": last_adb_state,
+                "boot_completed": boot_completed,
+            }
+
+            if boot_completed == "1":
+                boot_completed_seconds = elapsed
+                try:
+                    guest_snapshot = guest_status()
+                except Exception as exc:
+                    guest_snapshot["status_error"] = str(exc)
+                outcome = "boot-completed"
                 break
     finally:
         if proc.poll() is None:
@@ -538,7 +598,16 @@ def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]
         "tcg_thread_mode": TCG_THREAD_MODE or "multi",
         "duration_seconds": elapsed,
         "outcome": outcome,
-        "zygote_sigsegv": outcome == "zygote-sigsegv",
+        "native_sigsegv": outcome == "native-sigsegv",
+        "zygote_sigsegv": any(
+            "zygote" in line.lower() and "signal 11" in line.lower()
+            for line in crash_lines
+        ),
+        "adb_state": last_adb_state,
+        "first_adb_device_seconds": first_adb_device_seconds,
+        "boot_completed": boot_completed,
+        "boot_completed_seconds": boot_completed_seconds,
+        "guest_status": guest_snapshot,
         "framework_lines": framework_lines,
         "crash_lines": crash_lines,
         "log": str(paths["upstream_stdout"]),
@@ -549,7 +618,6 @@ def upstream_diagnostic(duration_seconds=300, *, wipe=True) -> dict[str, object]
     )
     print_json(report)
     return report
-
 
 def google_arm64_machine() -> str:
     machine = GOOGLE_ARM64_MACHINE
@@ -1522,7 +1590,7 @@ def main():
     parser.add_argument("--window", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument("--wait-seconds", type=int, default=45)
-    parser.add_argument("--duration-seconds", type=int, default=300)
+    parser.add_argument("--duration-seconds", type=int, default=600)
     args = parser.parse_args()
 
     if args.action == "probe":
