@@ -1,13 +1,13 @@
 # Kingshot / «Война за трон» automation
 
-Локальное Windows-приложение для автоматизации повторяемых действий в мобильной игре «Война за трон» через собственный ARM64 Android runtime или другой ADB Android.
+Локальное Windows-приложение для автоматизации повторяемых действий в мобильной игре «Война за трон». Основной Windows-only runtime — Windows Subsystem for Android (WSA); физический телефон и окно scrcpy для штатной работы не нужны.
 
 ## Текущая архитектура
 
 WAR BOT теперь отделяет логику игры от способа подключения к Android.
 
 ```text
-Native ARM64 QEMU / любой готовый ADB Android
+WSA / Native ARM64 PoC / любой готовый ADB Android
                   │
                   ▼
            DeviceBackend
@@ -24,13 +24,15 @@ Native ARM64 QEMU / любой готовый ADB Android
        safe state machine / GUI
 ```
 
-По умолчанию используется `native_arm64`: собственный ARM64 Android runtime
-под QEMU TCG и ADB `127.0.0.1:5561`. После прохождения системного ARM64 gate
-тот же backend будет использоваться для игры.
+По умолчанию используется `wsa` с ADB `127.0.0.1:58526`. WSA может выполнять
+ARM64-библиотеки через штатный Android native bridge; поэтому его критерий
+приёмки — стабильный запуск игры, прямой screenshot и ADB input, а не отсутствие
+трансляции. Собственный ARM64 QEMU сохранён как исследовательский fallback.
 
 Доступны режимы:
 
-- **native_arm64** — целевой production backend;
+- **wsa** — основной Windows-only backend;
+- **native_arm64** — диагностический PoC без трансляции, пока не прошедший boot gate;
 - **adb** — уже запущенный Android по конкретному ADB serial;
 - **scrcpy** — только legacy/диагностический источник кадров.
 
@@ -46,7 +48,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 
 На уровне приложения уже реализованы:
 
-- единый Android backend и строгий ARM64 gate;
+- единый Android backend, отдельные WSA и native ARM64 gates;
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через ADB;
@@ -58,18 +60,14 @@ image-first подход для Unity-интерфейса как в Airtest.
 - fail-closed при неизвестном экране или сообщении о лимите/ограничении;
 - тесты полного цикла, backend, runtime и vision.
 
-Последний real-host прогон доказал, что legacy Google `ranchu` под TCG
-доходит до adbd, но не завершает Android boot: zygote/HAL-процессы продолжают
-падать, а ядро поднимает только CPU0 из-за отсутствия PSCI для TCG. Поэтому
-production runtime переключён на Android-модифицированную Google машину
-`virt`, которую AOSP специально расширил ranchu/goldfish-устройствами и
-которая сохраняет PSCI/multicore. Legacy `ranchu` оставлен только как
-диагностический fallback.
+Native ARM64 QEMU пока не является рабочим runtime: Google ranchu падает в
+guest userspace, а upstream QEMU не предоставляет нужную ranchu/goldfish
+графику. Этот путь не удалён, но не блокирует WSA MVP.
 
-Следующий real-host gate должен подтвердить `virt` до
-`ADB=device` + `sys.boot_completed=1`. При ошибке автоматически
-сохраняются serial log, crash buffer, tombstones (если доступны),
-`zygote-crash.txt` и `boot-diagnostic.json`.
+WSA installer выбирает пакет под фактическую версию Windows, проверяет SHA-256
+архива и разделяет установку на две фазы: административная фаза меняет только
+машинные компоненты Windows, затем регистрация AppX и запуск выполняются под
+интерактивной учётной записью пользователя.
 
 
 ## Установка
@@ -112,8 +110,8 @@ python gui.py
 ```
 
 GUI показывает кадр выбранного Android backend, текущую фазу `state.json`,
-журнал и статистику цикла. В настройках можно выбрать Native ARM64, обычный
-ADB или legacy scrcpy, а также запустить/остановить ARM64 runtime. Кнопки
+журнал и статистику цикла. В настройках можно выбрать WSA, Native ARM64,
+обычный ADB или legacy scrcpy. Кнопки
 паузы и остановки передают команды движку через `control.json`, поэтому GUI
 не нажимает кнопки игры самостоятельно.
 
@@ -135,7 +133,7 @@ python C:\warbot\bot.py
 python C:\warbot\bot.py --dry-run
 ```
 
-Для целевого режима scrcpy больше не требуется. После загрузки ARM64 Android
+Для целевого режима scrcpy больше не требуется. После загрузки WSA Android
 кадры берутся напрямую через `adb exec-out screencap -p`, а input отправляется
 в тот же device-scoped ADB serial.
 
@@ -160,6 +158,8 @@ python .\warbot_cli.py ui-dump
 
 Установка игры в Native ARM64 режиме разрешается только после строгого gate:
 ADB=`device`, `sys.boot_completed=1`, ABI=`arm64-v8a`, без x86/native bridge.
+Для WSA обязательны ADB=`device`, `sys.boot_completed=1`, стабильный процесс
+игры и корректный PNG; наличие штатного native bridge допустимо.
 
 Очистка данных требует явного подтверждения. Для обычной работы предпочтителен
 синхронизированный clean-start, который сохраняет PC-side счётчик и возвращает
@@ -211,9 +211,15 @@ initial tutorial
 OCR видит сообщение о лимите/ограничении аккаунта или сервера, бот
 останавливается; очистка данных не используется как обход такого ограничения.
 
-`bootstrap` — рекомендуемый первый запуск: он поднимает Native ARM64 Android,
-проверяет строгий ARM64 gate, при необходимости устанавливает ARM64 splits
+`bootstrap` — рекомендуемый первый запуск: он будит WSA,
+проверяет готовность Android, при необходимости устанавливает ARM64 splits
 игры, запускает игру и сохраняет контрольный screenshot.
+
+Первичная установка WSA (один UAC-запрос):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install_wsa_poc.ps1
+```
 
 ## Что не коммитим
 
@@ -282,12 +288,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp.ps1
 python .\warbot_cli.py bootstrap --output bootstrap-frame.png
 ```
 
-PASS означает: Android полностью загрузился, native ARM64 gate пройден, игра
+PASS означает: Android полностью загрузился, WSA доступен по ADB, игра
 установлена/запущена, процесс жив и получен реальный PNG. После этого GUI
 кнопкой «ЗАПУСТИТЬ» использует тот же bootstrap автоматически и запускает
 state machine.
 
-Если boot не проходит, runtime автоматически формирует
-`C:\warbot_arm64_runtime\zygote-crash.txt` и
-`boot-diagnostic.json`, поэтому следующий blocker определяется по фактам,
-а не перебором параметров.
+WSA installer и verifier сохраняют отчёты в `runtime-reports`; native ARM64
+fallback дополнительно формирует `C:\warbot_arm64_runtime\zygote-crash.txt`
+и `boot-diagnostic.json`.

@@ -608,7 +608,7 @@ def create_backend(
     serial: str | None = None,
     adb_path: str | os.PathLike[str] | None = None,
 ) -> DeviceBackend:
-    selected = (name or os.environ.get("WAR_BOT_BACKEND", "native_arm64")).strip().lower()
+    selected = (name or os.environ.get("WAR_BOT_BACKEND", "wsa")).strip().lower()
     if selected in ("native", "native_arm64", "emulator"):
         return NativeArm64Backend(serial=serial, adb_path=adb_path)
     if selected in ("wsa", "windows_subsystem_android"):

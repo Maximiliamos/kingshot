@@ -44,10 +44,11 @@ class DeviceBackendTests(unittest.TestCase):
         self.assertFalse(x86.native_arm64)
         self.assertFalse(bridge.native_arm64)
 
-    def test_factory_defaults_to_native_arm64(self):
+    def test_factory_defaults_to_wsa(self):
         with patch.dict("os.environ", {}, clear=True):
             backend = db.create_backend(adb_path=r"C:\fake\adb.exe")
-        self.assertIsInstance(backend, db.NativeArm64Backend)
+        self.assertIsInstance(backend, db.WsaBackend)
+        self.assertEqual(backend.serial, "127.0.0.1:58526")
 
     def test_factory_supports_plain_adb(self):
         backend = db.create_backend(
