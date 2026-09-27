@@ -132,6 +132,22 @@ class DeviceBackend(ABC):
     def close(self) -> None:
         pass
 
+    def require_ready(self, *, native_arm64: bool = False) -> DeviceHealth:
+        health = self.health()
+        if not health.ready:
+            raise BackendError(
+                f"Android is not ready: backend={health.backend} "
+                f"serial={health.serial} state={health.state} "
+                f"boot_completed={health.boot_completed!r}"
+            )
+        if native_arm64 and not health.native_arm64:
+            raise BackendError(
+                "Native ARM64 gate failed: "
+                f"abi={health.abi!r} abilist={health.abilist!r} "
+                f"native_bridge={health.native_bridge!r}"
+            )
+        return health
+
 
 class AdbDeviceBackend(DeviceBackend):
     backend_name = "adb"
@@ -321,6 +337,26 @@ class AdbDeviceBackend(DeviceBackend):
             cmd = ["shell", *[str(x) for x in args]]
         return self._run(cmd, timeout=timeout, check=True, text=True).stdout
 
+    def install_apks(self, paths: Iterable[str | os.PathLike[str]]) -> str:
+        files = [Path(path) for path in paths]
+        missing = [str(path) for path in files if not path.is_file()]
+        if missing:
+            raise BackendError("APK split(s) not found: " + ", ".join(missing))
+        result = self._run(
+            ["install-multiple", "-r", *[str(path) for path in files]],
+            timeout=300,
+            check=True,
+            text=True,
+        )
+        return (result.stdout or result.stderr or "").strip()
+
+    def package_installed(self) -> bool:
+        try:
+            output = self.shell(["pm", "path", self.package], timeout=20)
+        except BackendError:
+            return False
+        return any(line.startswith("package:") for line in output.splitlines())
+
     def _uiautomator(self):
         if self._u2_attempted:
             return self._u2
@@ -368,6 +404,19 @@ class NativeArm64Backend(AdbDeviceBackend):
     def stop_runtime(self) -> None:
         import native_arm64_poc
         native_arm64_poc.stop()
+
+    def install_verified_game(self, apks_dir: str | os.PathLike[str] | None = None) -> str:
+        self.require_ready(native_arm64=True)
+        root = Path(
+            apks_dir
+            or os.environ.get("WAR_BOT_APKS_DIR", r"C:\warbot_emulator_poc\apks_1.12.10")
+        )
+        names = (
+            "base.apk",
+            "split_config.arm64_v8a.apk",
+            "split_game_asset.apk",
+        )
+        return self.install_apks(root / name for name in names)
 
     def health(self) -> DeviceHealth:
         base = super().health()
