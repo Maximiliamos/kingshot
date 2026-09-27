@@ -40,6 +40,12 @@ RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
 GPU_MODE = os.environ.get("WAR_BOT_ARM64_GPU", "host")
+# Prefer Google's Android-modified ARM virt board. AOSP extended this board
+# with ranchu/goldfish devices while retaining PSCI under TCG, unlike the
+# legacy ranchu board which exposes no PSCI for TCG and therefore boots CPU0 only.
+GOOGLE_ARM64_MACHINE = os.environ.get(
+    "WAR_BOT_ARM64_MACHINE", "virt"
+).strip().lower()
 SERIAL_CONSOLE = os.environ.get("WAR_BOT_ARM64_SERIAL_CONSOLE", "")
 RANCHU_BOOT_DEVICE = os.environ.get(
     "WAR_BOT_ARM64_BOOT_DEVICE", "a003600.virtio_mmio"
