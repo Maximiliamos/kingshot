@@ -153,3 +153,12 @@ Next step: obtain/build a Google/AOSP QEMU ranchu runner whose final topology
 omits the invalid HDA device, or make the launcher generate a supported audio
 device. Do not add generic virtio-gpu flags to the upstream path: the installed
 vendor image has no matching DRM/virtio hwcomposer implementation.
+
+The packaged ARM64 core also exposes a direct positional-QEMU path through
+`-fuchsia`. The PoC now uses that supported entry point to start Google
+`ranchu` and gfxstream without the launcher-generated HDA device; it does not
+patch the emulator binary, Android image, or game. The kernel sees the five
+block devices and the GPT `super` partition, but first-stage init currently
+stops at `partition(s) not found: system`. HDA is therefore resolved, while
+A1/A2 remain FAIL until the launcher-equivalent dynamic-partition mapping is
+reproduced and ADB reaches `device` with `sys.boot_completed=1`.

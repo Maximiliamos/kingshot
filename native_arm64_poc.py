@@ -288,10 +288,11 @@ def runtime_paths() -> dict[str, Path]:
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
         "crash": RUNTIME_ROOT / "game-crash.txt",
         "frame": RUNTIME_ROOT / "frame.png",
+        "pstore": RUNTIME_ROOT / "pstore.bin",
     }
 
 
-def write_hw_ini(path: Path):
+def write_hw_ini(path: Path, inv: dict[str, str], paths: dict[str, Path]):
     content = f"""hw.cpu.arch = arm64
 hw.cpu.ncore = {CPU_CORES}
 hw.ramSize = {RAM_MB}
@@ -302,11 +303,20 @@ hw.lcd.width = 1060
 hw.lcd.height = 2376
 hw.lcd.depth = 16
 hw.lcd.density = 480
-hw.gpu.enabled = no
+hw.gpu.enabled = yes
+hw.gpu.mode = {GPU_MODE}
 hw.audioInput = no
 hw.audioOutput = no
 hw.sdCard = no
 disk.cachePartition = no
+disk.cachePartition.path = {paths['cache']}
+kernel.path = {inv['kernel']}
+disk.ramdisk.path = {inv['ramdisk']}
+disk.systemPartition.initPath = {inv['system']}
+disk.vendorPartition.initPath = {inv['vendor']}
+disk.dataPartition.path = {paths['userdata']}
+disk.dataPartition.initPath = {inv['userdata']}
+disk.encryptionKeyPartition.path = {paths['encryptionkey']}
 disk.dataPartition.size = 8589934592
 vm.heapSize = 512
 """
@@ -318,6 +328,7 @@ def prepare_runtime(wipe=False):
     RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
     inv = image_inventory(package_dir())
     paths = runtime_paths()
+    paths.setdefault("pstore", RUNTIME_ROOT / "pstore.bin")
     if wipe or not paths["userdata"].is_file():
         if paths["userdata"].is_file():
             paths["userdata"].unlink()
@@ -341,7 +352,9 @@ def prepare_runtime(wipe=False):
             UPSTREAM_QEMU_IMG, "create", "-f", "qcow2", "-F", "raw",
             "-b", inv["encryptionkey"], paths["encryptionkey"],
         ])
-    write_hw_ini(paths["hw"])
+    write_hw_ini(paths["hw"], inv, paths)
+    if wipe or not paths["pstore"].is_file():
+        paths["pstore"].write_bytes(b"\0" * 65536)
     return inv, paths
 
 
@@ -395,9 +408,56 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     cmd += ["-display", "sdl" if window else "none"]
     return cmd
 
+
+def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
+    """Run Google's ARM64 QEMU core directly, without launcher-added HDA.
+
+    ``-fuchsia`` is the emulator's supported positional-QEMU entry point.  It
+    bypasses AVD argument synthesis while retaining the Google ranchu devices
+    and gfxstream libraries required by the stock Android vendor image.
+    """
+    inv, paths = prepare_runtime(wipe=wipe)
+    append = (
+        "8250.nr_uarts=1 no_timer_check console=ttyAMA0,38400 keep_bootcon "
+        "earlyprintk=ttyAMA0 loop.max_part=7 printk.devkmsg=on "
+        "android.qemud=1 androidboot.boot_devices=a003600.virtio_mmio "
+        "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64 "
+        "androidboot.vbmeta.digest=15e6b2e26d1523b6c38c0a60d5ac8f8cf547364c343d16e58338814e45faa6a8 "
+        "androidboot.vbmeta.hash_alg=sha256 androidboot.vbmeta.size=6720 "
+        "qemu=1 androidboot.qemu=1 qemu.encrypt=1 qemu.gles=1 "
+        "qemu.gltransport=pipe qemu.opengles.version=131072 "
+        "qemu.skin=1060x2376 qemu.virtiowifi=0 qemu.vsync=60"
+    )
+    qemu = QEMU_ARM64 if window else QEMU_ARM64_HEADLESS
+    return [
+        str(qemu), "-fuchsia", "-gpu", GPU_MODE,
+        "-window-size", "1060x2376",
+        "-L", str(SDK_ROOT / "emulator" / "lib" / "pc-bios"),
+        "-machine", "type=ranchu", "-cpu", CPU_MODEL,
+        "-smp", f"cores={CPU_CORES}", "-m", str(RAM_MB),
+        "-lcd-density", "480", "-nodefaults", "-no-audio",
+        "-device", f"goldfish_pstore,addr=0xff018000,size=0x10000,file={paths['pstore']}",
+        "-kernel", inv["kernel"], "-initrd", inv["ramdisk"],
+        "-drive", f"index=4,id=vendor,if=none,file={inv['vendor']},read-only",
+        "-drive", f"index=1,id=encrypt,if=none,file={paths['encryptionkey']}",
+        "-drive", f"index=2,id=userdata,if=none,file={paths['userdata']},format=raw",
+        "-drive", f"index=3,id=cache,if=none,file={paths['cache']}",
+        "-drive", f"index=0,id=system,if=none,file={inv['system']},read-only",
+        "-device", "virtio-blk-device,drive=system",
+        "-device", "virtio-blk-device,drive=encrypt",
+        "-device", "virtio-blk-device,drive=userdata",
+        "-device", "virtio-blk-device,drive=cache",
+        "-device", "virtio-blk-device,drive=vendor",
+        "-netdev", "user,id=mynet", "-device", "virtio-net-device,netdev=mynet",
+        "-device", "virtio-rng-device", "-show-cursor",
+        "-android-ports", f"{CONSOLE_PORT},{ADB_PORT}",
+        "-serial", "con:" if window else "stdio",
+        "-append", append, "-android-hw", str(paths["hw"]),
+    ]
+
 def start_direct(*, window=False, wipe=False, wait=True):
     _, paths = prepare_runtime(wipe=wipe)
-    cmd = build_direct_qemu_command(window=window, wipe=False)
+    cmd = build_google_ranchu_command(window=window, wipe=False)
     log = open(paths["stdout"], "w", encoding="utf-8", errors="replace")
     flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
     proc = subprocess.Popen(
@@ -619,7 +679,7 @@ def main():
         prepare_runtime(wipe=args.wipe)
         print(f"Runtime prepared: {RUNTIME_ROOT}")
     elif args.action == "command":
-        print_json(build_direct_qemu_command(window=args.window, wipe=args.wipe))
+        print_json(build_google_ranchu_command(window=args.window, wipe=args.wipe))
     elif args.action == "start":
         start_direct(window=args.window, wipe=args.wipe)
     elif args.action == "status":

@@ -219,6 +219,31 @@ class NativeArm64PocTests(unittest.TestCase):
         self.assertNotIn("houdini", joined)
         self.assertNotIn("ndk_translation", joined)
 
+    def test_google_ranchu_command_bypasses_launcher_hda(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)):
+            cmd = arm64.build_google_ranchu_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-fuchsia", cmd)
+        self.assertIn("-machine type=ranchu", joined)
+        self.assertIn("-android-ports 5560,5561", joined)
+        self.assertNotIn("-soundhw", joined)
+        self.assertNotIn(" hda", joined)
+
 
 if __name__ == "__main__":
     unittest.main()
