@@ -189,15 +189,22 @@ class AdbDeviceBackend(DeviceBackend):
         if not self.adb_path.is_file():
             raise BackendError(f"adb.exe not found: {self.adb_path}")
         self._ensure_transport()
-        result = subprocess.run(
-            [*self._base(), *[str(x) for x in args]],
-            capture_output=True,
-            text=text,
-            encoding="utf-8" if text else None,
-            errors="replace" if text else None,
-            timeout=timeout,
-            check=False,
-        )
+        command = [*self._base(), *[str(x) for x in args]]
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=text,
+                encoding="utf-8" if text else None,
+                errors="replace" if text else None,
+                timeout=timeout,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            detail = " ".join(str(x) for x in args)
+            raise BackendError(
+                f"ADB timeout after {timeout}s on {self.serial}: {detail}"
+            ) from exc
         if check and result.returncode:
             if text:
                 detail = (result.stderr or result.stdout or "").strip()
@@ -249,8 +256,8 @@ class AdbDeviceBackend(DeviceBackend):
 
     def health(self) -> DeviceHealth:
         try:
-            state = self._run(["get-state"], timeout=10, check=False).stdout.strip()
-        except (BackendError, subprocess.TimeoutExpired):
+            state = self._run(["get-state"], timeout=5, check=False).stdout.strip()
+        except BackendError:
             state = ""
         if state != "device":
             return DeviceHealth(
@@ -259,32 +266,45 @@ class AdbDeviceBackend(DeviceBackend):
                 state=state or "missing",
             )
 
-        def prop(name: str) -> str:
+        def prop(name: str, timeout: int = 5) -> str:
             try:
-                return self._getprop(name)
+                return self.shell(["getprop", name], timeout=timeout).strip()
             except BackendError:
                 return ""
 
-        try:
-            running = bool(self.shell(["pidof", self.package], timeout=10).strip())
-        except BackendError:
-            running = False
-        try:
-            resolution = self.shell(["wm", "size"], timeout=10).strip()
-        except BackendError:
-            resolution = ""
+        # ADB may report "device" while Android userspace is still blocked.
+        # Do not issue package-manager / wm probes until init has explicitly
+        # reached sys.boot_completed=1; those commands can hang pre-zygote.
+        boot_completed = prop("sys.boot_completed", timeout=5)
+        android = prop("ro.build.version.release", timeout=5)
+        abi = prop("ro.product.cpu.abi", timeout=5)
+        abilist = prop("ro.product.cpu.abilist", timeout=5)
+        native_bridge = prop("ro.dalvik.vm.native.bridge", timeout=5)
+        model = prop("ro.product.model", timeout=5)
+
+        running = False
+        resolution = ""
+        if boot_completed == "1":
+            try:
+                running = bool(self.shell(["pidof", self.package], timeout=5).strip())
+            except BackendError:
+                running = False
+            try:
+                resolution = self.shell(["wm", "size"], timeout=5).strip()
+            except BackendError:
+                resolution = ""
 
         return DeviceHealth(
             backend=self.backend_name,
             serial=self.serial,
             state=state,
-            boot_completed=prop("sys.boot_completed"),
-            android=prop("ro.build.version.release"),
-            abi=prop("ro.product.cpu.abi"),
-            abilist=prop("ro.product.cpu.abilist"),
-            native_bridge=prop("ro.dalvik.vm.native.bridge"),
+            boot_completed=boot_completed,
+            android=android,
+            abi=abi,
+            abilist=abilist,
+            native_bridge=native_bridge,
             package_running=running,
-            model=prop("ro.product.model"),
+            model=model,
             resolution=resolution,
         )
 
