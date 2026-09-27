@@ -1,0 +1,9 @@
+﻿{
+    "caption":  "Майкрософт Windows 10 Pro",
+    "version":  "10.0.19045",
+    "build":  "19045",
+    "architecture":  "64-разрядная",
+    "cpu":  "AMD Ryzen 5 2600 Six-Core Processor            ",
+    "virtualization_firmware_enabled":  true,
+    "slat":  false
+}

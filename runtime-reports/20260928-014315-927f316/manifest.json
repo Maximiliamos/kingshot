@@ -1,0 +1,23 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "UNSUPPORTED_WINDOWS_BUILD",
+    "exit_code":  11,
+    "commit":  "927f31626310810c58e4786ee94f43c0f91923e3",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-28T01:43:14.9384492+03:00",
+    "wsa_release":  "Windows_11_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z",
+    "archive_sha256":  "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8",
+    "host":  {
+                 "caption":  "Майкрософт Windows 10 Pro",
+                 "version":  "10.0.19045",
+                 "build":  "19045",
+                 "architecture":  "64-разрядная",
+                 "cpu":  "AMD Ryzen 5 2600 Six-Core Processor            ",
+                 "virtualization_firmware_enabled":  true,
+                 "slat":  false
+             }
+}
