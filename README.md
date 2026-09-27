@@ -4,15 +4,41 @@
 
 ## Текущая архитектура
 
-- **scrcpy** — передаёт изображение экрана HONOR Magic V3 на ПК с низкой задержкой.
-- **Python + OpenCV + MSS** — распознают текущий экран и известные элементы интерфейса.
-- **ADB** — выполняет нажатия и ввод на телефоне.
-- **state.json** — хранит текущую фазу/шаг локального запуска.
+WAR BOT теперь отделяет логику игры от способа подключения к Android.
 
-Телефон, на котором велась разработка:
-- HONOR Magic V3 / FCP-AN10
-- 1060×2376
-- ADB: `C:\platform-tools\adb.exe`
+```text
+Native ARM64 QEMU / любой готовый ADB Android
+                  │
+                  ▼
+           DeviceBackend
+      ┌───────────┼────────────┐
+      │           │            │
+ screenshot     input      app lifecycle
+      │           │            │
+      └───────────┴────────────┘
+                  │
+                  ▼
+          OpenCV vision layer
+                  │
+                  ▼
+       safe state machine / GUI
+```
+
+По умолчанию используется `native_arm64`: собственный ARM64 Android runtime
+под QEMU TCG и ADB `127.0.0.1:5561`. После прохождения системного ARM64 gate
+тот же backend будет использоваться для игры.
+
+Доступны режимы:
+
+- **native_arm64** — целевой production backend;
+- **adb** — уже запущенный Android по конкретному ADB serial;
+- **scrcpy** — только legacy/диагностический источник кадров.
+
+Из зрелых open-source проектов взяты архитектурные идеи, а не скопированный
+код: device-scoped transport как в adbutils, опциональный системный UI-канал
+как в uiautomator2, независимый video/control transport как в scrcpy и
+image-first подход для Unity-интерфейса как в Airtest.
+
 
 ## Текущая версия
 
@@ -74,9 +100,11 @@ run_gui.bat
 python gui.py
 ```
 
-GUI показывает живой кадр scrcpy, текущую фазу `state.json`, журнал и
-статистику цикла. Кнопки паузы и остановки передают команды
-движку через `control.json`, поэтому GUI не нажимает кнопки игры самостоятельно.
+GUI показывает кадр выбранного Android backend, текущую фазу `state.json`,
+журнал и статистику цикла. В настройках можно выбрать Native ARM64, обычный
+ADB или legacy scrcpy, а также запустить/остановить ARM64 runtime. Кнопки
+паузы и остановки передают команды движку через `control.json`, поэтому GUI
+не нажимает кнопки игры самостоятельно.
 
 Сбросить локальное состояние:
 
@@ -96,13 +124,12 @@ python C:\warbot\bot.py
 python C:\warbot\bot.py --dry-run
 ```
 
-Перед запуском открой scrcpy в режиме, доступном для захвата OpenCV:
+Для целевого режима scrcpy больше не требуется. После загрузки ARM64 Android
+кадры берутся напрямую через `adb exec-out screencap -p`, а input отправляется
+в тот же device-scoped ADB serial.
 
-```powershell
-scrcpy --no-audio --max-fps=60 --video-bit-rate=16M --stay-awake --render-driver=software --always-on-top
-```
-
-Бот захватывает только клиентскую область окна устройства `FCP-AN10`. Для другого устройства задай его заголовок через `WAR_BOT_SCRCPY_TITLE`.
+Legacy scrcpy оставлен только для диагностики. Для него можно задать
+`WAR_BOT_BACKEND=scrcpy` и `WAR_BOT_SCRCPY_TITLE`.
 
 **F8** — аварийная остановка.
 
