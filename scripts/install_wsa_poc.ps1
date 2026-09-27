@@ -403,43 +403,130 @@ if (-not $installed) {
 }
 $installed | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "installed-wsa.txt")
 
-Write-Log "Launching WSA Settings to wake the subsystem."
+Write-Log "Launching Android subsystem settings and waking the Android environment."
 try {
     Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
 }
 catch {
-    Write-Log "Could not launch WSA Settings automatically: $($_.Exception.Message)"
+    Write-Log "Could not launch subsystem Settings automatically: $($_.Exception.Message)"
 }
 
 $adb = "C:\Android\Sdk\platform-tools\adb.exe"
 if (-not (Test-Path $adb)) {
     Finish-Report -State "ADB_MISSING" -ExitCode 19
-    throw "ADB not found at $adb."
+    throw "Android control tool not found at $adb."
 }
 
-Start-Sleep -Seconds 12
-$connect = (& $adb connect $Serial 2>&1 | Out-String).Trim()
-Set-Content -Encoding UTF8 -Path (Join-Path $stage "adb-connect.txt") -Value $connect
-Write-Log "ADB connect result: $connect"
+$client = Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\WsaClient.exe"
+if (Test-Path $client) {
+    try {
+        Start-Process -FilePath $client -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue
+        Write-Log "Requested Android Settings launch to wake the Android environment."
+    }
+    catch {
+        Write-Log "Android Settings wake request was not available: $($_.Exception.Message)"
+    }
+}
 
-$state = (& $adb -s $Serial get-state 2>&1 | Out-String).Trim()
-Set-Content -Encoding UTF8 -Path (Join-Path $stage "adb-state.txt") -Value $state
-if ($state -ne "device") {
-    Finish-Report -State "NEEDS_WSA_DEVELOPER_MODE" -ExitCode 20 -Extra @{
-        adb_connect = $connect
-        adb_state = $state
+function Invoke-AdbSafe {
+    param([string[]]$Arguments)
+
+    $token = [Guid]::NewGuid().ToString("N")
+    $stdoutPath = Join-Path $env:TEMP ("warbot-android-out-" + $token + ".txt")
+    $stderrPath = Join-Path $env:TEMP ("warbot-android-err-" + $token + ".txt")
+    try {
+        $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -NoNewWindow -PassThru -Wait -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        $stdout = if (Test-Path $stdoutPath) { (Get-Content -Raw $stdoutPath).Trim() } else { "" }
+        $stderr = if (Test-Path $stderrPath) { (Get-Content -Raw $stderrPath).Trim() } else { "" }
+        $parts = @()
+        if ($stdout) { $parts += $stdout }
+        if ($stderr) { $parts += $stderr }
+        $combined = ($parts -join [Environment]::NewLine).Trim()
+        return [pscustomobject]@{
+            ExitCode = $proc.ExitCode
+            Stdout = $stdout
+            Stderr = $stderr
+            Text = $combined
+        }
+    }
+    finally {
+        Remove-Item -Force -ErrorAction SilentlyContinue $stdoutPath, $stderrPath
+    }
+}
+
+Start-Sleep -Seconds 20
+
+$serialCandidates = New-Object System.Collections.Generic.List[string]
+$serialCandidates.Add($Serial)
+
+if ($Serial -match ":58526$") {
+    try {
+        $routes = Get-NetRoute -AddressFamily IPv4 -DestinationPrefix "0.0.0.0/0" -ErrorAction Stop | Sort-Object RouteMetric, InterfaceMetric
+        foreach ($route in $routes) {
+            $addresses = Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue | Where-Object {
+                $_.IPAddress -and
+                $_.IPAddress -ne "127.0.0.1" -and
+                -not $_.IPAddress.StartsWith("169.254.")
+            }
+            foreach ($address in $addresses) {
+                $candidate = "$($address.IPAddress):58526"
+                if (-not $serialCandidates.Contains($candidate)) {
+                    $serialCandidates.Add($candidate)
+                }
+            }
+        }
+    }
+    catch {
+        Write-Log "Could not enumerate alternate host IPv4 endpoints: $($_.Exception.Message)"
+    }
+}
+
+$attempts = @()
+$onlineSerial = $null
+foreach ($candidate in $serialCandidates) {
+    $connectResult = Invoke-AdbSafe -Arguments @("connect", $candidate)
+    $stateResult = Invoke-AdbSafe -Arguments @("-s", $candidate, "get-state")
+    $stateText = $stateResult.Stdout.Trim()
+    $attempts += [ordered]@{
+        serial = $candidate
+        connect_exit = $connectResult.ExitCode
+        connect = $connectResult.Text
+        state_exit = $stateResult.ExitCode
+        state = $stateText
+        state_error = $stateResult.Stderr
+    }
+    Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
+    if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
+        $onlineSerial = $candidate
+        break
+    }
+}
+
+$attempts | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "android-connect-attempts.json")
+try {
+    (& netstat.exe -ano | Select-String -Pattern "58526" | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "port-58526.txt")
+}
+catch {}
+
+if (-not $onlineSerial) {
+    Finish-Report -State "NEEDS_ANDROID_DEVELOPER_MODE" -ExitCode 20 -Extra @{
         installed_version = $installed.Version.ToString()
+        attempted_serials = @($serialCandidates)
     }
     Write-Host ""
-    Write-Host "WSA is installed. One Windows UI permission remains:"
-    Write-Host "1. In the WSA Settings window open Advanced settings."
-    Write-Host "2. Enable Developer mode."
-    Write-Host "3. If WSA shows a different ADB IP:port, rerun with -Serial IP:PORT."
-    Write-Host "4. Otherwise rerun the SAME command; default is $Serial."
+    Write-Host "The Android subsystem is installed successfully."
+    Write-Host "The local control channel is not enabled yet."
+    Write-Host "In the subsystem Settings window:"
+    Write-Host "1. Open Advanced settings."
+    Write-Host "2. Turn Developer mode ON."
+    Write-Host "3. If a confirmation window appears, allow the local computer."
+    Write-Host "4. Run the SAME command again."
     exit 20
 }
 
-Write-Log "WSA ADB transport is online."
+$Serial = $onlineSerial
+Set-Content -Encoding UTF8 -Path (Join-Path $stage "selected-serial.txt") -Value $Serial
+Write-Log "Android control channel is online at $Serial."
 
 $props = @(
     "ro.build.version.release",
