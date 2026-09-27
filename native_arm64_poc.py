@@ -433,6 +433,11 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         "androidboot.vbmeta.digest=15e6b2e26d1523b6c38c0a60d5ac8f8cf547364c343d16e58338814e45faa6a8 "
         "androidboot.vbmeta.hash_alg=sha256 androidboot.vbmeta.size=6720 "
         "qemu=1 androidboot.qemu=1 qemu.encrypt=1 qemu.gles=1 "
+        # Goldfish/ranchu Android 11 disables Codec2 by default because the
+        # emulator platform does not provide the ION path Codec2 expects.
+        # Without this boot property our direct launcher can crash zygote in
+        # libcodec2_vndk.so before ADB becomes available.
+        "qemu.media.ccodec=0 "
         "qemu.gltransport=pipe qemu.opengles.version=131072 "
         "qemu.skin=1060x2376 qemu.virtiowifi=0 qemu.vsync=60"
     )
