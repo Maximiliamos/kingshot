@@ -16,8 +16,13 @@ import cv2
 import mss
 import numpy as np
 
+from device_backend import BackendCapture, BackendError, create_backend
 
-ADB = r"C:\platform-tools\adb.exe"
+
+ADB = os.environ.get("WAR_BOT_ADB", r"C:\platform-tools\adb.exe")
+BACKEND_NAME = os.environ.get("WAR_BOT_BACKEND", "native_arm64").strip().lower()
+ANDROID_SERIAL = os.environ.get("WAR_BOT_ANDROID_SERIAL", "127.0.0.1:5561")
+DEVICE_BACKEND = None
 TESSERACT = os.path.join(
     os.environ.get("LOCALAPPDATA", ""), "Programs", "Tesseract-OCR", "tesseract.exe"
 )
@@ -321,27 +326,58 @@ def begin_next_character_cycle(state):
     set_phase(state, "rename_governor", "governor_home")
 
 
-def adb(args, capture=False):
-    cmd = [ADB] + list(args)
-    if capture:
-        return subprocess.run(
-            cmd, capture_output=True, text=True,
-            encoding="utf-8", errors="ignore", check=False
+def get_device_backend():
+    """Return one device-scoped backend for the whole bot process."""
+    global DEVICE_BACKEND
+    if DEVICE_BACKEND is None:
+        backend_name = "adb" if BACKEND_NAME == "scrcpy" else BACKEND_NAME
+        serial = ANDROID_SERIAL or None
+        DEVICE_BACKEND = create_backend(
+            backend_name,
+            serial=serial,
+            adb_path=ADB,
         )
-    return subprocess.run(
-        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-    )
+    return DEVICE_BACKEND
+
+
+def create_capture():
+    """Use direct Android frames by default; keep scrcpy only as diagnostics."""
+    if BACKEND_NAME == "scrcpy":
+        return ScrcpyCapture()
+    return BackendCapture(get_device_backend())
+
+
+def adb(args, capture=False):
+    """Compatibility wrapper; all commands are scoped to the selected serial."""
+    backend = get_device_backend()
+    if not hasattr(backend, "run_adb"):
+        raise BackendError(f"Backend {backend.backend_name} has no raw ADB channel")
+    return backend.run_adb(args, check=False)
 
 
 def adb_check():
-    r = adb(["devices", "-l"], capture=True)
-    lines = [x.strip() for x in r.stdout.splitlines() if x.strip()]
-    if any("unauthorized" in x for x in lines):
-        raise RuntimeError("Телефон unauthorized. Подтверди USB-отладку на HONOR.")
-    dev = [x for x in lines if "\tdevice" in x or " device " in f" {x} "]
-    if not dev:
-        raise RuntimeError("Телефон со статусом device не найден.")
-    log(f"ADB OK: {dev[0]}")
+    backend = get_device_backend()
+    health = backend.health()
+    if health.state != "device":
+        raise RuntimeError(
+            f"Android backend {health.backend} is not ready: "
+            f"serial={health.serial} state={health.state}"
+        )
+    if health.boot_completed != "1":
+        raise RuntimeError(
+            f"Android {health.serial} is connected but boot is incomplete "
+            f"(sys.boot_completed={health.boot_completed!r})."
+        )
+    if BACKEND_NAME in ("native", "native_arm64", "emulator") and not health.native_arm64:
+        raise RuntimeError(
+            "Native ARM64 gate failed: "
+            f"abi={health.abi!r} abilist={health.abilist!r} "
+            f"native_bridge={health.native_bridge!r}"
+        )
+    log(
+        f"ANDROID OK: backend={health.backend} serial={health.serial} "
+        f"android={health.android} abi={health.abi}"
+    )
 
 
 def tap(x, y):
@@ -349,8 +385,8 @@ def tap(x, y):
     if DRY_RUN:
         log(f"DRY RUN tap ({x},{y})")
         return
-    adb(["shell", "input", "tap", str(x), str(y)])
-    log(f"ADB tap phone=({x},{y})")
+    get_device_backend().tap(x, y)
+    log(f"Android tap phone=({x},{y})")
 
 
 def hold(x, y, duration_ms):
@@ -359,8 +395,8 @@ def hold(x, y, duration_ms):
     if DRY_RUN:
         log(f"DRY RUN hold ({x},{y}) for {duration_ms} ms")
         return
-    adb(["shell", "input", "swipe", str(x), str(y), str(x), str(y), str(duration_ms)])
-    log(f"ADB hold phone=({x},{y}) duration={duration_ms} ms")
+    get_device_backend().hold(x, y, duration_ms)
+    log(f"Android hold phone=({x},{y}) duration={duration_ms} ms")
 
 
 def tap_norm(nx, ny):
@@ -396,12 +432,12 @@ def type_tugarin_on_russian_keyboard(phone, number):
 
 def key(code):
     if not DRY_RUN:
-        adb(["shell", "input", "keyevent", str(code)])
+        get_device_backend().keyevent(code)
 
 
 def text(value):
     if not DRY_RUN:
-        adb(["shell", "input", "text", str(value)])
+        get_device_backend().input_text(str(value))
 
 
 def emergency():
@@ -796,7 +832,7 @@ def crop_phone(frame):
         phone = frame[top:top + content_h, :]
         left = 0
     if phone.size == 0:
-        raise RuntimeError(f"Неверный crop scrcpy: {sw}x{sh}")
+        raise RuntimeError(f"Неверный crop Android frame: {sw}x{sh}")
     normalized = cv2.resize(phone, (VISION_W, VISION_H), interpolation=cv2.INTER_AREA)
     return normalized, left, left + phone.shape[1]
 
@@ -1276,7 +1312,10 @@ def main():
     log(f"WAR BOT v4 | phase={state['phase']} step={state['step']}")
     adb_check()
 
-    print("Убедись, что открыто ровно одно окно scrcpy с экраном телефона.")
+    if BACKEND_NAME == "scrcpy":
+        print("Legacy diagnostics: откройте ровно одно окно scrcpy.")
+    else:
+        print(f"Android backend: {BACKEND_NAME} / {get_device_backend().serial}")
     print("F8 — аварийная остановка.")
     for i in range(START_DELAY, 0, -1):
         print(f"Старт через {i}...")
@@ -1312,11 +1351,11 @@ def main():
 
             if capture is None:
                 try:
-                    capture = ScrcpyCapture()
+                    capture = create_capture()
                     frame, title, rect = capture.grab()
                     log(f"Захват scrcpy: {title} {rect['width']}x{rect['height']}")
                 except Exception as e:
-                    log(f"Захват scrcpy не открылся: {e}; повтор через 2 сек.")
+                    log(f"Захват Android не открылся: {e}; повтор через 2 сек.")
                     if capture is not None:
                         capture.close()
                     capture = None
@@ -1326,7 +1365,7 @@ def main():
             try:
                 frame, _, _ = capture.grab()
             except Exception as e:
-                log(f"Захват scrcpy: {e}. Пересоздаю захват.")
+                log(f"Захват Android: {e}. Пересоздаю захват.")
                 capture.close()
                 capture = None
                 time.sleep(2)
@@ -1335,7 +1374,7 @@ def main():
 
             if not stream_ok(frame, left, right):
                 if time.time() - warn_at > 5:
-                    log("scrcpy вернул пустой кадр — пауза.")
+                    log("Android backend вернул пустой кадр — пауза.")
                     warn_at = time.time()
                 unknown_since = None
                 time.sleep(0.7)
