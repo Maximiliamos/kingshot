@@ -782,7 +782,7 @@ def collect_adb_boot_diagnostics() -> dict[str, object]:
             [ADB, "-s", SERIAL, "get-state"],
             timeout=5, check=False,
         ).stdout.strip()
-    except subprocess.TimeoutExpired:
+    except (subprocess.TimeoutExpired, OSError):
         return result
     if state != "device":
         return result
