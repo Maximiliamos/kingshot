@@ -58,6 +58,36 @@ class DeviceBackendTests(unittest.TestCase):
         self.assertIsInstance(backend, db.AdbDeviceBackend)
         self.assertEqual(backend.serial, "device-1")
 
+    def test_factory_supports_wsa(self):
+        backend = db.create_backend(
+            "wsa",
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\fake\adb.exe",
+        )
+        self.assertIsInstance(backend, db.WsaBackend)
+        self.assertEqual(backend.backend_name, "wsa")
+        self.assertEqual(backend.serial, "127.0.0.1:58526")
+
+    def test_wsa_does_not_require_native_arm64_gate(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\fake\adb.exe",
+        )
+        translated = db.DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+            android="13",
+            abi="x86_64",
+            abilist="x86_64,x86,arm64-v8a,armeabi-v7a",
+            native_bridge="libhoudini.so",
+        )
+        with patch.object(backend, "health", return_value=translated):
+            health = backend.require_ready(native_arm64=False)
+        self.assertTrue(health.ready)
+        self.assertFalse(health.native_arm64)
+
     def test_health_does_not_probe_package_before_boot_complete(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
