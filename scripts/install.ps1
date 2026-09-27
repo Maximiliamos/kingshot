@@ -16,6 +16,7 @@ $files = @(
     "gui.py",
     "device_backend.py",
     "native_arm64_poc.py",
+    "warbot_cli.py",
     "run_gui.bat",
     "requirements.txt",
     "requirements-android-optional.txt"
