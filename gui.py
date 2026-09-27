@@ -1,10 +1,11 @@
 import json
 import os
 import sys
+import threading
 from datetime import datetime
 
 import cv2
-from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Qt
+from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Qt, Signal
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout,
@@ -68,6 +69,9 @@ class Card(QFrame):
 
 
 class WarBotWindow(QMainWindow):
+    capture_ready = Signal(object, str, object)
+    capture_failed = Signal(str)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("WAR BOT — Центр управления")
@@ -85,6 +89,9 @@ class WarBotWindow(QMainWindow):
         self.process.finished.connect(self.process_finished)
         self.capture = None
         self.capture_signature = None
+        self.capture_busy = False
+        self.capture_ready.connect(self._render_capture)
+        self.capture_failed.connect(self._capture_failed)
         self.last_log_size = 0
         self.paused = False
         self.pending_bot_start = False
@@ -560,39 +567,89 @@ class WarBotWindow(QMainWindow):
         else:
             self.start_button.setText("▶  ЗАПУСТИТЬ")
 
+    def _render_capture(self, phone, title, rect):
+        self.capture_busy = False
+        rgb = cv2.cvtColor(phone, cv2.COLOR_BGR2RGB)
+        image = QImage(
+            rgb.data, rgb.shape[1], rgb.shape[0], rgb.strides[0],
+            QImage.Format_RGB888,
+        ).copy()
+        pixmap = QPixmap.fromImage(image).scaled(
+            self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        self.preview.setPixmap(pixmap)
+        self.device_status.setText(
+            f"● {title} · {rect['width']}×{rect['height']}"
+        )
+        self.device_status.setStyleSheet("color: #55d98b")
+
+    def _capture_failed(self, message):
+        self.capture_busy = False
+        if self.capture is not None:
+            try:
+                self.capture.close()
+            except Exception:
+                pass
+            self.capture = None
+        self.capture_signature = None
+        self.device_status.setText(f"● Android недоступен: {message}")
+        self.device_status.setStyleSheet("color: #ff7185")
+
     def refresh_capture(self):
         mode = str(self.backend_mode.currentData() or "native_arm64")
         serial = self.android_serial.text().strip() or "127.0.0.1:5561"
         adb_path = self.adb_path.text().strip()
         signature = (mode, serial, adb_path, self.window_title.text().strip())
+
+        # Legacy scrcpy/MSS capture is kept synchronous only for diagnostics.
+        # Native ADB screencap can take hundreds of milliseconds (or timeout
+        # while Android boots), so it must never block the Qt UI thread.
+        if mode == "scrcpy":
+            try:
+                if self.capture is None or signature != self.capture_signature:
+                    if self.capture is not None:
+                        self.capture.close()
+                    bot.SCRCPY_VIDEO_TITLE = (
+                        self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE
+                    )
+                    self.capture = bot.ScrcpyCapture()
+                    self.capture_signature = signature
+                frame, title, rect = self.capture.grab()
+                phone, _, _ = bot.crop_phone(frame)
+                self._render_capture(phone, title, rect)
+            except Exception as error:
+                self._capture_failed(str(error))
+            return
+
+        if self.capture_busy:
+            return
         try:
             if self.capture is None or signature != self.capture_signature:
                 if self.capture is not None:
                     self.capture.close()
-                if mode == "scrcpy":
-                    bot.SCRCPY_VIDEO_TITLE = self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE
-                    self.capture = bot.ScrcpyCapture()
-                else:
-                    backend = create_backend(mode, serial=serial, adb_path=adb_path)
-                    self.capture = BackendCapture(backend)
+                backend = create_backend(mode, serial=serial, adb_path=adb_path)
+                self.capture = BackendCapture(backend)
                 self.capture_signature = signature
-            frame, title, rect = self.capture.grab()
-            phone, _, _ = bot.crop_phone(frame)
-            rgb = cv2.cvtColor(phone, cv2.COLOR_BGR2RGB)
-            image = QImage(rgb.data, rgb.shape[1], rgb.shape[0], rgb.strides[0], QImage.Format_RGB888).copy()
-            pixmap = QPixmap.fromImage(image).scaled(
-                self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
-            self.preview.setPixmap(pixmap)
-            self.device_status.setText(f"● {title} · {rect['width']}×{rect['height']}")
-            self.device_status.setStyleSheet("color: #55d98b")
         except Exception as error:
-            if self.capture is not None:
-                self.capture.close()
-                self.capture = None
-            self.capture_signature = None
-            self.device_status.setText(f"● Android недоступен: {error}")
-            self.device_status.setStyleSheet("color: #ff7185")
+            self._capture_failed(str(error))
+            return
+
+        self.capture_busy = True
+        capture = self.capture
+
+        def worker():
+            try:
+                frame, title, rect = capture.grab()
+                phone, _, _ = bot.crop_phone(frame)
+                self.capture_ready.emit(phone, title, rect)
+            except Exception as error:
+                self.capture_failed.emit(str(error))
+
+        threading.Thread(
+            target=worker,
+            name="warbot-gui-capture",
+            daemon=True,
+        ).start()
 
     def refresh_log_file(self):
         try:
