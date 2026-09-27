@@ -532,9 +532,8 @@ class WsaBackend(AdbDeviceBackend):
         # Settings app is a safe way to wake the subsystem and expose Developer
         # mode / ADB. Never delete WSA userdata from this backend.
         app = (
-            r"shell:AppsFolder\"
-            r"MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe"
-            r"!SettingsApp"
+            r"shell:AppsFolder\MicrosoftCorporationII."
+            r"WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
         )
         subprocess.Popen(
             ["explorer.exe", app],
