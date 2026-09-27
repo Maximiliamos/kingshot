@@ -516,6 +516,21 @@ class WarBotWindow(QMainWindow):
         self.write_control(False, True)
         self.paused = False
         self.pause_button.setText("Ⅱ  ПАУЗА")
+
+        if self.pending_bot_start:
+            self.pending_bot_start = False
+            if self.device_process.state() != QProcess.NotRunning:
+                self.device_process.kill()
+            # Stop only the WAR BOT runtime identified by native_arm64_poc.
+            QProcess.startDetached(
+                self.python_path.text().strip(),
+                [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
+                ROOT,
+            )
+            self.start_button.setEnabled(True)
+            self.start_button.setText("▶  ЗАПУСТИТЬ")
+            self.append_log("[Device] Подготовка Android отменена пользователем.")
+
         if self.process.state() != QProcess.NotRunning:
             QTimer.singleShot(3000, self.force_stop_if_needed)
 
