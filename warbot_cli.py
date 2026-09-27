@@ -39,6 +39,26 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def reset_workflow_for_clean_game() -> dict:
+    """Reset only Android-dependent workflow while preserving PC counters."""
+    import bot
+    old = bot.load_state()
+    fresh = dict(bot.DEFAULT_STATE)
+    for key in (
+        "next_nickname", "characters_created", "current_cycle",
+        "characters_per_cycle", "auto_reset_data", "repeat_cycles",
+        "target_state",
+    ):
+        if key in old:
+            fresh[key] = old[key]
+    fresh["pending_nickname"] = int(fresh.get("next_nickname", 1))
+    fresh["characters_created_cycle"] = 0
+    fresh["last_stop_reason"] = ""
+    fresh["tutorial_origin"] = "initial"
+    bot.save_state(fresh)
+    return fresh
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     backend = create_backend(
@@ -94,6 +114,7 @@ def main(argv=None) -> int:
 
         if args.clean_game:
             backend.clear_app_data()
+            reset_workflow_for_clean_game()
 
         backend.launch_app()
         pid = backend.wait_package_running(timeout=90)
@@ -151,24 +172,7 @@ def main(argv=None) -> int:
         backend.stop_app()
         clear_result = backend.clear_app_data()
 
-        # Keep PC-side nickname history/config but reset only the workflow that
-        # belongs to the freshly-cleared Android app.
-        import bot
-        old = bot.load_state()
-        fresh = dict(bot.DEFAULT_STATE)
-        for key in (
-            "next_nickname", "characters_created", "current_cycle",
-            "characters_per_cycle", "auto_reset_data", "repeat_cycles",
-            "target_state",
-        ):
-            if key in old:
-                fresh[key] = old[key]
-        fresh["pending_nickname"] = int(fresh.get("next_nickname", 1))
-        fresh["characters_created_cycle"] = 0
-        fresh["last_stop_reason"] = ""
-        fresh["tutorial_origin"] = "initial"
-        bot.save_state(fresh)
-
+        fresh = reset_workflow_for_clean_game()
         backend.launch_app()
         print(json.dumps({
             "clear_result": clear_result.strip(),
