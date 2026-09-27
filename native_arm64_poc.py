@@ -790,12 +790,19 @@ def wait_for_boot(timeout=1200, process=None):
             # expected and must not terminate an otherwise healthy QEMU guest.
             time.sleep(3)
             continue
-        state = run([ADB, "-s", SERIAL, "get-state"], timeout=10, check=False)
-        last_state = state.stdout.strip()
+        try:
+            state = run([ADB, "-s", SERIAL, "get-state"], timeout=5, check=False)
+            last_state = state.stdout.strip()
+        except subprocess.TimeoutExpired:
+            last_state = "unresponsive"
         if last_state == "device":
-            boot = adb(
-                "shell", "getprop", "sys.boot_completed", check=False
-            ).stdout.strip()
+            try:
+                boot = adb(
+                    "shell", "getprop", "sys.boot_completed",
+                    timeout=5, check=False,
+                ).stdout.strip()
+            except subprocess.TimeoutExpired:
+                boot = ""
             if boot == "1":
                 print(f"ARM64 Android booted: {SERIAL}", flush=True)
                 return
@@ -823,26 +830,54 @@ def wait_for_boot(timeout=1200, process=None):
 
 
 def guest_status() -> dict[str, object]:
-    state = run([ADB, "-s", SERIAL, "get-state"], check=False).stdout.strip()
+    try:
+        state = run(
+            [ADB, "-s", SERIAL, "get-state"],
+            timeout=5,
+            check=False,
+        ).stdout.strip()
+    except subprocess.TimeoutExpired:
+        return {
+            "serial": SERIAL,
+            "device_state": "unresponsive",
+            "diagnostic_error": "adb get-state timed out",
+        }
+
     if state != "device":
         return {"serial": SERIAL, "device_state": state or "missing"}
+
+    def safe_shell(*args, timeout=5) -> str:
+        try:
+            return adb(
+                "shell", *args, timeout=timeout, check=False
+            ).stdout.strip()
+        except subprocess.TimeoutExpired:
+            return ""
+
+    # "adb get-state" can become "device" before zygote/framework are usable.
+    # First ask only init-level properties. Avoid pm/wm/package probes until
+    # sys.boot_completed=1, otherwise diagnostics themselves can hang.
+    boot_completed = safe_shell("getprop", "sys.boot_completed", timeout=5)
     props = {
         "serial": SERIAL,
         "device_state": state,
-        "boot_completed": adb("shell", "getprop", "sys.boot_completed", check=False).stdout.strip(),
-        "android": adb("shell", "getprop", "ro.build.version.release", check=False).stdout.strip(),
-        "abi": adb("shell", "getprop", "ro.product.cpu.abi", check=False).stdout.strip(),
-        "abilist": adb("shell", "getprop", "ro.product.cpu.abilist", check=False).stdout.strip(),
-        "native_bridge": adb("shell", "getprop", "ro.dalvik.vm.native.bridge", check=False).stdout.strip(),
-        "codec2": adb("shell", "getprop", "debug.stagefright.ccodec", check=False).stdout.strip(),
-        "kernel_codec2": adb("shell", "getprop", "ro.kernel.qemu.media.ccodec", check=False).stdout.strip(),
-        "boot_devices": adb("shell", "getprop", "ro.boot.boot_devices", check=False).stdout.strip(),
-        "logical_partitions": adb("shell", "getprop", "ro.boot.logical_partitions", check=False).stdout.strip(),
-        "vbmeta_device_state": adb("shell", "getprop", "ro.boot.vbmeta.device_state", check=False).stdout.strip(),
-        "model": adb("shell", "getprop", "ro.product.model", check=False).stdout.strip(),
-        "resolution": adb("shell", "wm", "size", check=False).stdout.strip(),
-        "density": adb("shell", "wm", "density", check=False).stdout.strip(),
+        "boot_completed": boot_completed,
+        "android": safe_shell("getprop", "ro.build.version.release"),
+        "abi": safe_shell("getprop", "ro.product.cpu.abi"),
+        "abilist": safe_shell("getprop", "ro.product.cpu.abilist"),
+        "native_bridge": safe_shell("getprop", "ro.dalvik.vm.native.bridge"),
+        "codec2": safe_shell("getprop", "debug.stagefright.ccodec"),
+        "kernel_codec2": safe_shell("getprop", "ro.kernel.qemu.media.ccodec"),
+        "boot_devices": safe_shell("getprop", "ro.boot.boot_devices"),
+        "logical_partitions": safe_shell("getprop", "ro.boot.logical_partitions"),
+        "vbmeta_device_state": safe_shell("getprop", "ro.boot.vbmeta.device_state"),
+        "model": safe_shell("getprop", "ro.product.model"),
+        "resolution": "",
+        "density": "",
     }
+    if boot_completed == "1":
+        props["resolution"] = safe_shell("wm", "size")
+        props["density"] = safe_shell("wm", "density")
     props["native_arm64"] = is_native_arm64(props)
     return props
 
