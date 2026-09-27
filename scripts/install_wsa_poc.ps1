@@ -41,14 +41,18 @@ function Invoke-SelfElevated {
     $quoted = $args | ForEach-Object {
         if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
     }
-    Start-Process powershell.exe -Verb RunAs -ArgumentList ($quoted -join " ")
+    $proc = Start-Process powershell.exe -Verb RunAs -PassThru -Wait -ArgumentList ($quoted -join " ")
+    if ($null -eq $proc) {
+        return 98
+    }
+    return $proc.ExitCode
 }
 
 if (-not (Test-IsAdmin)) {
     Write-Host "Administrator rights are required for WSA installation."
     Write-Host "Requesting elevation..."
-    Invoke-SelfElevated
-    exit 0
+    $childExit = Invoke-SelfElevated
+    exit $childExit
 }
 
 New-Item -ItemType Directory -Force -Path $WorkRoot, $DownloadRoot, $RuntimeRoot | Out-Null
@@ -116,6 +120,24 @@ function Finish-Report {
     Write-Host "Local report: $stage"
 }
 
+trap {
+    $detail = ($_ | Out-String)
+    try {
+        $detail | Set-Content -Encoding UTF8 (Join-Path $stage "uncaught-error.txt")
+        Finish-Report -State "UNCAUGHT_ERROR" -ExitCode 99 -Extra @{
+            error = $_.Exception.Message
+            category = $_.CategoryInfo.Category.ToString()
+            target = [string]$_.CategoryInfo.TargetName
+        }
+    }
+    catch {
+        Write-Host "Secondary failure while uploading uncaught error:"
+        Write-Host ($_ | Out-String)
+    }
+    Write-Host $detail
+    exit 99
+}
+
 Write-Log "Starting WSA LTS 8 PoC installer."
 
 $os = Get-CimInstance Win32_OperatingSystem
@@ -169,7 +191,12 @@ if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
     throw "CPU virtualization is disabled in BIOS/UEFI. Enable Intel VT-x/AMD-V and rerun."
 }
 
-$featureNames = @("VirtualMachinePlatform", "HypervisorPlatform")
+& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to enable Windows developer package registration."
+}
+
+$featureNames = @("VirtualMachinePlatform")
 $featureState = @{}
 $needsReboot = $false
 foreach ($feature in $featureNames) {
