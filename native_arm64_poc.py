@@ -39,6 +39,9 @@ RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
 GPU_MODE = os.environ.get("WAR_BOT_ARM64_GPU", "host")
+RANCHU_BOOT_DEVICE = os.environ.get(
+    "WAR_BOT_ARM64_BOOT_DEVICE", "a003600.virtio_mmio"
+)
 
 ADB = SDK_ROOT / "platform-tools" / "adb.exe"
 SDKMANAGER = SDK_ROOT / "cmdline-tools" / "latest" / "bin" / "sdkmanager.bat"
@@ -420,7 +423,7 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
     append = (
         "8250.nr_uarts=1 no_timer_check console=ttyAMA0,38400 keep_bootcon "
         "earlyprintk=ttyAMA0 loop.max_part=7 printk.devkmsg=on "
-        "android.qemud=1 androidboot.boot_devices=a003600.virtio_mmio "
+        f"android.qemud=1 androidboot.boot_devices={RANCHU_BOOT_DEVICE} "
         "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64 "
         "androidboot.vbmeta.digest=15e6b2e26d1523b6c38c0a60d5ac8f8cf547364c343d16e58338814e45faa6a8 "
         "androidboot.vbmeta.hash_alg=sha256 androidboot.vbmeta.size=6720 "
@@ -438,16 +441,22 @@ def build_google_ranchu_command(*, window=False, wipe=False) -> list[str]:
         "-lcd-density", "480", "-nodefaults", "-no-audio",
         "-device", f"goldfish_pstore,addr=0xff018000,size=0x10000,file={paths['pstore']}",
         "-kernel", inv["kernel"], "-initrd", inv["ramdisk"],
-        "-drive", f"index=4,id=vendor,if=none,file={inv['vendor']},read-only",
-        "-drive", f"index=1,id=encrypt,if=none,file={paths['encryptionkey']}",
-        "-drive", f"index=2,id=userdata,if=none,file={paths['userdata']},format=raw",
-        "-drive", f"index=3,id=cache,if=none,file={paths['cache']}",
-        "-drive", f"index=0,id=system,if=none,file={inv['system']},read-only",
-        "-device", "virtio-blk-device,drive=system",
-        "-device", "virtio-blk-device,drive=encrypt",
-        "-device", "virtio-blk-device,drive=userdata",
-        "-device", "virtio-blk-device,drive=cache",
+        # Match Android Emulator's ARM64 PartitionParameters order exactly.
+        # On ranchu/virt, command-line virtio devices are assigned to MMIO
+        # transports in decreasing address order. With five block devices,
+        # vendor -> encrypt -> userdata -> cache -> system places the system
+        # (dynamic-partition/super) disk on a003600.virtio_mmio, matching the
+        # verified-boot androidboot.boot_devices value shipped with this image.
+        "-drive", f"index=0,id=vendor,if=none,file={inv['vendor']},read-only",
         "-device", "virtio-blk-device,drive=vendor",
+        "-drive", f"index=1,id=encrypt,if=none,file={paths['encryptionkey']}",
+        "-device", "virtio-blk-device,drive=encrypt",
+        "-drive", f"index=2,id=userdata,if=none,file={paths['userdata']},format=raw",
+        "-device", "virtio-blk-device,drive=userdata",
+        "-drive", f"index=3,id=cache,if=none,file={paths['cache']}",
+        "-device", "virtio-blk-device,drive=cache",
+        "-drive", f"index=4,id=system,if=none,file={inv['system']},read-only",
+        "-device", "virtio-blk-device,drive=system",
         "-netdev", "user,id=mynet", "-device", "virtio-net-device,netdev=mynet",
         "-device", "virtio-rng-device", "-show-cursor",
         "-android-ports", f"{CONSOLE_PORT},{ADB_PORT}",
