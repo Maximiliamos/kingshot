@@ -1,0 +1,21 @@
+{
+  "experiment": "upstream-virt-1cpu-single-tcg",
+  "qemu": "C:\\Program Files\\qemu\\qemu-system-aarch64.exe",
+  "machine": "virt",
+  "cpu": "cortex-a57",
+  "cpu_cores": 1,
+  "tcg_thread_mode": "single",
+  "duration_seconds": 302,
+  "outcome": "timeout-no-zygote-sigsegv",
+  "zygote_sigsegv": false,
+  "framework_lines": [
+    "[  231.620671] init: starting service 'zygote'...",
+    "[  231.620671] init: starting service 'zygote'...",
+    "[  275.550509] init: starting service 'surfaceflinger'...",
+    "[  275.550509] init: starting service 'surfaceflinger'...",
+    "[  289.642554] init: starting service 'adbd'...",
+    "[  289.642554] init: starting service 'adbd'..."
+  ],
+  "crash_lines": [],
+  "log": "C:\\warbot_arm64_runtime\\upstream-qemu-arm64.log"
+}

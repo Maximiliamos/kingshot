@@ -1,0 +1,11 @@
+===== getprop =====
+adb.exe: device offline
+
+===== cpuinfo =====
+adb.exe: device offline
+
+===== online-cpus =====
+adb.exe: device offline
+
+===== processes =====
+adb.exe: device offline
