@@ -32,9 +32,9 @@ Default system image:
 
 `system-images;android-30;google_apis;arm64-v8a`
 
-Default direct engine:
+Current raw-engine probe:
 
-`C:\Android\Sdk\emulator\qemu\windows-x86_64\qemu-system-aarch64.exe`
+`C:\Program Files\qemu\qemu-system-aarch64.exe` (QEMU 11.1, TCG)
 
 Default runtime data:
 
@@ -128,3 +128,28 @@ The first test is deliberately CPU/boot focused and starts with the simplest
 software framebuffer. If Android boots but Unity lacks a usable GLES renderer,
 that becomes the next isolated task. We should not mix CPU correctness, boot,
 ADB and GPU debugging in one change.
+
+## Evidence update — 2026-09-27
+
+`-debug-init` exposed the Android Emulator launcher's final ranchu topology.
+The launcher did not enter Android boot: its generated command includes
+`-soundhw hda`, but ranchu has no PCI bus. The headless binary reports the
+exact terminal error `PCI bus not available for hda`. `-no-audio` does not
+prevent that generated option, and QEMU passthrough appends rather than
+replaces it.
+
+Upstream QEMU 11.1 was then tested without the launcher layer. The stock
+Android 11 ARM64 kernel boots on `virt` under TCG, mounts system/vendor/data,
+finishes file-based encryption, starts zygote and adbd, and contains no x86
+native bridge. A fresh runtime encryption-key qcow2 overlay is required for a
+clean userdata image.
+
+This is not A1/A2 PASS yet. The stock vendor contains only ranchu graphics
+HALs (`hwcomposer.ranchu.so` and ranchu mapper/Vulkan modules). Upstream QEMU
+does not provide Android's goldfish pipe, so hwcomposer aborts and restarts
+SurfaceFlinger/zygote; ADB remains offline and `sys.boot_completed` is not 1.
+
+Next step: obtain/build a Google/AOSP QEMU ranchu runner whose final topology
+omits the invalid HDA device, or make the launcher generate a supported audio
+device. Do not add generic virtio-gpu flags to the upstream path: the installed
+vendor image has no matching DRM/virtio hwcomposer implementation.

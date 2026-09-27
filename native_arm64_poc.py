@@ -34,7 +34,7 @@ DEFAULT_SYSTEM_IMAGE = os.environ.get(
 )
 CONSOLE_PORT = int(os.environ.get("WAR_BOT_ARM64_CONSOLE_PORT", "5560"))
 ADB_PORT = CONSOLE_PORT + 1
-SERIAL = os.environ.get("WAR_BOT_ARM64_SERIAL", f"emulator-{CONSOLE_PORT}")
+SERIAL = os.environ.get("WAR_BOT_ARM64_SERIAL", f"127.0.0.1:{ADB_PORT}")
 RAM_MB = int(os.environ.get("WAR_BOT_ARM64_RAM_MB", "4096"))
 CPU_CORES = int(os.environ.get("WAR_BOT_ARM64_CPU_CORES", "4"))
 CPU_MODEL = os.environ.get("WAR_BOT_ARM64_CPU", "cortex-a57")
@@ -45,6 +45,13 @@ SDKMANAGER = SDK_ROOT / "cmdline-tools" / "latest" / "bin" / "sdkmanager.bat"
 QEMU_DIR = SDK_ROOT / "emulator" / "qemu" / "windows-x86_64"
 QEMU_ARM64 = QEMU_DIR / "qemu-system-aarch64.exe"
 QEMU_ARM64_HEADLESS = QEMU_DIR / "qemu-system-aarch64-headless.exe"
+UPSTREAM_QEMU_ARM64 = Path(os.environ.get(
+    "WAR_BOT_UPSTREAM_QEMU",
+    r"C:\Program Files\qemu\qemu-system-aarch64.exe",
+))
+UPSTREAM_QEMU_IMG = UPSTREAM_QEMU_ARM64.with_name("qemu-img.exe")
+MKE2FS = SDK_ROOT / "platform-tools" / "mke2fs.exe"
+DATA_SIZE_BYTES = int(os.environ.get("WAR_BOT_ARM64_DATA_BYTES", str(8 * 1024**3)))
 
 
 def qemu_library_dirs() -> list[Path]:
@@ -123,10 +130,14 @@ def image_inventory(image_dir: Path) -> dict[str, str]:
 
 
 def qemu_machine_probe() -> dict[str, object]:
-    if not QEMU_ARM64.is_file():
+    qemu = UPSTREAM_QEMU_ARM64 if UPSTREAM_QEMU_ARM64.is_file() else QEMU_ARM64
+    if not qemu.is_file():
         return {"returncode": None, "output": "", "names": []}
+    args = [qemu, "-machine", "help"]
+    if qemu == QEMU_ARM64:
+        args.insert(1, "-qemu")
     result = run(
-        [QEMU_ARM64, "-qemu", "-machine", "help"],
+        args,
         timeout=30,
         check=False,
         env=qemu_environment(),
@@ -146,7 +157,7 @@ def qemu_machine_probe() -> dict[str, object]:
                 continue
             if not line:
                 continue
-            if line.startswith(("INFO", "WARNING")) or line.startswith(str(QEMU_ARM64)):
+            if line.startswith(("INFO", "WARNING")) or line.startswith(str(qemu)):
                 break
             first = line.split()[0]
             if first and first[0].isalnum() and first not in names:
@@ -200,6 +211,7 @@ def probe() -> dict[str, object]:
             "sdkmanager": SDKMANAGER.is_file(),
             "qemu_system_aarch64": QEMU_ARM64.is_file(),
             "qemu_system_aarch64_headless": QEMU_ARM64_HEADLESS.is_file(),
+            "upstream_qemu_system_aarch64": UPSTREAM_QEMU_ARM64.is_file(),
         },
         "system_image": {
             "package": DEFAULT_SYSTEM_IMAGE,
@@ -234,7 +246,7 @@ def probe() -> dict[str, object]:
 
 
 def validate_tools(require_image=False):
-    missing = [str(p) for p in (ADB, SDKMANAGER, QEMU_ARM64) if not p.is_file()]
+    missing = [str(p) for p in (ADB, SDKMANAGER, UPSTREAM_QEMU_ARM64, UPSTREAM_QEMU_IMG, MKE2FS) if not p.is_file()]
     if missing:
         raise RuntimeError("Missing Android SDK tools:\n" + "\n".join(missing))
     if require_image:
@@ -269,6 +281,8 @@ def install_system_image():
 def runtime_paths() -> dict[str, Path]:
     return {
         "userdata": RUNTIME_ROOT / "userdata-qemu.img",
+        "cache": RUNTIME_ROOT / "cache-qemu.qcow2",
+        "encryptionkey": RUNTIME_ROOT / "encryptionkey-qemu.qcow2",
         "hw": RUNTIME_ROOT / "hardware-qemu.ini",
         "stdout": RUNTIME_ROOT / "qemu-arm64.log",
         "pid": RUNTIME_ROOT / "qemu-arm64.pid",
@@ -305,7 +319,28 @@ def prepare_runtime(wipe=False):
     inv = image_inventory(package_dir())
     paths = runtime_paths()
     if wipe or not paths["userdata"].is_file():
-        shutil.copy2(inv["userdata"], paths["userdata"])
+        if paths["userdata"].is_file():
+            paths["userdata"].unlink()
+        run([UPSTREAM_QEMU_IMG, "create", "-f", "raw", paths["userdata"], DATA_SIZE_BYTES])
+        blocks = DATA_SIZE_BYTES // 4096
+        run([
+            MKE2FS, "-t", "ext4", "-F", "-b", "4096", "-L", "data",
+            # Android 11 ships e2fsck 1.45.4. Host mke2fs 1.47 enables
+            # orphan_file (FEATURE_C12) by default; the guest cannot validate
+            # it and remounts /data read-only, causing init_user0_failed.
+            "-O", "^orphan_file", "-m", "0", paths["userdata"], blocks,
+        ], timeout=600)
+    if wipe or not paths["cache"].is_file():
+        if paths["cache"].is_file():
+            paths["cache"].unlink()
+        run([UPSTREAM_QEMU_IMG, "create", "-f", "qcow2", paths["cache"], "256M"])
+    if wipe or not paths["encryptionkey"].is_file():
+        if paths["encryptionkey"].is_file():
+            paths["encryptionkey"].unlink()
+        run([
+            UPSTREAM_QEMU_IMG, "create", "-f", "qcow2", "-F", "raw",
+            "-b", inv["encryptionkey"], paths["encryptionkey"],
+        ])
     write_hw_ini(paths["hw"])
     return inv, paths
 
@@ -314,53 +349,50 @@ def build_direct_qemu_command(*, window=False, wipe=False) -> list[str]:
     inv, paths = prepare_runtime(wipe=wipe)
     image_dir = package_dir()
     machine = choose_machine()
+    if machine != "virt":
+        raise RuntimeError(f"Upstream ARM64 QEMU requires virt machine; selected={machine!r}")
 
-    # Use the Android emulator's own image/config plumbing for the first boot.
-    # Passing raw -drive/-device topology by hand is brittle for ranchu images:
-    # the Android launcher already knows how to wire system/vendor/userdata,
-    # console/ADB and the Android-specific virtual hardware.
+    # The Google launcher currently exits before entering its QEMU main loop on
+    # an x86-64 Windows host. Upstream QEMU can boot this ARM64 kernel on `virt`;
+    # keep the launcher-observed block ordering (vendor, encryption, userdata,
+    # cache, system), which Android's first-stage init relies on.
+    append = (
+        "console=ttyAMA0,38400 keep_bootcon earlycon=pl011,0x09000000 "
+        "loop.max_part=7 printk.devkmsg=on "
+        "androidboot.boot_devices=a003600.virtio_mmio "
+        "androidboot.hardware=ranchu androidboot.serialno=WARBOTARM64 "
+        "qemu=1 androidboot.qemu=1 qemu.encrypt=1 "
+        "qemu.gles=0 qemu.virtiowifi=0"
+    )
     cmd = [
-        str(QEMU_ARM64),
-        "-debug-init",
-        "-sysdir", str(image_dir),
-        "-datadir", str(RUNTIME_ROOT),
+        str(UPSTREAM_QEMU_ARM64),
+        "-machine", "virt",
+        "-cpu", CPU_MODEL,
+        "-accel", "tcg,thread=multi",
+        "-smp", str(CPU_CORES),
+        "-m", str(RAM_MB),
         "-kernel", inv["kernel"],
-        "-ramdisk", inv["ramdisk"],
-        "-system", inv["system"],
-        "-initdata", str(image_dir / "userdata.img"),
-        "-data", str(paths["userdata"]),
-        "-memory", str(RAM_MB),
-        "-cores", str(CPU_CORES),
-        "-ports", f"{CONSOLE_PORT},{ADB_PORT}",
-        "-accel", "off",
-        "-no-audio",
-        "-no-snapshot",
-        "-no-cache",
-        # Android Emulator 37.x may still try to initialize Lavapipe/Vulkan
-        # when GPU is "off". Use SwiftShader explicitly for GLES and disable
-        # Vulkan host emulation for this first ARM64 boot gate.
-        "-gpu", GPU_MODE,
-        "-feature", "-Vulkan",
-        "-feature", "-VulkanSnapshots",
-        "-no-metrics",
-        "-show-kernel",
+        "-initrd", inv["ramdisk"],
+        "-append", append,
+        "-nodefaults",
+        "-no-reboot",
+        "-serial", "stdio",
+        "-monitor", "none",
+        "-drive", f"if=none,id=vendor,file={inv['vendor']},format=raw,readonly=on",
+        "-device", "virtio-blk-device,drive=vendor",
+        "-drive", f"if=none,id=encrypt,file={paths['encryptionkey']},format=qcow2",
+        "-device", "virtio-blk-device,drive=encrypt",
+        "-drive", f"if=none,id=userdata,file={paths['userdata']},format=raw",
+        "-device", "virtio-blk-device,drive=userdata",
+        "-drive", f"if=none,id=cache,file={paths['cache']},format=qcow2",
+        "-device", "virtio-blk-device,drive=cache",
+        "-drive", f"if=none,id=system,file={inv['system']},format=raw,readonly=on",
+        "-device", "virtio-blk-device,drive=system",
+        "-netdev", f"user,id=mynet,hostfwd=tcp:127.0.0.1:{ADB_PORT}-:5555",
+        "-device", "virtio-net-device,netdev=mynet",
+        "-device", "virtio-rng-device",
     ]
-    if "vendor" in inv:
-        cmd += ["-vendor", inv["vendor"]]
-    if "encryptionkey" in inv:
-        cmd += ["-encryption-key", inv["encryptionkey"]]
-    if not window:
-        cmd.append("-no-window")
-
-    # Do not append raw -qemu/-machine/-cpu options for the real boot.
-    # This executable is already qemu-system-aarch64, so the guest cannot
-    # silently become x86. The Android ranchu launcher must remain free to
-    # construct the machine/CPU/device topology that matches this system image.
-    # We keep machine discovery as a probe gate only.
-    if machine != "ranchu":
-        raise RuntimeError(
-            f"ARM64 boot requires Android ranchu machine; selected={machine!r}"
-        )
+    cmd += ["-display", "sdl" if window else "none"]
     return cmd
 
 def start_direct(*, window=False, wipe=False, wait=True):
@@ -420,6 +452,13 @@ def wait_for_boot(timeout=1200, process=None):
                     f"QEMU critical lines:\n{_qemu_critical_lines()}\n\n"
                     f"QEMU log tail:\n{_qemu_log_tail()}"
                 )
+        try:
+            run([ADB, "connect", SERIAL], timeout=3, check=False)
+        except subprocess.TimeoutExpired:
+            # TCP ADB is unavailable during the slow TCG boot. A missed poll is
+            # expected and must not terminate an otherwise healthy QEMU guest.
+            time.sleep(3)
+            continue
         state = run([ADB, "-s", SERIAL, "get-state"], timeout=10, check=False)
         last_state = state.stdout.strip()
         if last_state == "device":

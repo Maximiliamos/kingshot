@@ -59,11 +59,13 @@ class NativeArm64PocTests(unittest.TestCase):
     def test_qemu_machine_probe_parses_stderr(self):
         result = type("Result", (), {
             "stdout": "",
-            "stderr": "Supported machines are:\\nranchu Android Emulator\\nvirt ARM Virtual Machine\\n",
+            "stderr": "Supported machines are:\nranchu Android Emulator\nvirt ARM Virtual Machine\n",
             "returncode": 0,
         })()
-        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
              patch("native_arm64_poc.run", return_value=result):
+            upstream.is_file.return_value = False
             qemu.is_file.return_value = True
             probe = arm64.qemu_machine_probe()
         self.assertEqual(probe["returncode"], 0)
@@ -83,8 +85,10 @@ class NativeArm64PocTests(unittest.TestCase):
             "stderr": "",
             "returncode": 0,
         })()
-        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
              patch("native_arm64_poc.run", return_value=result):
+            upstream.is_file.return_value = False
             qemu.is_file.return_value = True
             qemu.__str__.return_value = r"C:\Android\Sdk\emulator\qemu\windows-x86_64\qemu-system-aarch64.exe"
             probe = arm64.qemu_machine_probe()
@@ -96,8 +100,10 @@ class NativeArm64PocTests(unittest.TestCase):
             "stderr": "",
             "returncode": 0,
         })()
-        with patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
              patch("native_arm64_poc.run", return_value=result) as run:
+            upstream.is_file.return_value = False
             qemu.is_file.return_value = True
             arm64.qemu_machine_probe()
         args = run.call_args.args[0]
@@ -117,6 +123,30 @@ class NativeArm64PocTests(unittest.TestCase):
             inv = arm64.image_inventory(root)
         self.assertTrue(inv["kernel"].endswith("kernel-ranchu"))
         self.assertTrue(inv["system"].endswith("system.img"))
+
+    def test_userdata_disables_ext4_feature_unsupported_by_android_11(self):
+        inv = {
+            "userdata": r"C:\image\userdata.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+        }
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            paths = {
+                "userdata": root / "userdata-qemu.img",
+                "cache": root / "cache-qemu.qcow2",
+                "encryptionkey": root / "encryptionkey-qemu.qcow2",
+                "hw": root / "hardware-qemu.ini",
+            }
+            with patch("native_arm64_poc.validate_tools"), \
+                 patch("native_arm64_poc.RUNTIME_ROOT", root), \
+                 patch("native_arm64_poc.image_inventory", return_value=inv), \
+                 patch("native_arm64_poc.runtime_paths", return_value=paths), \
+                 patch("native_arm64_poc.write_hw_ini"), \
+                 patch("native_arm64_poc.run") as run:
+                arm64.prepare_runtime(wipe=True)
+        mke2fs_args = run.call_args_list[1].args[0]
+        self.assertIn("^orphan_file", mke2fs_args)
+        self.assertEqual(mke2fs_args[-1], arm64.DATA_SIZE_BYTES // 4096)
 
     def test_critical_log_extracts_architecture_failure(self):
         with TemporaryDirectory() as td:
@@ -145,45 +175,47 @@ class NativeArm64PocTests(unittest.TestCase):
             "kernel": r"C:\image\kernel-ranchu",
             "ramdisk": r"C:\image\ramdisk.img",
             "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
             "userdata": r"C:\image\userdata.img",
         }
         paths = {
             "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
             "hw": Path(r"C:\runtime\hardware-qemu.ini"),
         }
         with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
-             patch("native_arm64_poc.choose_machine", return_value="ranchu"), \
-             patch("native_arm64_poc.GPU_MODE", "swangle_indirect"):
+             patch("native_arm64_poc.choose_machine", return_value="virt"):
             cmd = arm64.build_direct_qemu_command()
-        self.assertIn("-gpu swangle_indirect", " ".join(cmd).lower())
+        self.assertIn("-display none", " ".join(cmd).lower())
 
     def test_command_uses_aarch64_tcg_not_native_bridge(self):
         inv = {
             "kernel": r"C:\image\kernel-ranchu",
             "ramdisk": r"C:\image\ramdisk.img",
             "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
             "userdata": r"C:\image\userdata.img",
         }
         paths = {
             "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
             "hw": Path(r"C:\runtime\hardware-qemu.ini"),
         }
         with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
-             patch("native_arm64_poc.choose_machine", return_value="ranchu"):
+             patch("native_arm64_poc.choose_machine", return_value="virt"):
             cmd = arm64.build_direct_qemu_command()
         joined = " ".join(cmd).lower()
         self.assertIn("qemu-system-aarch64", joined)
-        self.assertIn("-accel off", joined)
-        self.assertIn("-debug-init", joined)
-        self.assertIn("-sysdir", joined)
-        self.assertIn("-data", joined)
-        self.assertIn("-initdata", joined)
-        self.assertIn("-gpu host", joined)
-        self.assertIn("-feature -vulkan", joined)
-        self.assertIn("-feature -vulkansnapshots", joined)
-        self.assertIn("-no-metrics", joined)
-        self.assertNotIn("-qemu", joined)
-        self.assertNotIn("-machine type=ranchu", joined)
+        self.assertIn("-accel tcg,thread=multi", joined)
+        self.assertIn("-machine virt", joined)
+        self.assertIn("virtio-blk-device,drive=userdata", joined)
+        self.assertIn("hostfwd=tcp:127.0.0.1:5561-:5555", joined)
+        self.assertIn("qemu.encrypt=1", joined)
+        self.assertNotIn("-qemu ", joined)
         self.assertNotIn("houdini", joined)
         self.assertNotIn("ndk_translation", joined)
 
