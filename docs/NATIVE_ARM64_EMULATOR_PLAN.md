@@ -217,3 +217,47 @@ physical partitions such as `system`, even though the backing disk exposes
 The DTB is not guessed: the PoC first asks the same ranchu binary to dump its
 generated base tree, then changes only Android fstab/vbmeta properties while
 preserving all ranchu/goldfish hardware nodes.
+
+
+### 2026-09-27 — Codec2 compatibility contract restored
+
+The second-agent baseline isolated the first stable userspace crash to
+`app_process64`/zygote executing inside `libcodec2_vndk.so`. CPU model,
+vCPU count and single-vs-multi-thread TCG did not change the failure, so more
+CPU flag guessing is no longer useful.
+
+AOSP goldfish/ranchu configuration contains a directly relevant compatibility
+contract that our direct launcher had omitted:
+
+- goldfish documents that Codec2 requires an ION path the emulator platform
+  does not provide in this configuration;
+- `init.ranchu.rc` maps `ro.kernel.qemu.media.ccodec` to
+  `debug.stagefright.ccodec`;
+- the supported QEMU override is `-append qemu.media.ccodec=<value>`, with
+  the emulator default being Codec2 off.
+
+The direct Google-ranchu and upstream-control command lines now both include:
+
+```text
+qemu.media.ccodec=0
+```
+
+This is an Android emulator platform compatibility setting, not a game patch
+or detection bypass. The next real-host boot must verify that
+`ro.kernel.qemu.media.ccodec=0` and `debug.stagefright.ccodec=0` are
+visible after startup.
+
+The PoC also now preserves pre-ADB failures in:
+
+```text
+C:\warbot_arm64_runtime\zygote-crash.txt
+C:\warbot_arm64_runtime\boot-diagnostic.json
+```
+
+so if the Codec2 setting is not sufficient, the next failure will carry the
+first relevant SIGSEGV context, PC/LR, fault address, Build ID/backtrace lines
+when present, and boot configuration.
+
+Production startup no longer requires a separately-installed upstream
+`qemu-system-aarch64.exe`; the Google Android Emulator ARM64 binaries are the
+production runtime. Upstream QEMU remains only an optional A/B diagnostic.
