@@ -66,6 +66,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('Join-Path $installed.InstallLocation "WsaClient.exe"', self.source)
         self.assertIn('Write-Log "Using WsaClient at $client."', self.source)
 
+    def test_p0_reports_persist_outside_temp_across_reboot(self):
+        self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
+        self.assertIn('Join-Path $ReportsRoot ("wsa-p0-"', self.source)
+        self.assertIn('$latestLocalPath = Join-Path $ReportsRoot "LATEST-LOCAL.json"', self.source)
+        self.assertIn('Persistent local report:', self.source)
+        self.assertIn('Select-Object -Skip 20', self.source)
+
     def test_runtime_report_upload_retries_git_network_operations(self):
         uploader = (ROOT / "scripts" / "upload_runtime_report.ps1").read_text(encoding="utf-8-sig")
         self.assertIn("function Invoke-GitWithRetry", uploader)
