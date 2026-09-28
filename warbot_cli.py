@@ -60,6 +60,14 @@ def reset_workflow_for_clean_game() -> dict:
     return fresh
 
 
+def loading_logo_visible(frame) -> bool:
+    """Return True when the verified Kingshot loading-logo template is visible."""
+    import bot
+
+    phone, _, _ = bot.crop_phone(frame)
+    return bot.match(phone, bot.tpl("loading_logo.png"), 0.82) is not None
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     backend = create_backend(
@@ -142,6 +150,15 @@ def main(argv=None) -> int:
         backend.launch_app()
         pid = backend.wait_package_running(timeout=180)
         stability = max(1, int(args.game_stability_seconds))
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+
+        startup_frame = backend.frame()
+        startup_output = output.with_name(output.stem + "-startup" + output.suffix)
+        if not cv2.imwrite(str(startup_output), startup_frame):
+            raise BackendError(f"Could not save startup screenshot: {startup_output}")
+        startup_loading = loading_logo_visible(startup_frame)
+
         print(
             f"Game process {pid} started; verifying stability for {stability}s...",
             flush=True,
@@ -151,12 +168,23 @@ def main(argv=None) -> int:
         except BackendError as exc:
             crash_path = backend.collect_game_crash()
             raise BackendError(f"{exc}; game crash log: {crash_path}") from exc
-        print(f"Game stability gate passed: PID {pid}", flush=True)
+
         frame = backend.frame()
-        output = Path(args.output)
-        output.parent.mkdir(parents=True, exist_ok=True)
+        final_loading = loading_logo_visible(frame)
         if not cv2.imwrite(str(output), frame):
             raise BackendError(f"Could not save bootstrap screenshot: {output}")
+        if final_loading:
+            crash_path = backend.collect_game_crash()
+            raise BackendError(
+                "Kingshot process stayed alive but remained on the verified loading screen "
+                f"after {stability}s; diagnostic log: {crash_path}"
+            )
+
+        print(
+            f"Game stability/loading gate passed: PID {pid}; "
+            f"startup_loading={startup_loading} final_loading={final_loading}",
+            flush=True,
+        )
 
         print(json.dumps({
             "ready": True,
@@ -170,6 +198,9 @@ def main(argv=None) -> int:
             "clean_game": bool(args.clean_game),
             "game_pid": pid,
             "game_stability_seconds": stability,
+            "startup_loading_logo": startup_loading,
+            "final_loading_logo": final_loading,
+            "startup_screenshot": str(startup_output.resolve()),
             "screenshot": str(output.resolve()),
         }, ensure_ascii=False, indent=2))
         return 0
