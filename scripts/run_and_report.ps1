@@ -4,6 +4,7 @@ param(
     [string]$Serial = "127.0.0.1:58526",
     [string]$PairEndpoint = "",
     [string]$PairCode = "",
+    [switch]$NoAutoDeveloperModePatch,
     [switch]$WipeRuntime,
     [switch]$CleanGame,
     [switch]$SkipPull
@@ -55,6 +56,7 @@ if (-not $SkipPull) {
         )
         if ($PairEndpoint) { $reexec += @("-PairEndpoint", $PairEndpoint) }
         if ($PairCode) { $reexec += @("-PairCode", $PairCode) }
+        if ($NoAutoDeveloperModePatch) { $reexec += "-NoAutoDeveloperModePatch" }
         if ($WipeRuntime) { $reexec += "-WipeRuntime" }
         if ($CleanGame) { $reexec += "-CleanGame" }
         & powershell @reexec
@@ -77,6 +79,7 @@ if ($Backend -eq "wsa") {
     )
     if ($PairEndpoint) { $wsaArgs += @("-PairEndpoint", $PairEndpoint) }
     if ($PairCode) { $wsaArgs += @("-PairCode", $PairCode) }
+    if ($NoAutoDeveloperModePatch) { $wsaArgs += "-NoAutoDeveloperModePatch" }
     if ($CleanGame) { $wsaArgs += "-CleanGame" }
     & powershell @wsaArgs
     exit $LASTEXITCODE
