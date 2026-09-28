@@ -29,6 +29,14 @@ class WsaInstallerTests(unittest.TestCase):
             self.source,
         )
 
+    def test_p0_accepts_semantic_adb_device_state_without_exit_code_gate(self):
+        self.assertIn('if ($stateText -eq "device")', self.source)
+        self.assertNotIn('$stateResult.ExitCode -eq 0 -and $stateText -eq "device"', self.source)
+        self.assertIn('Android control channel accepted on $candidate', self.source)
+        self.assertIn('$exitCode = 124', self.source)
+        self.assertIn('$proc.Refresh()', self.source)
+        self.assertIn('ExitCode = $exitCode', self.source)
+
     def test_adb_probe_is_null_safe_and_bounded(self):
         self.assertIn("$connectResult = Invoke-AdbSafe", self.source)
         self.assertIn("$connectDeadline = (Get-Date).AddMinutes(4)", self.source)
