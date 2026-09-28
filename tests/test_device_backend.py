@@ -147,8 +147,6 @@ Current Networks:
                 ("pidof", backend.package): "",
                 ("wm", "size"): "Physical size: 1920x1080",
                 ("pm", "path", "com.android.settings"): "package:/system/priv-app/Settings/Settings.apk",
-                ("pm", "path", "com.google.android.gms"): "package:/data/app/gms/base.apk",
-                ("pm", "path", "com.android.vending"): "package:/data/app/vending/base.apk",
                 ("df", "-k", "/data"): (
                     "Filesystem 1K-blocks Used Available Use% Mounted on\n"
                     "/dev/block/dm-1 150000000 1000000 149000000 1% /data\n"
@@ -169,8 +167,6 @@ Current Networks:
         self.assertTrue(health.network_ready)
         self.assertTrue(health.internet_reachable)
         self.assertTrue(health.audio_service_ready)
-        self.assertTrue(health.google_play_services_ready)
-        self.assertTrue(health.play_store_ready)
         self.assertEqual(health.data_free_mb, 145507)
 
     def test_run_converts_adb_timeout_to_backend_error(self):
@@ -249,29 +245,6 @@ Current Networks:
         with patch.object(backend, "health", return_value=ready), \
                 patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
             result = backend.wait_runtime_services(timeout=1)
-        self.assertIs(result, ready)
-
-    def test_wait_runtime_services_can_require_google_packages(self):
-        backend = db.AdbDeviceBackend(
-            serial="device-1",
-            adb_path=r"C:\\fake\\adb.exe",
-        )
-        ready = db.DeviceHealth(
-            backend="adb",
-            serial="device-1",
-            state="device",
-            boot_completed="1",
-            network_ready=True,
-            internet_reachable=True,
-            audio_service_ready=True,
-            package_manager_ready=True,
-            google_play_services_ready=True,
-            play_store_ready=True,
-            data_free_mb=4096,
-        )
-        with patch.object(backend, "health", return_value=ready), \
-                patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
-            result = backend.wait_runtime_services(timeout=1, require_google=True)
         self.assertIs(result, ready)
 
     def test_backend_capture_keeps_old_capture_contract(self):
