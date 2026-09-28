@@ -70,7 +70,6 @@ function Get-GitBlobSha1 {
 
 function Enable-DeveloperModeFallback {
     param(
-        [Parameter(Mandatory = $true)][string]$ClientPath,
         [Parameter(Mandatory = $true)][string]$ReportStage
     )
 
@@ -301,16 +300,16 @@ $hostInfo | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $sta
 
 if ($build -ge 22000) {
     $ReleaseTag = "Windows_11_2407.40000.4.0_LTS_8"
-    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon.7z"
-    $ArchiveSha256 = "09e27a35ac19a8ca14967ad76afb64b6b1fe855a67f13a389618b4d6b1bd8f48"
-    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows11_GApps"
+    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z"
+    $ArchiveSha256 = "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1"
+    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows11"
     Write-Log "Selected WSABuilds LTS 8 package for Windows 11 ($fullBuild)."
 }
 elseif ($build -eq 19045 -and $ubr -ge 2311) {
     $ReleaseTag = "Windows_10_2407.40000.4.0_LTS_8"
-    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon_Windows_10.7z"
-    $ArchiveSha256 = "501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458"
-    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10_GApps"
+    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z"
+    $ArchiveSha256 = "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8"
+    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10"
     Write-Log "Selected WSABuilds LTS 8 package for Windows 10 22H2 ($fullBuild)."
 }
 else {
@@ -374,40 +373,14 @@ if (-not $SkipInstall) {
     if ($existing) {
         $existing | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "existing-wsa.txt")
 
-        if ($existing.InstallLocation -like "$InstallRoot*") {
-            Write-Log "TUGARIN BOTS GApps WSA package is already registered; keeping it."
-        }
-        elseif ($existing.InstallLocation -like (Join-Path $WorkRoot "WSA_LTS8_Windows10*") -or
-                $existing.InstallLocation -like (Join-Path $WorkRoot "WSA_LTS8_Windows11*")) {
-            Write-Log "Existing TUGARIN BOTS WSA is NoGApps/older variant; preparing safe migration to GApps."
-            Write-Log "Stopping WSA before userdata backup."
-            Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 3
-            $backupRoot = Join-Path $WorkRoot "backups"
-            New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
-            $userdata = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\LocalCache\userdata.vhdx"
-            if (Test-Path -LiteralPath $userdata -PathType Leaf) {
-                $backup = Join-Path $backupRoot ("userdata-before-gapps-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".vhdx")
-                Write-Log "Backing up WSA userdata before GApps migration to $backup."
-                Copy-Item -LiteralPath $userdata -Destination $backup -Force
-                [ordered]@{
-                    source = $userdata
-                    backup = $backup
-                    size = (Get-Item $backup).Length
-                } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $stage "userdata-backup.json")
-            }
-            else {
-                Write-Log "No userdata.vhdx found to back up before GApps migration."
-            }
-            $needsPackageInstall = $true
-        }
-        else {
+        if (-not ($existing.InstallLocation -like "$InstallRoot*")) {
             Finish-Report -State "EXISTING_WSA_CONFLICT" -ExitCode 13 -Extra @{
                 existing_package = $existing.PackageFullName
                 existing_location = $existing.InstallLocation
             }
             throw ("Another WSA installation already exists at '$($existing.InstallLocation)'. TUGARIN BOTS will not uninstall or overwrite it automatically.")
         }
+        Write-Log "TUGARIN BOTS NoGApps WSA package is already registered; keeping it."
     }
 
     if ($needsPackageInstall) {
@@ -425,7 +398,7 @@ if (-not $SkipInstall) {
         }
 
         if ($needDownload) {
-            Write-Log "Downloading WSABuilds LTS 8 GApps 13.0 / NoAmazon package for this Windows build (~749 MB)."
+            Write-Log "Downloading WSABuilds LTS 8 NoGApps/NoAmazon package for this Windows build (~556 MB)."
             $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
             if ($curl) {
                 & curl.exe -L --fail --retry 5 --retry-all-errors --output $ArchivePath $ArchiveUrl
@@ -580,18 +553,18 @@ if (-not (Test-Path $adb)) {
 $client = $null
 Write-Log "Using registered WSA app-model URIs; nested WsaClient.exe will not be launched directly."
 try {
-    Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue
-    Write-Log "Requested Android Settings launch to wake the Android environment."
+    Start-Process explorer.exe "wsa://com.android.settings" -ErrorAction SilentlyContinue
+    Write-Log "Requested Android Settings launch through the interactive Explorer shell."
 }
 catch {
-    Write-Log "Android Settings URI wake request was not available: $($_.Exception.Message)"
+    Write-Log "Android Settings Explorer wake request was not available: $($_.Exception.Message)"
 }
 try {
-    Start-Process "wsa-client://developer-settings" -ErrorAction SilentlyContinue
-    Write-Log "Opened subsystem developer settings for the P0 control-channel gate."
+    Start-Process explorer.exe "wsa-client://developer-settings" -ErrorAction SilentlyContinue
+    Write-Log "Opened subsystem developer settings through the interactive Explorer shell."
 }
 catch {
-    Write-Log "Developer-settings URI was not available: $($_.Exception.Message)"
+    Write-Log "Developer-settings Explorer request was not available: $($_.Exception.Message)"
 }
 Write-Host ""
 Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subsystem settings, turn it ON now."
@@ -775,7 +748,7 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         $refusedSoFar = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
         if ($refusedSoFar) {
             $developerFallbackAttempted = $true
-            $developerFallbackBackup = Enable-DeveloperModeFallback -ClientPath $client -ReportStage $stage
+            $developerFallbackBackup = Enable-DeveloperModeFallback -ReportStage $stage
             if ($developerFallbackBackup) {
                 try {
                     Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
