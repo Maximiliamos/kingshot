@@ -1,6 +1,9 @@
 param(
     [ValidateSet("wsa", "native_arm64")]
     [string]$Backend = "wsa",
+    [string]$Serial = "127.0.0.1:58526",
+    [string]$PairEndpoint = "",
+    [string]$PairCode = "",
     [switch]$WipeRuntime,
     [switch]$CleanGame,
     [switch]$SkipPull
@@ -36,8 +39,11 @@ if (-not $SkipPull) {
             "-ExecutionPolicy", "Bypass",
             "-File", $PSCommandPath,
             "-Backend", $Backend,
+            "-Serial", $Serial,
             "-SkipPull"
         )
+        if ($PairEndpoint) { $reexec += @("-PairEndpoint", $PairEndpoint) }
+        if ($PairCode) { $reexec += @("-PairCode", $PairCode) }
         if ($WipeRuntime) { $reexec += "-WipeRuntime" }
         if ($CleanGame) { $reexec += "-CleanGame" }
         & powershell @reexec
@@ -55,8 +61,11 @@ if ($Backend -eq "wsa") {
     $wsaArgs = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
-        "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1")
+        "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1"),
+        "-Serial", $Serial
     )
+    if ($PairEndpoint) { $wsaArgs += @("-PairEndpoint", $PairEndpoint) }
+    if ($PairCode) { $wsaArgs += @("-PairCode", $PairCode) }
     if ($CleanGame) { $wsaArgs += "-CleanGame" }
     & powershell @wsaArgs
     exit $LASTEXITCODE
