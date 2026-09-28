@@ -69,11 +69,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$round -ge 6", self.source)
         self.assertNotIn('Start-Process -FilePath $client', self.source)
 
-    def test_p0_uses_interactive_explorer_app_model_not_nested_wsaclient_exe(self):
+    def test_p0_uses_interactive_explorer_then_safe_wsaclient_fallback(self):
         self.assertIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
         self.assertIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
-        self.assertIn("nested WsaClient.exe will not be launched directly", self.source)
-        self.assertNotIn('Start-Process -FilePath $client', self.source)
+        self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
+        self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
+        self.assertIn('App-model wake did not expose ADB yet', self.source)
+        self.assertIn('$directClientAttempted = $false', self.source)
 
     def test_p0_stays_on_rootless_nogapps_runtime(self):
         self.assertIn("NoGApps-NoAmazon_Windows_10.7z", self.source)
@@ -81,6 +83,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("WSA_LTS8_Windows10", self.source)
         self.assertNotIn("preparing safe migration to GApps", self.source)
         self.assertNotIn("userdata-before-gapps-", self.source)
+
+    def test_p0_does_not_recycle_after_real_adb_device_state(self):
+        self.assertIn('if ($stateText -eq "device")', self.source)
+        self.assertIn('$onlineSerial = $candidate', self.source)
+        self.assertIn('break', self.source)
+        self.assertIn('Android control channel accepted on $candidate', self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
