@@ -1,0 +1,2 @@
+﻿[2026-09-28T18:09:10.3421518+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T18:09:11.6307937+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).

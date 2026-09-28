@@ -1,0 +1,9 @@
+﻿Get-FileHash : Имя "Get-FileHash" не распознано как имя командлета, функции, файла сценария или выполняемой программы. 
+Проверьте правильность написания имени, а также наличие и правильность пути, после чего повторите попытку.
+C:\warbot_git\scripts\install_wsa_poc.ps1:264 знак:22
++             $hash = (Get-FileHash -Algorithm SHA256 $ArchivePath).Has ...
++                      ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Get-FileHash:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
