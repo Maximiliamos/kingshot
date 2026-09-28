@@ -59,6 +59,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.source)
         self.assertNotIn("Get-FileHash", self.source)
 
+    def test_report_workflow_preserves_dirty_worktree_before_pull(self):
+        reporter = REPORTER.read_text(encoding="utf-8-sig")
+        self.assertIn("TUGARIN_BOTS_AUTO_BACKUP_", reporter)
+        self.assertIn("git stash push -u -m", reporter)
+        self.assertIn("They will NOT be dropped automatically", reporter)
+
     def test_report_workflow_defaults_to_wsa_installer(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn('[string]$Backend = "wsa"', reporter)
