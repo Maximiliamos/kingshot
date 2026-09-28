@@ -3,7 +3,8 @@ param(
     [string]$PairEndpoint = "",
     [string]$PairCode = "",
     [switch]$CleanGame,
-    [switch]$SkipInstall
+    [switch]$SkipInstall,
+    [switch]$NoAutoDeveloperModePatch
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,6 +42,7 @@ function Invoke-SelfElevated {
     if ($PairCode) { $args += @("-PairCode", $PairCode) }
     if ($CleanGame) { $args += "-CleanGame" }
     if ($SkipInstall) { $args += "-SkipInstall" }
+    if ($NoAutoDeveloperModePatch) { $args += "-NoAutoDeveloperModePatch" }
 
     $quoted = $args | ForEach-Object {
         if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
@@ -50,6 +52,104 @@ function Invoke-SelfElevated {
         return 98
     }
     return $proc.ExitCode
+}
+
+$DeveloperSettingsSourceCommit = "2e04da1be0765a8a248ab7006ed5f7eeeed15b76"
+$DeveloperSettingsBlobSha1 = "019f772c0e46e7eed9aaa0a26ea35bf6ef32093e"
+$DeveloperSettingsUrl = "https://raw.githubusercontent.com/WSA-Installer/wsa-installer/$DeveloperSettingsSourceCommit/assets/settings.dat"
+
+function Get-GitBlobSha1 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $result = (& git hash-object -- $Path 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $result -notmatch "^[0-9a-fA-F]{40}$") {
+        throw "Could not calculate Git blob SHA-1 for $Path"
+    }
+    return $result.ToLowerInvariant()
+}
+
+function Enable-DeveloperModeFallback {
+    param(
+        [Parameter(Mandatory = $true)][string]$ClientPath,
+        [Parameter(Mandatory = $true)][string]$ReportStage
+    )
+
+    $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
+    if (-not (Test-Path $settingsPath)) {
+        Write-Log "Developer-mode fallback skipped: settings.dat was not found."
+        return $null
+    }
+
+    $patchDir = Join-Path $WorkRoot "developer-mode-fallback"
+    New-Item -ItemType Directory -Force -Path $patchDir | Out-Null
+    $patchPath = Join-Path $patchDir "settings.dat"
+    $backupPath = Join-Path $patchDir ("settings.dat.backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+
+    try {
+        Write-Log "Preparing reversible Developer-mode settings fallback."
+        Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force
+
+        $needDownload = $true
+        if (Test-Path $patchPath) {
+            try {
+                $blob = Get-GitBlobSha1 -Path $patchPath
+                if ($blob -eq $DeveloperSettingsBlobSha1) {
+                    $needDownload = $false
+                }
+            }
+            catch {}
+        }
+
+        if ($needDownload) {
+            Remove-Item -Force -ErrorAction SilentlyContinue $patchPath
+            $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
+            if ($curl) {
+                & curl.exe -L --fail --retry 3 --retry-all-errors --output $patchPath $DeveloperSettingsUrl
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Could not download pinned Developer-mode settings fallback."
+                }
+            }
+            else {
+                Invoke-WebRequest -UseBasicParsing -Uri $DeveloperSettingsUrl -OutFile $patchPath
+            }
+        }
+
+        if ((Get-Item $patchPath).Length -ne 8192) {
+            throw "Pinned Developer-mode settings fallback has unexpected size."
+        }
+        $blobSha = Get-GitBlobSha1 -Path $patchPath
+        if ($blobSha -ne $DeveloperSettingsBlobSha1) {
+            throw "Pinned Developer-mode settings fallback hash mismatch."
+        }
+
+        [ordered]@{
+            source_commit = $DeveloperSettingsSourceCommit
+            blob_sha1 = $blobSha
+            source_url = $DeveloperSettingsUrl
+            original_settings = $settingsPath
+            backup = $backupPath
+        } | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $ReportStage "developer-mode-fallback.json")
+
+        if (Test-Path $ClientPath) {
+            try {
+                Start-Process -FilePath $ClientPath -ArgumentList "/shutdown" -Wait -ErrorAction SilentlyContinue
+            }
+            catch {}
+        }
+        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 3
+
+        Copy-Item -LiteralPath $patchPath -Destination $settingsPath -Force
+        Write-Log "Developer-mode fallback applied; original settings preserved at $backupPath."
+        return $backupPath
+    }
+    catch {
+        Write-Log "Developer-mode fallback could not be applied safely: $($_.Exception.Message)"
+        if (Test-Path $backupPath) {
+            try { Copy-Item -LiteralPath $backupPath -Destination $settingsPath -Force } catch {}
+        }
+        return $null
+    }
 }
 
 function Get-Sha256 {
@@ -543,6 +643,8 @@ $onlineSerial = $null
 $connectDeadline = (Get-Date).AddMinutes(4)
 $round = 0
 $runtimeRecycled = $false
+$developerFallbackAttempted = $false
+$developerFallbackBackup = $null
 while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     $round++
     foreach ($candidate in $serialCandidates) {
@@ -589,6 +691,26 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         catch {}
         Start-Sleep -Seconds 20
     }
+    elseif (
+        -not $onlineSerial -and
+        $runtimeRecycled -and
+        -not $developerFallbackAttempted -and
+        -not $NoAutoDeveloperModePatch -and
+        $round -ge 8
+    ) {
+        $refusedSoFar = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
+        if ($refusedSoFar) {
+            $developerFallbackAttempted = $true
+            $developerFallbackBackup = Enable-DeveloperModeFallback -ClientPath $client -ReportStage $stage
+            if ($developerFallbackBackup) {
+                try {
+                    Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+                }
+                catch {}
+                Start-Sleep -Seconds 25
+            }
+        }
+    }
     elseif (-not $onlineSerial) {
         Start-Sleep -Seconds 10
     }
@@ -609,6 +731,25 @@ try {
 catch {}
 
 if (-not $onlineSerial) {
+    if ($developerFallbackBackup -and (Test-Path $developerFallbackBackup)) {
+        $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
+        try {
+            if (Test-Path $client) {
+                Start-Process -FilePath $client -ArgumentList "/shutdown" -Wait -ErrorAction SilentlyContinue
+            }
+        }
+        catch {}
+        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+        try {
+            Copy-Item -LiteralPath $developerFallbackBackup -Destination $settingsPath -Force
+            Write-Log "Developer-mode fallback did not recover the channel; original settings restored."
+        }
+        catch {
+            Write-Log "WARNING: could not restore original settings automatically: $($_.Exception.Message)"
+        }
+    }
+
     $refused = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
     $state = if ($refused) { "ANDROID_CONTROL_CHANNEL_REFUSED" } else { "ANDROID_CONTROL_CHANNEL_OFFLINE" }
     Finish-Report -State $state -ExitCode 20 -Extra @{
@@ -616,6 +757,8 @@ if (-not $onlineSerial) {
         attempted_serials = @($serialCandidates)
         pair_attempted = [bool]($PairEndpoint -and $PairCode)
         port_58526_refused = $refused
+        developer_fallback_attempted = $developerFallbackAttempted
+        developer_fallback_succeeded = [bool]($developerFallbackBackup)
     }
     Write-Host ""
     Write-Host "The Android subsystem is installed successfully, but its local control channel is not online."
