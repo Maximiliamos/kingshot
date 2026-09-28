@@ -61,11 +61,54 @@ def reset_workflow_for_clean_game() -> dict:
 
 
 def loading_logo_visible(frame) -> bool:
-    """Return True when the verified Kingshot loading-logo template is visible."""
-    import bot
+    """Return True when the verified Kingshot loading-logo template is visible.
 
-    phone, _, _ = bot.crop_phone(frame)
-    return bot.match(phone, bot.tpl("loading_logo.png"), 0.82) is not None
+    Keep the P0 runtime gate independent from bot.py: importing the full bot
+    also loads desktop-capture/UI dependencies that are irrelevant to a pure
+    ADB bootstrap and can fail before the 120-second game stability test.
+    """
+    template_path = Path(__file__).resolve().parent / "templates" / "loading_logo.png"
+    if not template_path.is_file():
+        raise BackendError(f"Loading-logo template is missing: {template_path}")
+
+    template = cv2.imread(str(template_path), cv2.IMREAD_COLOR)
+    if template is None or template.size == 0:
+        raise BackendError(f"Loading-logo template is invalid: {template_path}")
+
+    if frame is None or frame.size == 0:
+        raise BackendError("Cannot evaluate loading screen from an empty framebuffer")
+
+    height, width = frame.shape[:2]
+    target_ratio = 1060 / 2376
+    actual_ratio = width / max(1, height)
+    if actual_ratio > target_ratio:
+        content_width = max(1, round(height * target_ratio))
+        left = max(0, (width - content_width) // 2)
+        phone = frame[:, left:left + content_width]
+    else:
+        content_height = max(1, round(width / target_ratio))
+        top = max(0, (height - content_height) // 2)
+        phone = frame[top:top + content_height, :]
+
+    phone = cv2.resize(phone, (421, 944), interpolation=cv2.INTER_AREA)
+    best = -1.0
+    for scale in (0.72, 0.80, 0.88, 0.94, 1.0, 1.06, 1.12, 1.18, 1.25, 1.32):
+        candidate = template if scale == 1.0 else cv2.resize(
+            template,
+            None,
+            fx=scale,
+            fy=scale,
+            interpolation=cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC,
+        )
+        th, tw = candidate.shape[:2]
+        if th > phone.shape[0] or tw > phone.shape[1]:
+            continue
+        result = cv2.matchTemplate(phone, candidate, cv2.TM_CCOEFF_NORMED)
+        _, score, _, _ = cv2.minMaxLoc(result)
+        best = max(best, float(score))
+        if best >= 0.82:
+            return True
+    return False
 
 
 def main(argv=None) -> int:
