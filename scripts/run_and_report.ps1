@@ -17,7 +17,18 @@ Set-Location $Root
 if (-not $SkipPull) {
     $status = (& git status --porcelain)
     if ($status) {
-        throw "Working tree is not clean. Refusing automatic pull. Commit/stash local changes first."
+        $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        $stashMessage = "TUGARIN_BOTS_AUTO_BACKUP_$stamp"
+        Write-Host "Local changes detected. Saving them safely to git stash: $stashMessage"
+        & git stash push -u -m $stashMessage
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not create a safe backup stash. Refusing to continue."
+        }
+        $afterStash = (& git status --porcelain)
+        if ($afterStash) {
+            throw "Working tree is still dirty after backup stash. Refusing to continue."
+        }
+        Write-Host "Local changes preserved in stash '$stashMessage'. They will NOT be dropped automatically."
     }
 
     $beforePull = (& git rev-parse HEAD).Trim()
