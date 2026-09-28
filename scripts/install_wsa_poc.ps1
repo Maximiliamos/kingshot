@@ -553,6 +553,7 @@ if (-not (Test-Path $adb)) {
 $client = $null
 $clientWorkDir = $null
 $directClientAttempted = $false
+$directClientStartedAt = $null
 if ($installed.InstallLocation) {
     $candidateClient = Join-Path $installed.InstallLocation "WsaClient\WsaClient.exe"
     if (Test-Path -LiteralPath $candidateClient -PathType Leaf) {
@@ -754,17 +755,30 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         $round -ge 3
     ) {
         $directClientAttempted = $true
+        $directClientStartedAt = Get-Date
         Write-Log "App-model wake did not expose ADB yet; starting WsaClient fallback with package-root working directory."
         try {
+            $oldPath = $env:PATH
+            $env:PATH = "$clientWorkDir;$oldPath"
             Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
-            Write-Log "WsaClient fallback start requested from $clientWorkDir."
+            $env:PATH = $oldPath
+            Write-Log "WsaClient fallback start requested from $clientWorkDir; allowing up to 90s for Android/ADB startup."
         }
         catch {
+            if ($null -ne $oldPath) { $env:PATH = $oldPath }
             Write-Log "WsaClient fallback could not be started: $($_.Exception.Message)"
         }
         Start-Sleep -Seconds 20
     }
-    elseif (-not $onlineSerial -and -not $runtimeRecycled -and $round -ge 6) {
+    elseif (
+        -not $onlineSerial -and
+        -not $runtimeRecycled -and
+        $round -ge 6 -and
+        (
+            -not $directClientAttempted -or
+            ($directClientStartedAt -and ((Get-Date) - $directClientStartedAt).TotalSeconds -ge 90)
+        )
+    ) {
         $runtimeRecycled = $true
         Write-Log "Control channel is still offline; recycling the Android subsystem once."
         Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
