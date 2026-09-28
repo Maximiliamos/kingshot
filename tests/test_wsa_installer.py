@@ -17,7 +17,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertNotIn("function Invoke-AdminBootstrap", self.source)
         self.assertIn("$childExit = Invoke-SelfElevated", self.source)
         self.assertIn("exit $childExit", self.source)
-        self.assertIn('Get-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform"', self.source)
+        self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
@@ -33,6 +33,20 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$connectResult = Invoke-AdbSafe", self.source)
         self.assertIn("$connectDeadline = (Get-Date).AddMinutes(4)", self.source)
         self.assertIn("if ($null -ne $rawStdout)", self.source)
+
+    def test_p0_pairing_and_port_diagnostics_are_supported(self):
+        self.assertIn('[string]$PairEndpoint = ""', self.source)
+        self.assertIn('[string]$PairCode = ""', self.source)
+        self.assertIn('@("pair", $PairEndpoint, $PairCode)', self.source)
+        self.assertIn("excluded-tcp-ranges.txt", self.source)
+        self.assertIn("ANDROID_CONTROL_CHANNEL_REFUSED", self.source)
+
+    def test_p0_failure_bundle_collects_runtime_services(self):
+        self.assertIn("wsa-logcat-tail.txt", self.source)
+        self.assertIn("wsa-connectivity.txt", self.source)
+        self.assertIn("wsa-audio.txt", self.source)
+        self.assertIn("wsa-processes.txt", self.source)
+        self.assertIn("wsa-health.json", self.source)
 
     def test_archive_hash_does_not_depend_on_get_file_hash_cmdlet(self):
         self.assertIn("function Get-Sha256", self.source)
