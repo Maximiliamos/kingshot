@@ -1,0 +1,22 @@
+﻿
+7-Zip 26.02 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-06-25
+
+Scanning the drive for archives:
+1 file, 748886758 bytes (715 MiB)
+
+Extracting archive: C:\warbot_wsa\downloads\WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon_Windows_10.7z
+--
+Path = C:\warbot_wsa\downloads\WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon_Windows_10.7z
+Type = 7z
+Physical Size = 748886758
+Headers Size = 4880
+Method = ARM64 LZMA2:25 BCJ
+Solid = +
+Blocks = 3
+
+Everything is Ok
+
+Folders: 36
+Files: 315
+Size:       2272446580
+Compressed: 748886758
