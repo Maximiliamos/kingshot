@@ -62,7 +62,8 @@ class WarBotCliTests(unittest.TestCase):
                     patch.object(backend, "launch_app", return_value="Starting"), \
                     patch.object(backend, "wait_package_running", return_value="1234"), \
                     patch.object(backend, "wait_package_stable", return_value="1234") as stable, \
-                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
+                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)), \
+                    patch("warbot_cli.loading_logo_visible", return_value=False):
                 out = io.StringIO()
                 with redirect_stdout(out):
                     code = warbot_cli.main(["bootstrap", "--output", output])
@@ -72,6 +73,7 @@ class WarBotCliTests(unittest.TestCase):
             install.assert_called_once()
             stable.assert_called_once_with(45, expected_pid="1234")
             self.assertTrue(Path(output).is_file())
+            self.assertTrue(Path(output).with_name("frame-startup.png").is_file())
             self.assertIn('"native_arm64": true', out.getvalue())
 
     def test_bootstrap_supports_wsa_translation_backend(self):
@@ -94,12 +96,14 @@ class WarBotCliTests(unittest.TestCase):
             with patch("warbot_cli.create_backend", return_value=backend), \
                     patch.object(backend, "health", return_value=ready), \
                     patch.object(backend, "require_ready", return_value=ready) as require_ready, \
+                    patch.object(backend, "wait_runtime_services", return_value=ready) as services, \
                     patch.object(backend, "package_installed", return_value=False), \
                     patch.object(backend, "install_verified_game", return_value="Success") as install, \
                     patch.object(backend, "launch_app", return_value="Starting"), \
                     patch.object(backend, "wait_package_running", return_value="5678"), \
                     patch.object(backend, "wait_package_stable", return_value="5678"), \
-                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
+                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)), \
+                    patch("warbot_cli.loading_logo_visible", return_value=False):
                 out = io.StringIO()
                 with redirect_stdout(out):
                     code = warbot_cli.main([
@@ -113,8 +117,47 @@ class WarBotCliTests(unittest.TestCase):
             services.assert_called_once_with(timeout=90)
             install.assert_called_once()
             self.assertTrue(Path(output).is_file())
+            self.assertTrue(Path(output).with_name("wsa-frame-startup.png").is_file())
             self.assertIn('"backend": "wsa"', out.getvalue())
             self.assertIn('"native_bridge": "libhoudini.so"', out.getvalue())
+
+    def test_bootstrap_fails_if_game_remains_on_loading_screen(self):
+        backend = warbot_cli.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        ready = DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+            android="13",
+            abi="x86_64",
+            network_ready=True,
+            internet_reachable=True,
+            audio_service_ready=True,
+        )
+        with TemporaryDirectory() as td:
+            output = str(Path(td) / "stuck.png")
+            with patch("warbot_cli.create_backend", return_value=backend), \
+                    patch.object(backend, "health", return_value=ready), \
+                    patch.object(backend, "require_ready", return_value=ready), \
+                    patch.object(backend, "wait_runtime_services", return_value=ready), \
+                    patch.object(backend, "package_installed", return_value=True), \
+                    patch.object(backend, "launch_app", return_value="Starting"), \
+                    patch.object(backend, "wait_package_running", return_value="777"), \
+                    patch.object(backend, "wait_package_stable", return_value="777"), \
+                    patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)), \
+                    patch.object(backend, "collect_game_crash", return_value=Path(td) / "crash.txt"), \
+                    patch("warbot_cli.loading_logo_visible", side_effect=[True, True]):
+                with self.assertRaises(BackendError) as ctx:
+                    warbot_cli.main([
+                        "bootstrap", "--backend", "wsa",
+                        "--serial", "127.0.0.1:58526",
+                        "--game-stability-seconds", "1",
+                        "--output", output,
+                    ])
+        self.assertIn("remained on the verified loading screen", str(ctx.exception))
 
     def test_clean_start_preserves_pc_nickname_counter(self):
         backend = warbot_cli.NativeArm64Backend(
