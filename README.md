@@ -1,10 +1,10 @@
-# Kingshot / «Война за трон» automation
+# TUGARIN BOTS
 
 Локальное Windows-приложение для автоматизации повторяемых действий в мобильной игре «Война за трон». Основной Windows-only runtime — Windows Subsystem for Android (WSA); физический телефон и окно scrcpy для штатной работы не нужны.
 
 ## Текущая архитектура
 
-WAR BOT теперь отделяет логику игры от способа подключения к Android.
+TUGARIN BOTS теперь отделяет логику игры от способа подключения к Android.
 
 ```text
 WSA / Native ARM64 PoC / любой готовый ADB Android
@@ -48,10 +48,15 @@ image-first подход для Unity-интерфейса как в Airtest.
 
 На уровне приложения уже реализованы:
 
+- пользовательское имя продукта **TUGARIN BOTS** (старые `WAR_BOT_*` переменные временно сохранены для совместимости);
+
 - единый Android backend, отдельные WSA и native ARM64 gates;
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
-- прямой screenshot/input через ADB;
+- прямой screenshot/input через Android transport;
+- интерактивный экран Android внутри GUI: мышь → касание/свайп, клавиатура → Android key/text;
+- ручной ввод автоматически ставит автоматизацию на паузу, чтобы действия не конфликтовали;
+- read-only health probes сети, доступности Интернета и Android-аудиосервиса;
 - точный выбор строки и Confirm государства №3;
 - обязательный initial/character tutorial state machine;
 - переименование без пробела: `Тугарин1`, `Тугарин2`, ...;
@@ -194,7 +199,7 @@ python -m pip install -r requirements-android-optional.txt
 ## Полный цикл
 
 Для чистого запуска состояние по умолчанию начинается с обязательного
-обучения. После его завершения WAR BOT:
+обучения. После его завершения TUGARIN BOTS:
 
 ```text
 initial tutorial
@@ -296,3 +301,7 @@ state machine.
 WSA installer и verifier сохраняют отчёты в `runtime-reports`; native ARM64
 fallback дополнительно формирует `C:\warbot_arm64_runtime\zygote-crash.txt`
 и `boot-diagnostic.json`.
+
+## Дальнейший план
+
+Актуальный план разработки, включая низколатентное видео, передачу игрового звука, клавиатуру и сетевую готовность, находится в `docs/TUGARIN_BOTS_ROADMAP.md`.
