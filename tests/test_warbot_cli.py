@@ -77,7 +77,7 @@ class WarBotCliTests(unittest.TestCase):
                     code = warbot_cli.main(["bootstrap", "--output", output])
 
             self.assertEqual(code, 0)
-            services.assert_called_once_with(timeout=90, require_google=False)
+            services.assert_called_once_with(timeout=90)
             install.assert_called_once()
             stable.assert_called_once_with(45, expected_pid="1234")
             self.assertTrue(Path(output).is_file())
@@ -122,7 +122,7 @@ class WarBotCliTests(unittest.TestCase):
 
             self.assertEqual(code, 0)
             require_ready.assert_called_once_with(native_arm64=False)
-            services.assert_called_once_with(timeout=90, require_google=True)
+            services.assert_called_once_with(timeout=90)
             install.assert_called_once()
             self.assertTrue(Path(output).is_file())
             self.assertTrue(Path(output).with_name("wsa-frame-startup.png").is_file())
