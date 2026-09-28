@@ -67,7 +67,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('"wsa-client://developer-settings"', self.source)
         self.assertIn("$runtimeRecycled = $false", self.source)
         self.assertIn("$round -ge 6", self.source)
-        self.assertNotIn('Start-Process -FilePath $client', self.source)
+        self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
 
     def test_p0_uses_interactive_explorer_then_safe_wsaclient_fallback(self):
         self.assertIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
