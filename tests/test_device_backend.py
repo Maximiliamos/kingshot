@@ -113,6 +113,62 @@ class DeviceBackendTests(unittest.TestCase):
         self.assertFalse(health.package_running)
         self.assertEqual(health.resolution, "")
 
+    def test_health_accepts_validated_wsa_connectivity_without_ip_route(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+
+        connectivity = """
+Active default network: 100
+Current Networks:
+  NetworkAgentInfo{network{100} ni{Ethernet CONNECTED}
+  nc{[ Transports: WIFI|ETHERNET Capabilities:
+  NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&VALIDATED&FOREGROUND ]}}
+"""
+
+        def fake_run(args, **kwargs):
+            args = list(args)
+            if args == ["get-state"]:
+                return subprocess.CompletedProcess(args, 0, stdout="device\n", stderr="")
+            if args[:2] == ["shell", "ping"]:
+                return subprocess.CompletedProcess(args, 1, stdout="", stderr="")
+            raise AssertionError(f"unexpected raw adb command: {args}")
+
+        def fake_shell(args, timeout=60):
+            args = list(args)
+            values = {
+                ("getprop", "sys.boot_completed"): "1",
+                ("getprop", "ro.build.version.release"): "13",
+                ("getprop", "ro.product.cpu.abi"): "x86_64",
+                ("getprop", "ro.product.cpu.abilist"): "x86_64,arm64-v8a",
+                ("getprop", "ro.dalvik.vm.native.bridge"): "libhoudini.so",
+                ("getprop", "ro.product.model"): "Subsystem for Android(TM)",
+                ("pidof", backend.package): "",
+                ("wm", "size"): "Physical size: 1920x1080",
+                ("pm", "path", "com.android.settings"): "package:/system/priv-app/Settings/Settings.apk",
+                ("df", "-k", "/data"): (
+                    "Filesystem 1K-blocks Used Available Use% Mounted on\n"
+                    "/dev/block/dm-1 150000000 1000000 149000000 1% /data\n"
+                ),
+                ("dumpsys", "connectivity"): connectivity,
+                ("ip", "route"): "",
+                ("dumpsys", "audio"): "AudioService\nSTREAM_MUSIC",
+            }
+            key = tuple(args)
+            if key not in values:
+                raise AssertionError(f"unexpected shell command: {args}")
+            return values[key]
+
+        with patch.object(backend, "_run", side_effect=fake_run), \
+                patch.object(backend, "shell", side_effect=fake_shell):
+            health = backend.health()
+
+        self.assertTrue(health.network_ready)
+        self.assertTrue(health.internet_reachable)
+        self.assertTrue(health.audio_service_ready)
+        self.assertEqual(health.data_free_mb, 145507)
+
     def test_run_converts_adb_timeout_to_backend_error(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
