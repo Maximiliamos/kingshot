@@ -661,6 +661,9 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
             state_error = $stateResult.Stderr
         }
         Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
+        if ($stateText -eq "unauthorized" -or $stateResult.Stderr -match "(?i)unauthorized") {
+            Write-Log "Android control channel is reachable but awaiting host-key authorization."
+        }
         if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
             $onlineSerial = $candidate
             break
@@ -731,6 +734,23 @@ try {
 catch {}
 
 if (-not $onlineSerial) {
+    $unauthorized = [bool](@($attempts | Where-Object {
+        $_.state -eq "unauthorized" -or $_.state_error -match "(?i)unauthorized"
+    }).Count)
+
+    if ($unauthorized) {
+        Finish-Report -State "ANDROID_AUTHORIZATION_REQUIRED" -ExitCode 24 -Extra @{
+            installed_version = $installed.Version.ToString()
+            attempted_serials = @($serialCandidates)
+            authorization_required = $true
+        }
+        Write-Host ""
+        Write-Host "The Android control channel is online, but this PC is not authorized yet."
+        Write-Host "Approve the Android debugging authorization prompt inside the Android environment."
+        Write-Host "Select 'Always allow from this computer' if that option is offered, then rerun the SAME command."
+        exit 24
+    }
+
     if ($developerFallbackBackup -and (Test-Path $developerFallbackBackup)) {
         $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
         try {
