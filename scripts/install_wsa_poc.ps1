@@ -1,5 +1,7 @@
 param(
     [string]$Serial = "127.0.0.1:58526",
+    [string]$PairEndpoint = "",
+    [string]$PairCode = "",
     [switch]$CleanGame,
     [switch]$SkipInstall
 )
@@ -35,6 +37,8 @@ function Invoke-SelfElevated {
         "-File", $PSCommandPath,
         "-Serial", $Serial
     )
+    if ($PairEndpoint) { $args += @("-PairEndpoint", $PairEndpoint) }
+    if ($PairCode) { $args += @("-PairCode", $PairCode) }
     if ($CleanGame) { $args += "-CleanGame" }
     if ($SkipInstall) { $args += "-SkipInstall" }
 
@@ -216,13 +220,15 @@ if ($LASTEXITCODE -ne 0) {
 
 $featureState = @{}
 $needsReboot = $false
-$currentFeature = Get-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform"
-$featureState["VirtualMachinePlatform"] = $currentFeature.State.ToString()
-if ($currentFeature.State -ne "Enabled") {
-    Write-Log "Enabling Windows feature: VirtualMachinePlatform"
-    $featureResult = Enable-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform" -All -NoRestart
-    if ($featureResult.RestartNeeded) {
-        $needsReboot = $true
+foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform")) {
+    $currentFeature = Get-WindowsOptionalFeature -Online -FeatureName $featureName -ErrorAction Stop
+    $featureState[$featureName] = $currentFeature.State.ToString()
+    if ($currentFeature.State -ne "Enabled") {
+        Write-Log "Enabling Windows feature: $featureName"
+        $featureResult = Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart
+        if ($featureResult.RestartNeeded) {
+            $needsReboot = $true
+        }
     }
 }
 $featureState | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $stage "windows-features-before.json")
@@ -477,6 +483,26 @@ function Invoke-AdbSafe {
 
 Start-Sleep -Seconds 20
 
+if (($PairEndpoint -and -not $PairCode) -or ($PairCode -and -not $PairEndpoint)) {
+    Finish-Report -State "PAIRING_ARGUMENTS_INCOMPLETE" -ExitCode 22 -Extra @{
+        pair_endpoint = $PairEndpoint
+    }
+    throw "Both -PairEndpoint and -PairCode are required for one-time Android pairing."
+}
+if ($PairEndpoint -and $PairCode) {
+    Write-Log "Attempting one-time Android control-channel pairing at $PairEndpoint."
+    $pairResult = Invoke-AdbSafe -Arguments @("pair", $PairEndpoint, $PairCode)
+    $pairResult.Text | Set-Content -Encoding UTF8 (Join-Path $stage "android-pair.txt")
+    if ($pairResult.ExitCode -ne 0 -or $pairResult.Text -notmatch "(?i)success") {
+        Finish-Report -State "ANDROID_PAIR_FAILED" -ExitCode 23 -Extra @{
+            pair_endpoint = $PairEndpoint
+            pair_result = $pairResult.Text
+        }
+        throw "Android pairing failed. Check the pairing endpoint/code shown by the subsystem."
+    }
+    Write-Log "Android pairing completed."
+}
+
 $serialCandidates = New-Object System.Collections.Generic.List[string]
 $serialCandidates.Add($Serial)
 
@@ -531,24 +557,36 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
 }
 
 $attempts | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "android-connect-attempts.json")
+$portNetstat = ""
+$excludedRanges = ""
 try {
-    (& netstat.exe -ano | Select-String -Pattern "58526" | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "port-58526.txt")
+    $portNetstat = (& netstat.exe -ano | Select-String -Pattern "58526" | Out-String)
+    $portNetstat | Set-Content -Encoding UTF8 (Join-Path $stage "port-58526.txt")
+}
+catch {}
+try {
+    $excludedRanges = (& netsh.exe interface ipv4 show excludedportrange protocol=tcp 2>&1 | Out-String)
+    $excludedRanges | Set-Content -Encoding UTF8 (Join-Path $stage "excluded-tcp-ranges.txt")
 }
 catch {}
 
 if (-not $onlineSerial) {
-    Finish-Report -State "NEEDS_ANDROID_DEVELOPER_MODE" -ExitCode 20 -Extra @{
+    $refused = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
+    $state = if ($refused) { "ANDROID_CONTROL_CHANNEL_REFUSED" } else { "ANDROID_CONTROL_CHANNEL_OFFLINE" }
+    Finish-Report -State $state -ExitCode 20 -Extra @{
         installed_version = $installed.Version.ToString()
         attempted_serials = @($serialCandidates)
+        pair_attempted = [bool]($PairEndpoint -and $PairCode)
+        port_58526_refused = $refused
     }
     Write-Host ""
-    Write-Host "The Android subsystem is installed successfully."
-    Write-Host "The local control channel is not enabled yet."
-    Write-Host "In the subsystem Settings window:"
-    Write-Host "1. Open Advanced settings."
-    Write-Host "2. Turn Developer mode ON."
-    Write-Host "3. If a confirmation window appears, allow the local computer."
-    Write-Host "4. Run the SAME command again."
+    Write-Host "The Android subsystem is installed successfully, but its local control channel is not online."
+    Write-Host "Complete these P0 steps in the subsystem Settings:"
+    Write-Host "1. Open Advanced settings and turn Developer mode ON."
+    Write-Host "2. Open the developer/wireless-debugging section and note the pairing endpoint/code if shown."
+    Write-Host "3. Pair once by rerunning with -PairEndpoint IP:PORT -PairCode CODE."
+    Write-Host "4. Use -Serial IP:PORT if the connection endpoint shown by the subsystem is not $Serial."
+    Write-Host "The report also contains excluded-tcp-ranges.txt for the known Windows/Hyper-V port-58526 issue."
     exit 20
 }
 
@@ -593,8 +631,24 @@ catch {
 }
 
 & $adb -s $Serial logcat -b crash -d -v threadtime 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-crash-buffer.txt")
+& $adb -s $Serial logcat -d -t 2500 -v threadtime 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-logcat-tail.txt")
 & $adb -s $Serial shell pm path com.got.globalru 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-path.txt")
 & $adb -s $Serial shell pidof com.got.globalru 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-game-pid.txt")
+& $adb -s $Serial shell dumpsys connectivity 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-connectivity.txt")
+& $adb -s $Serial shell dumpsys audio 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-audio.txt")
+& $adb -s $Serial shell dumpsys activity processes 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-processes.txt")
+try {
+    & python .\warbot_cli.py status --backend wsa --serial $Serial 2>&1 |
+        Set-Content -Encoding UTF8 (Join-Path $stage "wsa-health.json")
+}
+catch {}
+if (-not (Test-Path (Join-Path $stage "wsa-bootstrap.png"))) {
+    try {
+        & python .\warbot_cli.py screenshot --backend wsa --serial $Serial --output (Join-Path $stage "wsa-failure-frame.png") 2>&1 |
+            Set-Content -Encoding UTF8 (Join-Path $stage "wsa-failure-frame.txt")
+    }
+    catch {}
+}
 
 if ($bootstrapExit -eq 0) {
     Finish-Report -State "WSA_GAME_PASS" -ExitCode 0 -Extra @{
