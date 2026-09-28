@@ -59,13 +59,21 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('"wsa-client://developer-settings"', self.source)
         self.assertIn("$runtimeRecycled = $false", self.source)
         self.assertIn("$round -ge 6", self.source)
-        self.assertIn('"/shutdown"', self.source)
+        self.assertNotIn('Start-Process -FilePath $client', self.source)
 
-    def test_p0_uses_registered_wsa_install_location_for_client(self):
-        self.assertIn('$installed.InstallLocation', self.source)
-        self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
-        self.assertIn('Test-Path -LiteralPath $_ -PathType Leaf', self.source)
-        self.assertIn('Write-Log "Using WsaClient executable at $client."', self.source)
+    def test_p0_uses_registered_app_model_not_nested_wsaclient_exe(self):
+        self.assertIn('Start-Process "wsa://com.android.settings"', self.source)
+        self.assertIn('Start-Process "wsa-client://developer-settings"', self.source)
+        self.assertIn("nested WsaClient.exe will not be launched directly", self.source)
+        self.assertNotIn('ArgumentList "/shutdown"', self.source)
+
+    def test_p0_migrates_to_gapps_with_userdata_backup(self):
+        self.assertIn("GApps-13.0-NoAmazon_Windows_10.7z", self.source)
+        self.assertIn("501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458", self.source)
+        self.assertIn("WSA_LTS8_Windows10_GApps", self.source)
+        self.assertIn("userdata-before-gapps-", self.source)
+        self.assertIn("userdata-backup.json", self.source)
+        self.assertIn("preparing safe migration to GApps", self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
