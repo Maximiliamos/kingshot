@@ -551,7 +551,16 @@ if (-not (Test-Path $adb)) {
 }
 
 $client = $null
-Write-Log "Using registered WSA app-model URIs; nested WsaClient.exe will not be launched directly."
+$clientWorkDir = $null
+$directClientAttempted = $false
+if ($installed.InstallLocation) {
+    $candidateClient = Join-Path $installed.InstallLocation "WsaClient\WsaClient.exe"
+    if (Test-Path -LiteralPath $candidateClient -PathType Leaf) {
+        $client = $candidateClient
+        $clientWorkDir = $installed.InstallLocation
+    }
+}
+Write-Log "Using registered WSA app-model URIs first; direct WsaClient fallback is available only if needed."
 try {
     Start-Process explorer.exe "wsa://com.android.settings" -ErrorAction SilentlyContinue
     Write-Log "Requested Android Settings launch through the interactive Explorer shell."
@@ -737,7 +746,25 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
 
     # A correctly installed WSA can occasionally leave the localhost bridge
     # unbound after first launch. Recycle the subsystem once, then keep probing.
-    if (-not $onlineSerial -and -not $runtimeRecycled -and $round -ge 6) {
+    if (
+        -not $onlineSerial -and
+        -not $directClientAttempted -and
+        $client -and
+        $clientWorkDir -and
+        $round -ge 3
+    ) {
+        $directClientAttempted = $true
+        Write-Log "App-model wake did not expose ADB yet; starting WsaClient fallback with package-root working directory."
+        try {
+            Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
+            Write-Log "WsaClient fallback start requested from $clientWorkDir."
+        }
+        catch {
+            Write-Log "WsaClient fallback could not be started: $($_.Exception.Message)"
+        }
+        Start-Sleep -Seconds 20
+    }
+    elseif (-not $onlineSerial -and -not $runtimeRecycled -and $round -ge 6) {
         $runtimeRecycled = $true
         Write-Log "Control channel is still offline; recycling the Android subsystem once."
         Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
@@ -833,6 +860,7 @@ if (-not $onlineSerial) {
         port_58526_refused = $refused
         developer_fallback_attempted = $developerFallbackAttempted
         developer_fallback_succeeded = [bool]($developerFallbackBackup)
+        direct_client_fallback_attempted = $directClientAttempted
     }
     Write-Host ""
     Write-Host "The Android subsystem is installed successfully, but its local control channel is not online."
