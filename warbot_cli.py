@@ -124,6 +124,12 @@ def main(argv=None) -> int:
 
         native_gate = isinstance(backend, NativeArm64Backend)
         health = backend.require_ready(native_arm64=native_gate)
+
+        # P0 runtime acceptance: do not install/launch the game until Android
+        # has a real framebuffer, validated networking and an audio service.
+        if hasattr(backend, "wait_runtime_services"):
+            health = backend.wait_runtime_services(timeout=90)
+
         installed_now = False
         if not backend.package_installed():
             backend.install_verified_game(args.apks_dir)
