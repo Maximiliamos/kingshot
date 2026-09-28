@@ -380,6 +380,9 @@ if (-not $SkipInstall) {
         elseif ($existing.InstallLocation -like (Join-Path $WorkRoot "WSA_LTS8_Windows10*") -or
                 $existing.InstallLocation -like (Join-Path $WorkRoot "WSA_LTS8_Windows11*")) {
             Write-Log "Existing TUGARIN BOTS WSA is NoGApps/older variant; preparing safe migration to GApps."
+            Write-Log "Stopping WSA before userdata backup."
+            Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 3
             $backupRoot = Join-Path $WorkRoot "backups"
             New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
             $userdata = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\LocalCache\userdata.vhdx"
