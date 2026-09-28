@@ -90,6 +90,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('break', self.source)
         self.assertIn('Android control channel accepted on $candidate', self.source)
 
+    def test_p0_direct_client_fallback_gets_full_startup_grace(self):
+        self.assertIn("$directClientStartedAt = $null", self.source)
+        self.assertIn("$directClientStartedAt = Get-Date", self.source)
+        self.assertIn("TotalSeconds -ge 90", self.source)
+        self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
+        self.assertIn("allowing up to 90s for Android/ADB startup", self.source)
+
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
         self.assertIn('Join-Path $ReportsRoot ("wsa-p0-"', self.source)
