@@ -50,6 +50,8 @@ class DeviceHealth:
     network_ready: bool = False
     internet_reachable: bool = False
     audio_service_ready: bool = False
+    package_manager_ready: bool = False
+    data_free_mb: int = 0
 
     @property
     def ready(self) -> bool:
@@ -290,6 +292,8 @@ class AdbDeviceBackend(DeviceBackend):
         network_ready = False
         internet_reachable = False
         audio_service_ready = False
+        package_manager_ready = False
+        data_free_mb = 0
         if boot_completed == "1":
             try:
                 running = bool(self.shell(["pidof", self.package], timeout=5).strip())
@@ -299,6 +303,20 @@ class AdbDeviceBackend(DeviceBackend):
                 resolution = self.shell(["wm", "size"], timeout=5).strip()
             except BackendError:
                 resolution = ""
+
+            try:
+                package_manager_ready = bool(
+                    self.shell(["pm", "path", "com.android.settings"], timeout=8).strip()
+                )
+            except BackendError:
+                package_manager_ready = False
+            try:
+                df_output = self.shell(["df", "-k", "/data"], timeout=8)
+                df_lines = [line.split() for line in df_output.splitlines() if line.strip()]
+                if len(df_lines) >= 2 and len(df_lines[-1]) >= 4:
+                    data_free_mb = max(0, int(df_lines[-1][3]) // 1024)
+            except (BackendError, ValueError, IndexError):
+                data_free_mb = 0
 
             # Runtime service probes are intentionally read-only. They make the
             # GUI distinguish "Android booted" from "Android can actually use
@@ -355,6 +373,8 @@ class AdbDeviceBackend(DeviceBackend):
             network_ready=network_ready,
             internet_reachable=internet_reachable,
             audio_service_ready=audio_service_ready,
+            package_manager_ready=package_manager_ready,
+            data_free_mb=data_free_mb,
         )
 
     def wait_ready(self, timeout: int = 180) -> DeviceHealth:
@@ -395,12 +415,15 @@ class AdbDeviceBackend(DeviceBackend):
                 and last.network_ready
                 and last.internet_reachable
                 and last.audio_service_ready
+                and last.package_manager_ready
+                and last.data_free_mb >= 1024
             ):
                 return last
             time.sleep(2.0)
         raise BackendError(
             "Android runtime services did not become ready: "
-            f"health={last.to_dict()} framebuffer_error={last_frame_error!r}"
+            f"health={last.to_dict()} framebuffer_error={last_frame_error!r}; "
+            "requires package manager and at least 1024 MiB free in /data"
         )
 
     def frame(self) -> np.ndarray:
