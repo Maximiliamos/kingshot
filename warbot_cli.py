@@ -209,8 +209,14 @@ def main(argv=None) -> int:
         try:
             backend.wait_package_stable(stability, expected_pid=pid)
         except BackendError as exc:
-            crash_path = backend.collect_game_crash()
-            raise BackendError(f"{exc}; game crash log: {crash_path}") from exc
+            try:
+                crash_path = backend.collect_game_crash()
+                crash_detail = str(crash_path)
+            except Exception as crash_exc:
+                crash_detail = f"collection failed: {crash_exc}"
+            raise BackendError(
+                f"{exc}; game crash log: {crash_detail}"
+            ) from exc
 
         frame = backend.frame()
         final_loading = loading_logo_visible(frame)
