@@ -1,0 +1,9 @@
+﻿Enable-DeveloperModeFallback : Не удается привязать аргумент к параметру "ClientPath", так как он представляет собой пу
+стую строку.
+C:\warbot_git\scripts\install_wsa_poc.ps1:778 знак:81
++ ... backBackup = Enable-DeveloperModeFallback -ClientPath $client -Report ...
++                                                           ~~~~~~~
+    + CategoryInfo          : InvalidData: (:) [Enable-DeveloperModeFallback], ParameterBindingValidationException
+    + FullyQualifiedErrorId : ParameterArgumentValidationErrorEmptyStringNotAllowed,Enable-DeveloperModeFallback
+ 
+

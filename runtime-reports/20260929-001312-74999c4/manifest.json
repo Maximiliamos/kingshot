@@ -1,0 +1,17 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "UNCAUGHT_ERROR",
+    "exit_code":  99,
+    "commit":  "74999c41025b9b0d3701599e39796007e8ec8279",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-29T00:13:11.7937758+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps",
+    "error":  "Не удается привязать аргумент к параметру \"ClientPath\", так как он представляет собой пустую строку.",
+    "category":  "InvalidData",
+    "target":  ""
+}
