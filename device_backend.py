@@ -51,8 +51,6 @@ class DeviceHealth:
     internet_reachable: bool = False
     audio_service_ready: bool = False
     package_manager_ready: bool = False
-    google_play_services_ready: bool = False
-    play_store_ready: bool = False
     data_free_mb: int = 0
 
     @property
@@ -295,8 +293,6 @@ class AdbDeviceBackend(DeviceBackend):
         internet_reachable = False
         audio_service_ready = False
         package_manager_ready = False
-        google_play_services_ready = False
-        play_store_ready = False
         data_free_mb = 0
         if boot_completed == "1":
             try:
@@ -314,19 +310,6 @@ class AdbDeviceBackend(DeviceBackend):
                 )
             except BackendError:
                 package_manager_ready = False
-            if package_manager_ready:
-                try:
-                    google_play_services_ready = bool(
-                        self.shell(["pm", "path", "com.google.android.gms"], timeout=8).strip()
-                    )
-                except BackendError:
-                    google_play_services_ready = False
-                try:
-                    play_store_ready = bool(
-                        self.shell(["pm", "path", "com.android.vending"], timeout=8).strip()
-                    )
-                except BackendError:
-                    play_store_ready = False
             try:
                 df_output = self.shell(["df", "-k", "/data"], timeout=8)
                 df_lines = [line.split() for line in df_output.splitlines() if line.strip()]
@@ -405,8 +388,6 @@ class AdbDeviceBackend(DeviceBackend):
             internet_reachable=internet_reachable,
             audio_service_ready=audio_service_ready,
             package_manager_ready=package_manager_ready,
-            google_play_services_ready=google_play_services_ready,
-            play_store_ready=play_store_ready,
             data_free_mb=data_free_mb,
         )
 
@@ -422,12 +403,7 @@ class AdbDeviceBackend(DeviceBackend):
             f"Android did not become ready in {timeout}s: {last.to_dict()}"
         )
 
-    def wait_runtime_services(
-        self,
-        timeout: int = 90,
-        *,
-        require_google: bool = False,
-    ) -> DeviceHealth:
+    def wait_runtime_services(self, timeout: int = 90) -> DeviceHealth:
         """Wait until the runtime has framebuffer/network/Internet/audio.
 
         P0 acceptance is stricter than a mere sys.boot_completed=1: Kingshot
@@ -454,8 +430,6 @@ class AdbDeviceBackend(DeviceBackend):
                 and last.internet_reachable
                 and last.audio_service_ready
                 and last.package_manager_ready
-                and (not require_google or last.google_play_services_ready)
-                and (not require_google or last.play_store_ready)
                 and last.data_free_mb >= 1024
             ):
                 return last
@@ -463,8 +437,7 @@ class AdbDeviceBackend(DeviceBackend):
         raise BackendError(
             "Android runtime services did not become ready: "
             f"health={last.to_dict()} framebuffer_error={last_frame_error!r}; "
-            "requires package manager and at least 1024 MiB free in /data; "
-            f"require_google={require_google}"
+            "requires package manager and at least 1024 MiB free in /data"
         )
 
     def frame(self) -> np.ndarray:
