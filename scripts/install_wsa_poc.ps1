@@ -560,15 +560,17 @@ if (-not (Test-Path $adb)) {
 
 $clientCandidates = @()
 if ($installed.InstallLocation) {
+    $clientCandidates += (Join-Path $installed.InstallLocation "WsaClient\WsaClient.exe")
     $clientCandidates += (Join-Path $installed.InstallLocation "WsaClient.exe")
-    $clientCandidates += (Join-Path $installed.InstallLocation "WsaClient")
 }
+$clientCandidates += (Join-Path $InstallRoot "WsaClient\WsaClient.exe")
 $clientCandidates += (Join-Path $InstallRoot "WsaClient.exe")
-$clientCandidates += (Join-Path $InstallRoot "WsaClient")
 $clientCandidates += (Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\WsaClient.exe")
-$client = $clientCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+$client = $clientCandidates | Where-Object {
+    Test-Path -LiteralPath $_ -PathType Leaf
+} | Select-Object -First 1
 if ($client) {
-    Write-Log "Using WsaClient at $client."
+    Write-Log "Using WsaClient executable at $client."
     try {
         Start-Process -FilePath $client -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue
         Write-Log "Requested Android Settings launch to wake the Android environment."
