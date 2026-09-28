@@ -79,6 +79,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('[string]$Serial = "127.0.0.1:58526"', reporter)
         self.assertIn('[string]$PairEndpoint = ""', reporter)
         self.assertIn('[string]$PairCode = ""', reporter)
+        self.assertIn('[switch]$NoAutoDeveloperModePatch', reporter)
         self.assertIn('if ($Backend -eq "wsa")', reporter)
         self.assertIn('"install_wsa_poc.ps1"', reporter)
         self.assertIn('@("-PairEndpoint", $PairEndpoint)', reporter)
