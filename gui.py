@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import threading
+import time
 from datetime import datetime
 
 import cv2
@@ -58,6 +59,112 @@ def bot_pid():
         return None
 
 
+class InteractivePreview(QLabel):
+    """Interactive Android framebuffer shown inside TUGARIN BOTS.
+
+    Mouse clicks become taps, mouse drags become swipes, and focused keyboard
+    events are forwarded to Android. The preview may be scaled/letterboxed, so
+    pointer coordinates are mapped back to the real framebuffer size.
+    """
+
+    tap_requested = Signal(int, int)
+    swipe_requested = Signal(int, int, int, int, int)
+    key_requested = Signal(str)
+    text_requested = Signal(str)
+
+    def __init__(self, text=""):
+        super().__init__(text)
+        self.setAlignment(Qt.AlignCenter)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setMouseTracking(True)
+        self._device_width = 0
+        self._device_height = 0
+        self._press_point = None
+        self._press_at = 0.0
+
+    def set_device_size(self, width, height):
+        self._device_width = max(0, int(width or 0))
+        self._device_height = max(0, int(height or 0))
+
+    def _map_to_device(self, point):
+        pixmap = self.pixmap()
+        if (
+            pixmap is None
+            or pixmap.isNull()
+            or self._device_width <= 0
+            or self._device_height <= 0
+        ):
+            return None
+
+        pw = pixmap.width()
+        ph = pixmap.height()
+        left = (self.width() - pw) / 2.0
+        top = (self.height() - ph) / 2.0
+        x = point.x() - left
+        y = point.y() - top
+        if x < 0 or y < 0 or x >= pw or y >= ph:
+            return None
+
+        dx = round(x * self._device_width / max(1, pw))
+        dy = round(y * self._device_height / max(1, ph))
+        dx = max(0, min(self._device_width - 1, dx))
+        dy = max(0, min(self._device_height - 1, dy))
+        return dx, dy
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.setFocus(Qt.FocusReason.MouseFocusReason)
+            mapped = self._map_to_device(event.position())
+            if mapped is not None:
+                self._press_point = mapped
+                self._press_at = time.monotonic()
+                event.accept()
+                return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self._press_point is not None:
+            start = self._press_point
+            self._press_point = None
+            end = self._map_to_device(event.position())
+            if end is not None:
+                elapsed_ms = max(50, min(5000, round((time.monotonic() - self._press_at) * 1000)))
+                distance = abs(end[0] - start[0]) + abs(end[1] - start[1])
+                if distance <= 12:
+                    self.tap_requested.emit(*end)
+                else:
+                    self.swipe_requested.emit(start[0], start[1], end[0], end[1], elapsed_ms)
+                event.accept()
+                return
+        super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event):
+        special = {
+            Qt.Key.Key_Backspace: "KEYCODE_DEL",
+            Qt.Key.Key_Return: "KEYCODE_ENTER",
+            Qt.Key.Key_Enter: "KEYCODE_ENTER",
+            Qt.Key.Key_Escape: "KEYCODE_BACK",
+            Qt.Key.Key_Tab: "KEYCODE_TAB",
+            Qt.Key.Key_Left: "KEYCODE_DPAD_LEFT",
+            Qt.Key.Key_Right: "KEYCODE_DPAD_RIGHT",
+            Qt.Key.Key_Up: "KEYCODE_DPAD_UP",
+            Qt.Key.Key_Down: "KEYCODE_DPAD_DOWN",
+            Qt.Key.Key_Home: "KEYCODE_HOME",
+        }
+        code = special.get(event.key())
+        if code:
+            self.key_requested.emit(code)
+            event.accept()
+            return
+
+        text = event.text()
+        if text and text.isprintable() and text.isascii():
+            self.text_requested.emit(text)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+
 class Card(QFrame):
     def __init__(self, title):
         super().__init__()
@@ -71,10 +178,11 @@ class Card(QFrame):
 class WarBotWindow(QMainWindow):
     capture_ready = Signal(object, str, object)
     capture_failed = Signal(str)
+    manual_input_log = Signal(str)
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("WAR BOT — Центр управления")
+        self.setWindowTitle("TUGARIN BOTS — Центр управления")
         self.resize(1240, 780)
         self.process = QProcess(self)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
@@ -92,6 +200,7 @@ class WarBotWindow(QMainWindow):
         self.capture_busy = False
         self.capture_ready.connect(self._render_capture)
         self.capture_failed.connect(self._capture_failed)
+        self.manual_input_log.connect(self.append_log)
         self.last_log_size = 0
         self.paused = False
         self.pending_bot_start = False
@@ -109,7 +218,7 @@ class WarBotWindow(QMainWindow):
         outer = QVBoxLayout(root)
 
         header = QHBoxLayout()
-        brand = QLabel("WAR BOT")
+        brand = QLabel("TUGARIN BOTS")
         brand.setObjectName("brand")
         header.addWidget(brand)
         self.device_status = QLabel("● Проверка подключения…")
@@ -157,12 +266,22 @@ class WarBotWindow(QMainWindow):
     def overview_page(self):
         page = QWidget()
         layout = QHBoxLayout(page)
-        preview_card = Card("ЭКРАН ТЕЛЕФОНА")
-        self.preview = QLabel("Ожидание Android backend")
-        self.preview.setAlignment(Qt.AlignCenter)
+        preview_card = Card("ЭКРАН ANDROID · РУЧНОЕ УПРАВЛЕНИЕ")
+        self.preview = InteractivePreview("Ожидание Android backend")
         self.preview.setMinimumSize(430, 600)
         self.preview.setObjectName("preview")
+        self.preview.tap_requested.connect(self.preview_tap)
+        self.preview.swipe_requested.connect(self.preview_swipe)
+        self.preview.key_requested.connect(self.preview_key)
+        self.preview.text_requested.connect(self.preview_text)
         preview_card.layout.addWidget(self.preview, 1)
+        preview_help = QLabel(
+            "Мышь: клик = касание, протяжка = свайп. "
+            "Кликни по экрану и используй клавиатуру для ввода/Android-клавиш."
+        )
+        preview_help.setWordWrap(True)
+        preview_help.setObjectName("muted")
+        preview_card.layout.addWidget(preview_help)
         layout.addWidget(preview_card, 3)
 
         side = QVBoxLayout()
@@ -401,7 +520,7 @@ class WarBotWindow(QMainWindow):
             return
         mode = str(self.backend_mode.currentData() or "wsa")
         if mode not in ("native_arm64", "wsa"):
-            QMessageBox.information(self, "WAR BOT", "Выберите WSA или Native ARM64 emulator.")
+            QMessageBox.information(self, "TUGARIN BOTS", "Выберите WSA или Native ARM64 emulator.")
             return
         if mode == "wsa":
             self.run_device_cli("start-runtime")
@@ -421,7 +540,7 @@ class WarBotWindow(QMainWindow):
     def stop_android_runtime(self):
         if (self.backend_mode.currentData() or "wsa") == "wsa":
             QMessageBox.information(
-                self, "WAR BOT", "Жизненным циклом WSA управляет Windows; остановка не требуется."
+                self, "TUGARIN BOTS", "Жизненным циклом WSA управляет Windows; остановка не требуется."
             )
             return
         QProcess.startDetached(
@@ -452,7 +571,7 @@ class WarBotWindow(QMainWindow):
     def run_device_cli(self, action, extra=None, quiet_busy=False):
         if self.device_process.state() != QProcess.NotRunning:
             if not quiet_busy:
-                QMessageBox.information(self, "WAR BOT", "Предыдущая Android-команда ещё выполняется.")
+                QMessageBox.information(self, "TUGARIN BOTS", "Предыдущая Android-команда ещё выполняется.")
             return False
         self.save_config(show_message=False)
         self.device_process.setWorkingDirectory(ROOT)
@@ -471,7 +590,7 @@ class WarBotWindow(QMainWindow):
     def bootstrap_android_game(self):
         if (self.backend_mode.currentData() or "wsa") not in ("native_arm64", "wsa"):
             QMessageBox.information(
-                self, "WAR BOT", "Подготовка доступна для WSA или Native ARM64 emulator."
+                self, "TUGARIN BOTS", "Подготовка доступна для WSA или Native ARM64 emulator."
             )
             return
         self.run_device_cli(
@@ -483,7 +602,7 @@ class WarBotWindow(QMainWindow):
         if (self.backend_mode.currentData() or "wsa") not in ("native_arm64", "wsa"):
             QMessageBox.information(
                 self,
-                "WAR BOT",
+                "TUGARIN BOTS",
                 "Установка игры через GUI разрешена только для управляемых "
                 "runtime WSA и Native ARM64.",
             )
@@ -499,7 +618,7 @@ class WarBotWindow(QMainWindow):
     def clear_game_data(self):
         answer = QMessageBox.question(
             self,
-            "WAR BOT",
+            "TUGARIN BOTS",
             "Очистить данные com.got.globalru и синхронно начать новый чистый цикл? "
             "Счётчик Тугарин<N> на ПК будет сохранён.",
             QMessageBox.Yes | QMessageBox.No,
@@ -508,6 +627,78 @@ class WarBotWindow(QMainWindow):
         if answer != QMessageBox.Yes:
             return
         self.run_device_cli("clean-start", ["--yes"])
+
+    def _manual_backend(self):
+        if isinstance(self.capture, BackendCapture):
+            return self.capture.backend
+        mode = str(self.backend_mode.currentData() or "wsa")
+        if mode == "scrcpy":
+            raise RuntimeError("Ручной ввод внутри GUI доступен для Android backend, а не legacy scrcpy.")
+        return create_backend(
+            mode,
+            serial=self.android_serial.text().strip() or "127.0.0.1:58526",
+            adb_path=self.adb_path.text().strip(),
+        )
+
+    def _pause_for_manual_control(self):
+        if bot_pid() is None:
+            return
+        control = read_json(CONTROL_FILE, {})
+        if not bool(control.get("paused", False)):
+            self.paused = True
+            self.write_control(True, False)
+            self.pause_button.setText("▶  ПРОДОЛЖИТЬ")
+            self.manual_input_log.emit(
+                "[Manual] Автоматизация поставлена на паузу перед ручным управлением."
+            )
+
+    def _send_manual_input(self, kind, *args):
+        self._pause_for_manual_control()
+
+        def worker():
+            try:
+                backend = self._manual_backend()
+                if kind == "tap":
+                    backend.tap(*args)
+                    detail = f"касание {args[0]},{args[1]}"
+                elif kind == "swipe":
+                    backend.swipe(*args)
+                    detail = (
+                        f"свайп {args[0]},{args[1]} → {args[2]},{args[3]} "
+                        f"({args[4]} мс)"
+                    )
+                elif kind == "key":
+                    backend.keyevent(args[0])
+                    detail = f"клавиша {args[0]}"
+                elif kind == "text":
+                    backend.input_text(args[0])
+                    detail = f"текст {args[0]!r}"
+                else:
+                    raise RuntimeError(f"Неизвестный ручной ввод: {kind}")
+                self.manual_input_log.emit("[Manual] " + detail)
+            except Exception as error:
+                self.manual_input_log.emit(f"[Manual] Ошибка ввода: {error}")
+
+        threading.Thread(
+            target=worker,
+            name="tugarin-bots-manual-input",
+            daemon=True,
+        ).start()
+
+    def preview_tap(self, x, y):
+        self._send_manual_input("tap", int(x), int(y))
+
+    def preview_swipe(self, x1, y1, x2, y2, duration_ms):
+        self._send_manual_input(
+            "swipe",
+            int(x1), int(y1), int(x2), int(y2), int(duration_ms),
+        )
+
+    def preview_key(self, code):
+        self._send_manual_input("key", str(code))
+
+    def preview_text(self, value):
+        self._send_manual_input("text", str(value))
 
     def read_device_output(self):
         raw = bytes(self.device_process.readAllStandardOutput()).decode("utf-8", errors="replace")
@@ -519,7 +710,7 @@ class WarBotWindow(QMainWindow):
             return
         self.pending_bot_start = False
         if exit_code == 0:
-            self.append_log("[Device] Android и игра готовы — запускаю WAR BOT.")
+            self.append_log("[Device] Android и игра готовы — запускаю TUGARIN BOTS.")
             self._launch_bot_process()
         else:
             self.start_button.setEnabled(True)
@@ -543,7 +734,7 @@ class WarBotWindow(QMainWindow):
             self.pending_bot_start = False
             if self.device_process.state() != QProcess.NotRunning:
                 self.device_process.kill()
-            # Stop only the WAR BOT runtime identified by native_arm64_poc.
+            # Stop only the TUGARIN BOTS runtime identified by native_arm64_poc.
             QProcess.startDetached(
                 self.python_path.text().strip(),
                 [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
@@ -619,6 +810,7 @@ class WarBotWindow(QMainWindow):
             self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
         self.preview.setPixmap(pixmap)
+        self.preview.set_device_size(rect["width"], rect["height"])
         self.device_status.setText(
             f"● {title} · {rect['width']}×{rect['height']}"
         )
@@ -755,7 +947,7 @@ class WarBotWindow(QMainWindow):
             state["next_nickname"] = config["next_number"]
         atomic_json(bot.STATE_FILE, state)
         if show_message:
-            QMessageBox.information(self, "WAR BOT", "Настройки сохранены.")
+            QMessageBox.information(self, "TUGARIN BOTS", "Настройки сохранены.")
 
     def closeEvent(self, event):
         if self.capture is not None:
@@ -787,7 +979,7 @@ class WarBotWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("WAR BOT")
+    app.setApplicationName("TUGARIN BOTS")
     window = WarBotWindow()
     window.show()
     return app.exec()
