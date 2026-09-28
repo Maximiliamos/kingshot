@@ -318,38 +318,52 @@ class AdbDeviceBackend(DeviceBackend):
             except (BackendError, ValueError, IndexError):
                 data_free_mb = 0
 
-            # Runtime service probes are intentionally read-only. They make the
-            # GUI distinguish "Android booted" from "Android can actually use
-            # the network/audio stack" without changing guest settings.
+            # Runtime service probes are intentionally read-only. WSA can
+            # expose a fully usable virtual Ethernet connection even when
+            # `ip route` is incomplete/empty for the shell user, so Android's
+            # ConnectivityService is the primary source of truth.
+            connectivity = ""
+            try:
+                connectivity = self.shell(["dumpsys", "connectivity"], timeout=8)
+            except BackendError:
+                connectivity = ""
+
+            if connectivity:
+                upper = connectivity.upper()
+                active_index = upper.find("ACTIVE DEFAULT NETWORK:")
+                active = upper[active_index:active_index + 5000] if active_index >= 0 else ""
+                network_ready = (
+                    active_index >= 0
+                    and "CONNECTED" in active
+                    and ("ETHERNET" in active or "WIFI" in active or "CELLULAR" in active)
+                )
+                internet_reachable = (
+                    network_ready
+                    and "INTERNET" in active
+                    and "VALIDATED" in active
+                )
+
+            # Route inspection is only a fallback/supplement for Android
+            # builds where dumpsys connectivity is unavailable or abbreviated.
             try:
                 routes = self.shell(["ip", "route"], timeout=5)
-                network_ready = "default" in routes
+                if "default" in routes.lower():
+                    network_ready = True
             except BackendError:
-                network_ready = False
-            if network_ready:
-                # Android's ConnectivityService exposes whether the active
-                # network was actually validated. Prefer that over relying on
-                # ICMP, which some networks block even when Internet works.
+                pass
+
+            # ICMP is a final fallback only; some networks block it.
+            if network_ready and not internet_reachable:
                 try:
-                    connectivity = self.shell(["dumpsys", "connectivity"], timeout=8)
-                    upper = connectivity.upper()
-                    internet_reachable = (
-                        "VALIDATED" in upper
-                        and ("INTERNET" in upper or "NET_CAPABILITY_INTERNET" in upper)
+                    ping = self._run(
+                        ["shell", "ping", "-c", "1", "-W", "2", "1.1.1.1"],
+                        timeout=5,
+                        check=False,
+                        text=True,
                     )
+                    internet_reachable = ping.returncode == 0
                 except BackendError:
                     internet_reachable = False
-                if not internet_reachable:
-                    try:
-                        ping = self._run(
-                            ["shell", "ping", "-c", "1", "-W", "2", "1.1.1.1"],
-                            timeout=5,
-                            check=False,
-                            text=True,
-                        )
-                        internet_reachable = ping.returncode == 0
-                    except BackendError:
-                        internet_reachable = False
             try:
                 audio = self.shell(["dumpsys", "audio"], timeout=8)
                 audio_service_ready = bool(audio.strip()) and (
