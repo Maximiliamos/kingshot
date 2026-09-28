@@ -309,15 +309,29 @@ class AdbDeviceBackend(DeviceBackend):
             except BackendError:
                 network_ready = False
             if network_ready:
+                # Android's ConnectivityService exposes whether the active
+                # network was actually validated. Prefer that over relying on
+                # ICMP, which some networks block even when Internet works.
                 try:
-                    ping = self.run_adb(
-                        ["shell", "ping", "-c", "1", "-W", "2", "1.1.1.1"],
-                        timeout=5,
-                        check=False,
+                    connectivity = self.shell(["dumpsys", "connectivity"], timeout=8)
+                    upper = connectivity.upper()
+                    internet_reachable = (
+                        "VALIDATED" in upper
+                        and ("INTERNET" in upper or "NET_CAPABILITY_INTERNET" in upper)
                     )
-                    internet_reachable = ping.returncode == 0
                 except BackendError:
                     internet_reachable = False
+                if not internet_reachable:
+                    try:
+                        ping = self._run(
+                            ["shell", "ping", "-c", "1", "-W", "2", "1.1.1.1"],
+                            timeout=5,
+                            check=False,
+                            text=True,
+                        )
+                        internet_reachable = ping.returncode == 0
+                    except BackendError:
+                        internet_reachable = False
             try:
                 audio = self.shell(["dumpsys", "audio"], timeout=8)
                 audio_service_ready = bool(audio.strip()) and (
@@ -353,6 +367,40 @@ class AdbDeviceBackend(DeviceBackend):
             time.sleep(1.0)
         raise BackendError(
             f"Android did not become ready in {timeout}s: {last.to_dict()}"
+        )
+
+    def wait_runtime_services(self, timeout: int = 90) -> DeviceHealth:
+        """Wait until the runtime has framebuffer/network/Internet/audio.
+
+        P0 acceptance is stricter than a mere sys.boot_completed=1: Kingshot
+        needs a usable display, validated networking and Android's audio
+        service. The framebuffer itself is verified with a real screencap.
+        """
+        deadline = time.monotonic() + max(1, int(timeout))
+        last = self.health()
+        last_frame_error = ""
+        while time.monotonic() < deadline:
+            last = self.health()
+            frame_ok = False
+            if last.ready:
+                try:
+                    frame = self.frame()
+                    frame_ok = bool(frame is not None and frame.size > 0)
+                    last_frame_error = ""
+                except BackendError as exc:
+                    last_frame_error = str(exc)
+            if (
+                last.ready
+                and frame_ok
+                and last.network_ready
+                and last.internet_reachable
+                and last.audio_service_ready
+            ):
+                return last
+            time.sleep(2.0)
+        raise BackendError(
+            "Android runtime services did not become ready: "
+            f"health={last.to_dict()} framebuffer_error={last_frame_error!r}"
         )
 
     def frame(self) -> np.ndarray:
