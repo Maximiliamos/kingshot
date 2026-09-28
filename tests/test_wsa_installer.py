@@ -41,6 +41,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("excluded-tcp-ranges.txt", self.source)
         self.assertIn("ANDROID_CONTROL_CHANNEL_REFUSED", self.source)
 
+    def test_p0_opens_developer_settings_and_recycles_once(self):
+        self.assertIn('"wsa-client://developer-settings"', self.source)
+        self.assertIn("$runtimeRecycled = $false", self.source)
+        self.assertIn("$round -ge 6", self.source)
+        self.assertIn('"/shutdown"', self.source)
+
     def test_p0_failure_bundle_collects_runtime_services(self):
         self.assertIn("wsa-logcat-tail.txt", self.source)
         self.assertIn("wsa-connectivity.txt", self.source)
