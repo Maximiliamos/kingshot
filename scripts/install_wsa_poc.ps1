@@ -1,8 +1,7 @@
 param(
     [string]$Serial = "127.0.0.1:58526",
     [switch]$CleanGame,
-    [switch]$SkipInstall,
-    [switch]$AdminBootstrap
+    [switch]$SkipInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,8 +33,7 @@ function Invoke-SelfElevated {
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", $PSCommandPath,
-        "-Serial", $Serial,
-        "-AdminBootstrap"
+        "-Serial", $Serial
     )
     if ($CleanGame) { $args += "-CleanGame" }
     if ($SkipInstall) { $args += "-SkipInstall" }
@@ -50,55 +48,11 @@ function Invoke-SelfElevated {
     return $proc.ExitCode
 }
 
-function Invoke-AdminBootstrap {
-    & reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to enable Windows developer package registration." }
-
-    $restartNeeded = $false
-    $feature = Get-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform"
-    if ($feature.State -ne "Enabled") {
-        $result = Enable-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform" -All -NoRestart
-        $restartNeeded = [bool]$result.RestartNeeded
-    }
-
-    $bcd = (& bcdedit /enum "{current}" 2>&1 | Out-String)
-    if ($bcd -match "hypervisorlaunchtype\s+Off") {
-        & bcdedit /set hypervisorlaunchtype auto | Out-Null
-        $restartNeeded = $true
-    }
-
-    # An unpackaged AppX registration is user-scoped. If UAC used a separate
-    # administrator account, remove only the WAR BOT copy so the invoking
-    # desktop user can register the same verified files afterwards.
-    $warBotRoot = "C:\warbot_wsa"
-    $conflicts = Get-AppxPackage -AllUsers | Where-Object {
-        $_.Name -like "*WindowsSubsystemForAndroid*" -and
-        $_.InstallLocation -like "$warBotRoot*"
-    }
-    foreach ($package in $conflicts) {
-        Write-Host "Removing WAR BOT WSA registration owned by another user: $($package.PackageFullName)"
-        Remove-AppxPackage -Package $package.PackageFullName -AllUsers -ErrorAction Stop
-    }
-
-    if ($restartNeeded) { return 3010 }
-    return 0
-}
-
-if ($AdminBootstrap) {
-    if (-not (Test-IsAdmin)) { throw "Admin bootstrap was started without administrator rights." }
-    exit (Invoke-AdminBootstrap)
-}
-
 if (-not (Test-IsAdmin)) {
-    Write-Host "Administrator rights are required for WSA installation."
+    Write-Host "Administrator rights are required for the Android subsystem setup."
     Write-Host "Requesting elevation..."
     $childExit = Invoke-SelfElevated
-    if ($childExit -eq 3010) {
-        Write-Host "Windows virtualization components were enabled. Restart Windows and run this command again."
-        exit 3010
-    }
-    if ($childExit -ne 0) { exit $childExit }
-    Write-Host "Administrator bootstrap completed; continuing as the interactive WAR BOT user."
+    exit $childExit
 }
 
 New-Item -ItemType Directory -Force -Path $WorkRoot, $DownloadRoot, $RuntimeRoot | Out-Null
@@ -237,9 +191,39 @@ if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
     throw "CPU virtualization is disabled in BIOS/UEFI. Enable Intel VT-x/AMD-V and rerun."
 }
 
-@{ VirtualMachinePlatform = "Enabled by administrator bootstrap" } |
-    ConvertTo-Json -Depth 3 |
-    Set-Content -Encoding UTF8 (Join-Path $stage "windows-features-before.json")
+& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to enable Windows developer package registration."
+}
+
+$featureState = @{}
+$needsReboot = $false
+$currentFeature = Get-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform"
+$featureState["VirtualMachinePlatform"] = $currentFeature.State.ToString()
+if ($currentFeature.State -ne "Enabled") {
+    Write-Log "Enabling Windows feature: VirtualMachinePlatform"
+    $featureResult = Enable-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform" -All -NoRestart
+    if ($featureResult.RestartNeeded) {
+        $needsReboot = $true
+    }
+}
+$featureState | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $stage "windows-features-before.json")
+
+$bcd = (& bcdedit /enum "{current}" 2>&1 | Out-String)
+$bcd | Set-Content -Encoding UTF8 (Join-Path $stage "bcd-current.txt")
+if ($bcd -match "hypervisorlaunchtype\s+Off") {
+    Write-Log "Enabling Windows hypervisor launch at boot."
+    & bcdedit /set hypervisorlaunchtype auto | Out-Null
+    $needsReboot = $true
+}
+
+if ($needsReboot) {
+    Finish-Report -State "NEEDS_REBOOT" -ExitCode 3010 -Extra @{ host = $hostInfo }
+    Write-Host ""
+    Write-Host "Windows virtualization components were enabled."
+    Write-Host "Restart Windows, then run the SAME command again."
+    exit 3010
+}
 
 if (-not $SkipInstall) {
     $existing = Get-AppxPackage | Where-Object {
