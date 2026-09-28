@@ -30,10 +30,28 @@ function Assert-GitSuccess {
     }
 }
 
+function Invoke-GitWithRetry {
+    param(
+        [Parameter(Mandatory=$true)][scriptblock]$Command,
+        [Parameter(Mandatory=$true)][string]$Operation,
+        [int]$Attempts = 3
+    )
+    for ($i = 1; $i -le $Attempts; $i++) {
+        & $Command
+        if ($LASTEXITCODE -eq 0) { return }
+        if ($i -lt $Attempts) {
+            Write-Host "$Operation failed (attempt $i/$Attempts); retrying..."
+            Start-Sleep -Seconds (2 * $i)
+        }
+    }
+    throw "git failed during $Operation after $Attempts attempts (exit $LASTEXITCODE)"
+}
+
 try {
-    Write-Host "Uploading WAR BOT report to GitHub branch '$ReportsBranch'..."
-    & git fetch $Remote $ReportsBranch
-    Assert-GitSuccess "fetch reports branch"
+    Write-Host "Uploading TUGARIN BOTS report to GitHub branch '$ReportsBranch'..."
+    Invoke-GitWithRetry -Operation "fetch reports branch" -Command {
+        & git fetch $Remote $ReportsBranch
+    }
 
     if (Test-Path $worktree) {
         Remove-Item -Recurse -Force $worktree
@@ -66,8 +84,9 @@ try {
         throw "git commit failed while uploading report."
     }
 
-    & git -C $worktree push $Remote "HEAD:refs/heads/$ReportsBranch"
-    Assert-GitSuccess "push report"
+    Invoke-GitWithRetry -Operation "push report" -Command {
+        & git -C $worktree push $Remote "HEAD:refs/heads/$ReportsBranch"
+    }
 
     Write-Host ""
     Write-Host "Report uploaded successfully."
