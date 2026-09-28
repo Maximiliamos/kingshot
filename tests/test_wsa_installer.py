@@ -74,6 +74,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("userdata-before-gapps-", self.source)
         self.assertIn("userdata-backup.json", self.source)
         self.assertIn("preparing safe migration to GApps", self.source)
+        self.assertIn("Stopping WSA before userdata backup.", self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
