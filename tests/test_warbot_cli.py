@@ -36,6 +36,14 @@ class WarBotCliTests(unittest.TestCase):
                 warbot_cli.main(["clear-game-data", "--backend", "adb"])
         backend.clear_app_data.assert_not_called()
 
+    def test_loading_logo_gate_is_independent_from_full_bot_runtime(self):
+        import inspect
+        source = inspect.getsource(warbot_cli.loading_logo_visible)
+        self.assertNotIn("import bot", source)
+        self.assertIn("templates", source)
+        self.assertIn("loading_logo.png", source)
+        self.assertIn("cv2.matchTemplate", source)
+
     def test_bootstrap_prepares_native_runtime_and_game(self):
         backend = warbot_cli.NativeArm64Backend(
             serial="device-1",
