@@ -12,14 +12,12 @@ class WsaInstallerTests(unittest.TestCase):
     def setUpClass(cls):
         cls.source = INSTALLER.read_text(encoding="utf-8-sig")
 
-    def test_elevation_is_limited_to_machine_bootstrap(self):
-        self.assertIn("[switch]$AdminBootstrap", self.source)
-        self.assertIn("function Invoke-AdminBootstrap", self.source)
-        self.assertIn('"-AdminBootstrap"', self.source)
-        self.assertIn(
-            "Administrator bootstrap completed; continuing as the interactive WAR BOT user.",
-            self.source,
-        )
+    def test_full_wsa_workflow_runs_elevated(self):
+        self.assertNotIn("[switch]$AdminBootstrap", self.source)
+        self.assertNotIn("function Invoke-AdminBootstrap", self.source)
+        self.assertIn("$childExit = Invoke-SelfElevated", self.source)
+        self.assertIn("exit $childExit", self.source)
+        self.assertIn('Get-WindowsOptionalFeature -Online -FeatureName "VirtualMachinePlatform"', self.source)
 
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
