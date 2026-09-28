@@ -179,6 +179,7 @@ class WarBotWindow(QMainWindow):
     capture_ready = Signal(object, str, object)
     capture_failed = Signal(str)
     manual_input_log = Signal(str)
+    health_ready = Signal(object)
 
     def __init__(self):
         super().__init__()
@@ -201,6 +202,9 @@ class WarBotWindow(QMainWindow):
         self.capture_ready.connect(self._render_capture)
         self.capture_failed.connect(self._capture_failed)
         self.manual_input_log.connect(self.append_log)
+        self.health_ready.connect(self._render_runtime_health)
+        self.health_busy = False
+        self.last_health_probe_at = 0.0
         self.last_log_size = 0
         self.paused = False
         self.pending_bot_start = False
@@ -295,10 +299,15 @@ class WarBotWindow(QMainWindow):
         self.cycle_created_value = QLabel("0")
         self.stop_reason_value = QLabel("—")
         self.stop_reason_value.setWordWrap(True)
+        self.network_value = QLabel("—")
+        self.internet_value = QLabel("—")
+        self.audio_value = QLabel("—")
         for row, (name, widget) in enumerate((
             ("Режим", self.phase_value), ("Шаг", self.step_value),
             ("Следующее имя", self.name_value), ("Создано всего", self.created_value),
             ("Цикл", self.cycle_value), ("В этом цикле", self.cycle_created_value),
+            ("Сеть Android", self.network_value), ("Интернет", self.internet_value),
+            ("Аудиосервис", self.audio_value),
             ("Последняя остановка", self.stop_reason_value),
         )):
             caption = QLabel(name)
@@ -774,7 +783,48 @@ class WarBotWindow(QMainWindow):
     def refresh(self):
         self.refresh_state()
         self.refresh_capture()
+        self.refresh_runtime_health()
         self.refresh_log_file()
+
+    def refresh_runtime_health(self):
+        if self.health_busy or (time.monotonic() - self.last_health_probe_at) < 10.0:
+            return
+        mode = str(self.backend_mode.currentData() or "wsa")
+        if mode == "scrcpy":
+            return
+
+        self.health_busy = True
+        self.last_health_probe_at = time.monotonic()
+
+        def worker():
+            try:
+                backend = self._manual_backend()
+                self.health_ready.emit(backend.health().to_dict())
+            except Exception as error:
+                self.health_ready.emit({"error": str(error)})
+
+        threading.Thread(
+            target=worker,
+            name="tugarin-bots-health",
+            daemon=True,
+        ).start()
+
+    def _render_runtime_health(self, health):
+        self.health_busy = False
+        if health.get("error"):
+            self.network_value.setText("недоступно")
+            self.internet_value.setText("недоступно")
+            self.audio_value.setText("недоступно")
+            return
+
+        ready = bool(health.get("ready"))
+        self.network_value.setText("готово" if health.get("network_ready") else "нет")
+        self.internet_value.setText("доступен" if health.get("internet_reachable") else "нет")
+        self.audio_value.setText("готов" if health.get("audio_service_ready") else "нет")
+        if ready:
+            self.device_status.setToolTip(
+                "Android готов; сеть/интернет/аудио контролируются TUGARIN BOTS."
+            )
 
     def refresh_state(self):
         state = read_json(bot.STATE_FILE, {})
