@@ -61,20 +61,18 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$round -ge 6", self.source)
         self.assertNotIn('Start-Process -FilePath $client', self.source)
 
-    def test_p0_uses_registered_app_model_not_nested_wsaclient_exe(self):
-        self.assertIn('Start-Process "wsa://com.android.settings"', self.source)
-        self.assertIn('Start-Process "wsa-client://developer-settings"', self.source)
+    def test_p0_uses_interactive_explorer_app_model_not_nested_wsaclient_exe(self):
+        self.assertIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
+        self.assertIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
         self.assertIn("nested WsaClient.exe will not be launched directly", self.source)
-        self.assertNotIn('ArgumentList "/shutdown"', self.source)
+        self.assertNotIn('Start-Process -FilePath $client', self.source)
 
-    def test_p0_migrates_to_gapps_with_userdata_backup(self):
-        self.assertIn("GApps-13.0-NoAmazon_Windows_10.7z", self.source)
-        self.assertIn("501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458", self.source)
-        self.assertIn("WSA_LTS8_Windows10_GApps", self.source)
-        self.assertIn("userdata-before-gapps-", self.source)
-        self.assertIn("userdata-backup.json", self.source)
-        self.assertIn("preparing safe migration to GApps", self.source)
-        self.assertIn("Stopping WSA before userdata backup.", self.source)
+    def test_p0_stays_on_rootless_nogapps_runtime(self):
+        self.assertIn("NoGApps-NoAmazon_Windows_10.7z", self.source)
+        self.assertIn("366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8", self.source)
+        self.assertIn("WSA_LTS8_Windows10", self.source)
+        self.assertNotIn("preparing safe migration to GApps", self.source)
+        self.assertNotIn("userdata-before-gapps-", self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
