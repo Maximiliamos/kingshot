@@ -183,6 +183,8 @@ class DeviceBackendTests(unittest.TestCase):
             network_ready=True,
             internet_reachable=True,
             audio_service_ready=True,
+            package_manager_ready=True,
+            data_free_mb=4096,
         )
         with patch.object(backend, "health", return_value=ready), \
                 patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
