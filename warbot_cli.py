@@ -179,10 +179,7 @@ def main(argv=None) -> int:
         # P0 runtime acceptance: do not install/launch the game until Android
         # has a real framebuffer, validated networking and an audio service.
         if hasattr(backend, "wait_runtime_services"):
-            health = backend.wait_runtime_services(
-                timeout=90,
-                require_google=isinstance(backend, WsaBackend),
-            )
+            health = backend.wait_runtime_services(timeout=90)
 
         installed_now = False
         if not backend.package_installed():
@@ -252,8 +249,6 @@ def main(argv=None) -> int:
             "internet_reachable": health.internet_reachable,
             "audio_service_ready": health.audio_service_ready,
             "package_manager_ready": health.package_manager_ready,
-            "google_play_services_ready": health.google_play_services_ready,
-            "play_store_ready": health.play_store_ready,
             "data_free_mb": health.data_free_mb,
             "installed_now": installed_now,
             "clean_game": bool(args.clean_game),
