@@ -1,0 +1,81 @@
+﻿[2026-09-28T22:18:59.7592943+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T22:19:01.1435455+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T22:19:02.0888562+03:00] WAR BOT WSA package is already registered; keeping it.
+[2026-09-28T22:19:02.1395693+03:00] Launching Android subsystem settings and waking the Android environment.
+[2026-09-28T22:19:02.1978298+03:00] Requested Android Settings launch to wake the Android environment.
+[2026-09-28T22:19:02.2264706+03:00] Opened subsystem developer settings for the P0 control-channel gate.
+[2026-09-28T22:19:24.9711019+03:00] Android control endpoint 127.0.0.1:58526 -> connect='failed to authenticate to 127.0.0.1:58526' state=''.
+[2026-09-28T22:19:27.1072280+03:00] Android control endpoint 192.168.1.101:58526 -> connect='failed to authenticate to 192.168.1.101:58526' state=''.
+[2026-09-28T22:19:39.2049876+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:19:41.2952965+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:19:53.4153360+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:19:55.4917664+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:20:07.5734668+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:20:09.6594801+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:20:21.7616137+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:20:23.8352713+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:20:35.9156785+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:20:37.9952725+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:20:37.9972728+03:00] Control channel is still offline; recycling the Android subsystem once.
+[2026-09-28T22:21:06.1594253+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:08.2442576+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:20.3272609+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:22.4141873+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:24.5113547+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:26.5937171+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:28.6857229+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:30.7682171+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:32.8587249+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:34.9409934+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:37.0204441+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:39.0990725+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:41.2042420+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:43.2814708+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:45.3681010+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:47.4300881+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:49.5136183+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:51.5965722+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:53.6887476+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:55.7714368+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:21:57.8540786+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:21:59.9306103+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:02.0099584+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:04.0907064+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:06.1583701+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:08.2343053+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:10.3156675+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:12.3930996+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:14.4743390+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:16.5522837+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:18.6333412+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:20.7362994+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:22.8416682+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:24.9827550+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:27.0729853+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:29.1851149+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:31.2743299+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:33.3543542+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:35.4259760+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:37.5131711+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:39.6014853+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:41.6933359+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:43.7826654+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:45.8577010+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:47.9376200+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:50.0162107+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:52.0972131+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:54.1771736+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:22:56.2659839+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:22:58.3476979+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:00.4290943+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:02.5061252+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:04.5846933+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:06.6611517+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:08.7450632+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:10.8418304+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:12.9175045+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:14.9967733+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:17.0837638+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:19.1699984+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.
+[2026-09-28T22:23:21.2908163+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state=''.
+[2026-09-28T22:23:23.3738340+03:00] Android control endpoint 192.168.1.101:58526 -> connect='already connected to 192.168.1.101:58526' state=''.

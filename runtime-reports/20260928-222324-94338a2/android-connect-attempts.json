@@ -1,0 +1,668 @@
+﻿[
+    {
+        "round":  1,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "failed to authenticate to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  1,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "failed to authenticate to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  2,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  2,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  3,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  3,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  4,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  4,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  5,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  5,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  6,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  6,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  7,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  7,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  8,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  8,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  9,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  9,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  10,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  10,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  11,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  11,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  12,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  12,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  13,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  13,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  14,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  14,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  15,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  15,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  16,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  16,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  17,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  17,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  18,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  18,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  19,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  19,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  20,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  20,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  21,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  21,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  22,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  22,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  23,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  23,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  24,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  24,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  25,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  25,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  26,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  26,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  27,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  27,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  28,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  28,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  29,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  29,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  30,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  30,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  31,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  31,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  32,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  32,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  33,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  33,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  34,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  34,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  35,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  35,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  36,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  36,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  37,
+        "serial":  "127.0.0.1:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    },
+    {
+        "round":  37,
+        "serial":  "192.168.1.101:58526",
+        "connect_exit":  0,
+        "connect":  "already connected to 192.168.1.101:58526",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "error: device unauthorized.\r\nThis adb server\u0027s $ADB_VENDOR_KEYS is not set\r\nTry \u0027adb kill-server\u0027 if that seems wrong.\r\nOtherwise check for a confirmation dialog on your device."
+    }
+]
