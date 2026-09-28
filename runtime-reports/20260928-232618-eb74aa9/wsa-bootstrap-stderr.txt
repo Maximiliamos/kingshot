@@ -1,0 +1,1 @@
+WAR BOT CLI ERROR: ADB timeout after 120s on 127.0.0.1:58526: logcat -b crash -d -v threadtime

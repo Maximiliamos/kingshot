@@ -1,0 +1,17 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "UNCAUGHT_ERROR",
+    "exit_code":  99,
+    "commit":  "eb74aa907d5d243dcf2a0a7aa80f712bc5541fad",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-28T23:26:17.8852630+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "error":  "- waiting for device -",
+    "category":  "NotSpecified",
+    "target":  "- waiting for device -"
+}

@@ -1,0 +1,8 @@
+﻿adb.exe : - waiting for device -
+C:\warbot_git\scripts\install_wsa_poc.ps1:863 знак:1
++ & $adb -s $Serial logcat -b crash -d -v threadtime 2>&1 | Set-Content ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (- waiting for device -:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
