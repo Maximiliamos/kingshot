@@ -520,15 +520,36 @@ class AdbDeviceBackend(DeviceBackend):
     ) -> str:
         pid = expected_pid or self.wait_package_running(timeout=90)
         deadline = time.monotonic() + max(1, stability_seconds)
+        transport_failures = 0
+        empty_pid_checks = 0
         while time.monotonic() < deadline:
             try:
                 current = self.shell(["pidof", self.package], timeout=10).strip()
+                transport_failures = 0
             except BackendError:
-                current = ""
+                # WSA can briefly recycle the ADB transport while the guest and
+                # game stay alive. Do not turn one transient transport failure
+                # into a false "game exited" verdict.
+                transport_failures += 1
+                if transport_failures >= 4:
+                    raise BackendError(
+                        f"ADB transport stayed unavailable during the "
+                        f"{stability_seconds}s stability gate"
+                    )
+                time.sleep(2.0)
+                continue
+
             if not current:
-                raise BackendError(
-                    f"{self.package} exited during the {stability_seconds}s stability gate"
-                )
+                empty_pid_checks += 1
+                if empty_pid_checks >= 3:
+                    raise BackendError(
+                        f"{self.package} exited during the "
+                        f"{stability_seconds}s stability gate"
+                    )
+                time.sleep(2.0)
+                continue
+
+            empty_pid_checks = 0
             if current != pid:
                 raise BackendError(
                     f"{self.package} restarted during stability gate: {pid} -> {current}"
@@ -683,7 +704,7 @@ class WsaBackend(AdbDeviceBackend):
     def collect_game_crash(self) -> Path:
         result = self._run(
             ["logcat", "-b", "crash", "-d", "-v", "threadtime"],
-            timeout=120,
+            timeout=15,
             check=False,
             text=True,
         )
