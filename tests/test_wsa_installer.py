@@ -56,8 +56,13 @@ class WsaInstallerTests(unittest.TestCase):
     def test_report_workflow_defaults_to_wsa_installer(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn('[string]$Backend = "wsa"', reporter)
+        self.assertIn('[string]$Serial = "127.0.0.1:58526"', reporter)
+        self.assertIn('[string]$PairEndpoint = ""', reporter)
+        self.assertIn('[string]$PairCode = ""', reporter)
         self.assertIn('if ($Backend -eq "wsa")', reporter)
         self.assertIn('"install_wsa_poc.ps1"', reporter)
+        self.assertIn('@("-PairEndpoint", $PairEndpoint)', reporter)
+        self.assertIn('@("-PairCode", $PairCode)', reporter)
 
 
 if __name__ == "__main__":
