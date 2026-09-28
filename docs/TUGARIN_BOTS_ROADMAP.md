@@ -26,6 +26,18 @@ runtime is stabilised.
 | P3 | Cleanup | Demote old QEMU/BlueStacks experiments to diagnostic fallback and update PR/README | Simpler maintainable codebase |
 | P3 | Packaging | One installer/shortcut, product assets, stable tag | Finished TUGARIN BOTS MVP |
 
+## Current P0 status — 2026-09-28
+
+Code-side P0 is complete and covered by CI. Real-host acceptance is still required before P1 may begin.
+
+- Windows 10 WSA package installation/registration: **real-host PASS**.
+- Developer/control channel: installer opens developer settings, retries for four minutes, supports one-time pairing, and recycles the subsystem once.
+- Windows prerequisites: `VirtualMachinePlatform` + `HypervisorPlatform` are enforced; hypervisor launch is checked.
+- Runtime gate: `sys.boot_completed=1`, real framebuffer, package manager, >=1024 MiB free `/data`, network route, validated Internet, and Android audio service.
+- Kingshot gate: verified split install, process launch, stable PID for 120 seconds, startup/final screenshots, and verified `loading_logo.png` must be absent at the end.
+- Failure bundle: crash buffer, logcat tail, package path, PID, connectivity, audio, process dump, full health JSON, failure screenshot, port 58526 and excluded-range diagnostics.
+- **Do not begin P1 until a real-host run reports `WSA_GAME_PASS`.**
+
 ## Acceptance milestones
 
 ### M1 — Runtime PASS
