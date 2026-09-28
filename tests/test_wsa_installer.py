@@ -66,6 +66,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('Join-Path $installed.InstallLocation "WsaClient.exe"', self.source)
         self.assertIn('Write-Log "Using WsaClient at $client."', self.source)
 
+    def test_runtime_report_upload_retries_git_network_operations(self):
+        uploader = (ROOT / "scripts" / "upload_runtime_report.ps1").read_text(encoding="utf-8-sig")
+        self.assertIn("function Invoke-GitWithRetry", uploader)
+        self.assertIn('Operation "fetch reports branch"', uploader)
+        self.assertIn('Operation "push report"', uploader)
+        self.assertIn("Attempts = 3", uploader)
+
     def test_p0_post_failure_diagnostics_are_bounded_and_nonfatal(self):
         self.assertIn("function Save-AdbDiagnostic", self.source)
         self.assertIn("[int]$TimeoutSeconds = 20", self.source)
