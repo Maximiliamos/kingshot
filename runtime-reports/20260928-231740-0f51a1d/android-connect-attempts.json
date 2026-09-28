@@ -1,0 +1,9 @@
+﻿{
+    "round":  1,
+    "serial":  "127.0.0.1:58526",
+    "connect_exit":  0,
+    "connect":  "already connected to 127.0.0.1:58526",
+    "state_exit":  0,
+    "state":  "device",
+    "state_error":  ""
+}

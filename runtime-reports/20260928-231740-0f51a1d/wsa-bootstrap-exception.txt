@@ -1,0 +1,8 @@
+﻿python.exe : Traceback (most recent call last):
+C:\warbot_git\scripts\install_wsa_poc.ps1:832 знак:5
++     & python @bootstrapArgs 2>&1 | Tee-Object -FilePath (Join-Path $s ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
