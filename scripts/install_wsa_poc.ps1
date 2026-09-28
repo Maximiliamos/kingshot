@@ -823,12 +823,6 @@ if (-not $onlineSerial) {
 
     if ($developerFallbackBackup -and (Test-Path $developerFallbackBackup)) {
         $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
-        try {
-            if (Test-Path $client) {
-                Start-Process -FilePath $client -ArgumentList "/shutdown" -Wait -ErrorAction SilentlyContinue
-            }
-        }
-        catch {}
         Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         try {
