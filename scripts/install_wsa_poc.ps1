@@ -661,7 +661,11 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
             state_error = $stateResult.Stderr
         }
         Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
-        if ($stateText -eq "unauthorized" -or $stateResult.Stderr -match "(?i)unauthorized") {
+        if (
+            $stateText -eq "unauthorized" -or
+            $stateResult.Stderr -match "(?i)unauthorized|authenticate" -or
+            $connectResult.Text -match "(?i)unauthorized|failed to authenticate"
+        ) {
             Write-Log "Android control channel is reachable but awaiting host-key authorization."
         }
         if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
@@ -735,7 +739,9 @@ catch {}
 
 if (-not $onlineSerial) {
     $unauthorized = [bool](@($attempts | Where-Object {
-        $_.state -eq "unauthorized" -or $_.state_error -match "(?i)unauthorized"
+        $_.state -eq "unauthorized" -or
+        $_.state_error -match "(?i)unauthorized|authenticate" -or
+        $_.connect -match "(?i)unauthorized|failed to authenticate"
     }).Count)
 
     if ($unauthorized) {
