@@ -61,6 +61,18 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$round -ge 6", self.source)
         self.assertIn('"/shutdown"', self.source)
 
+    def test_p0_uses_registered_wsa_install_location_for_client(self):
+        self.assertIn('$installed.InstallLocation', self.source)
+        self.assertIn('Join-Path $installed.InstallLocation "WsaClient.exe"', self.source)
+        self.assertIn('Write-Log "Using WsaClient at $client."', self.source)
+
+    def test_p0_post_failure_diagnostics_are_bounded_and_nonfatal(self):
+        self.assertIn("function Save-AdbDiagnostic", self.source)
+        self.assertIn("[int]$TimeoutSeconds = 20", self.source)
+        self.assertIn("$proc.WaitForExit", self.source)
+        self.assertIn("ADB command timed out after $TimeoutSeconds seconds.", self.source)
+        self.assertNotIn('& $adb -s $Serial logcat -b crash -d -v threadtime 2>&1', self.source)
+
     def test_p0_preserves_full_python_traceback(self):
         self.assertIn("wsa-bootstrap-stderr.txt", self.source)
         self.assertIn("Start-Process -FilePath $pythonExe", self.source)
