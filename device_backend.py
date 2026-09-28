@@ -47,6 +47,9 @@ class DeviceHealth:
     package_running: bool = False
     model: str = ""
     resolution: str = ""
+    network_ready: bool = False
+    internet_reachable: bool = False
+    audio_service_ready: bool = False
 
     @property
     def ready(self) -> bool:
@@ -284,6 +287,9 @@ class AdbDeviceBackend(DeviceBackend):
 
         running = False
         resolution = ""
+        network_ready = False
+        internet_reachable = False
+        audio_service_ready = False
         if boot_completed == "1":
             try:
                 running = bool(self.shell(["pidof", self.package], timeout=5).strip())
@@ -293,6 +299,32 @@ class AdbDeviceBackend(DeviceBackend):
                 resolution = self.shell(["wm", "size"], timeout=5).strip()
             except BackendError:
                 resolution = ""
+
+            # Runtime service probes are intentionally read-only. They make the
+            # GUI distinguish "Android booted" from "Android can actually use
+            # the network/audio stack" without changing guest settings.
+            try:
+                routes = self.shell(["ip", "route"], timeout=5)
+                network_ready = "default" in routes
+            except BackendError:
+                network_ready = False
+            if network_ready:
+                try:
+                    ping = self.run_adb(
+                        ["shell", "ping", "-c", "1", "-W", "2", "1.1.1.1"],
+                        timeout=5,
+                        check=False,
+                    )
+                    internet_reachable = ping.returncode == 0
+                except BackendError:
+                    internet_reachable = False
+            try:
+                audio = self.shell(["dumpsys", "audio"], timeout=8)
+                audio_service_ready = bool(audio.strip()) and (
+                    "STREAM_MUSIC" in audio or "Audio routes" in audio or "AudioService" in audio
+                )
+            except BackendError:
+                audio_service_ready = False
 
         return DeviceHealth(
             backend=self.backend_name,
@@ -306,6 +338,9 @@ class AdbDeviceBackend(DeviceBackend):
             package_running=running,
             model=model,
             resolution=resolution,
+            network_ready=network_ready,
+            internet_reachable=internet_reachable,
+            audio_service_ready=audio_service_ready,
         )
 
     def wait_ready(self, timeout: int = 180) -> DeviceHealth:
