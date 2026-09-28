@@ -733,7 +733,7 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         }
         catch {}
         try {
-            Start-Process "wsa-client://developer-settings" -ErrorAction SilentlyContinue
+            Start-Process explorer.exe "wsa-client://developer-settings" -ErrorAction SilentlyContinue
         }
         catch {}
         Start-Sleep -Seconds 20
