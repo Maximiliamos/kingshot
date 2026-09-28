@@ -536,8 +536,17 @@ if (-not (Test-Path $adb)) {
     throw "Android control tool not found at $adb."
 }
 
-$client = Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\WsaClient.exe"
-if (Test-Path $client) {
+$clientCandidates = @()
+if ($installed.InstallLocation) {
+    $clientCandidates += (Join-Path $installed.InstallLocation "WsaClient.exe")
+    $clientCandidates += (Join-Path $installed.InstallLocation "WsaClient")
+}
+$clientCandidates += (Join-Path $InstallRoot "WsaClient.exe")
+$clientCandidates += (Join-Path $InstallRoot "WsaClient")
+$clientCandidates += (Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\WsaClient.exe")
+$client = $clientCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($client) {
+    Write-Log "Using WsaClient at $client."
     try {
         Start-Process -FilePath $client -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue
         Write-Log "Requested Android Settings launch to wake the Android environment."
@@ -558,13 +567,21 @@ Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subs
 Write-Host "The verifier will keep retrying automatically while the settings window is open."
 
 function Invoke-AdbSafe {
-    param([string[]]$Arguments)
+    param(
+        [string[]]$Arguments,
+        [int]$TimeoutSeconds = 20
+    )
 
     $token = [Guid]::NewGuid().ToString("N")
     $stdoutPath = Join-Path $env:TEMP ("warbot-android-out-" + $token + ".txt")
     $stderrPath = Join-Path $env:TEMP ("warbot-android-err-" + $token + ".txt")
     try {
-        $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -NoNewWindow -PassThru -Wait -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -NoNewWindow -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        $finished = $proc.WaitForExit([Math]::Max(1, $TimeoutSeconds) * 1000)
+        if (-not $finished) {
+            try { $proc.Kill() } catch {}
+            try { $proc.WaitForExit() } catch {}
+        }
         $stdout = ""
         $stderr = ""
         if (Test-Path $stdoutPath) {
@@ -579,15 +596,41 @@ function Invoke-AdbSafe {
         if ($stdout) { $parts += $stdout }
         if ($stderr) { $parts += $stderr }
         $combined = ($parts -join [Environment]::NewLine).Trim()
+        if (-not $finished) {
+            if ($stderr) { $stderr += [Environment]::NewLine }
+            $stderr += "ADB command timed out after $TimeoutSeconds seconds."
+            $combined = (($stdout, $stderr | Where-Object { $_ }) -join [Environment]::NewLine).Trim()
+        }
         return [pscustomobject]@{
-            ExitCode = $proc.ExitCode
+            ExitCode = if ($finished) { $proc.ExitCode } else { 124 }
             Stdout = $stdout
             Stderr = $stderr
             Text = $combined
+            TimedOut = (-not $finished)
         }
     }
     finally {
         Remove-Item -Force -ErrorAction SilentlyContinue $stdoutPath, $stderrPath
+    }
+}
+
+function Save-AdbDiagnostic {
+    param(
+        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [int]$TimeoutSeconds = 20
+    )
+    try {
+        $result = Invoke-AdbSafe -Arguments $Arguments -TimeoutSeconds $TimeoutSeconds
+        $text = $result.Text
+        if (-not $text) {
+            $text = "exit_code=$($result.ExitCode)"
+        }
+        $text | Set-Content -Encoding UTF8 (Join-Path $stage $Name)
+    }
+    catch {
+        ("diagnostic collection failed: " + $_.Exception.Message) |
+            Set-Content -Encoding UTF8 (Join-Path $stage $Name)
     }
 }
 
@@ -860,13 +903,13 @@ catch {
     ($_ | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-bootstrap-exception.txt")
 }
 
-& $adb -s $Serial logcat -b crash -d -v threadtime 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-crash-buffer.txt")
-& $adb -s $Serial logcat -d -t 2500 -v threadtime 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-logcat-tail.txt")
-& $adb -s $Serial shell pm path com.got.globalru 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-path.txt")
-& $adb -s $Serial shell pidof com.got.globalru 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-game-pid.txt")
-& $adb -s $Serial shell dumpsys connectivity 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-connectivity.txt")
-& $adb -s $Serial shell dumpsys audio 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-audio.txt")
-& $adb -s $Serial shell dumpsys activity processes 2>&1 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-processes.txt")
+Save-AdbDiagnostic -Name "wsa-crash-buffer.txt" -Arguments @("-s", $Serial, "logcat", "-b", "crash", "-d", "-v", "threadtime") -TimeoutSeconds 15
+Save-AdbDiagnostic -Name "wsa-logcat-tail.txt" -Arguments @("-s", $Serial, "logcat", "-d", "-t", "2500", "-v", "threadtime") -TimeoutSeconds 20
+Save-AdbDiagnostic -Name "wsa-package-path.txt" -Arguments @("-s", $Serial, "shell", "pm", "path", "com.got.globalru") -TimeoutSeconds 10
+Save-AdbDiagnostic -Name "wsa-game-pid.txt" -Arguments @("-s", $Serial, "shell", "pidof", "com.got.globalru") -TimeoutSeconds 10
+Save-AdbDiagnostic -Name "wsa-connectivity.txt" -Arguments @("-s", $Serial, "shell", "dumpsys", "connectivity") -TimeoutSeconds 15
+Save-AdbDiagnostic -Name "wsa-audio.txt" -Arguments @("-s", $Serial, "shell", "dumpsys", "audio") -TimeoutSeconds 15
+Save-AdbDiagnostic -Name "wsa-processes.txt" -Arguments @("-s", $Serial, "shell", "dumpsys", "activity", "processes") -TimeoutSeconds 15
 try {
     & python .\warbot_cli.py status --backend wsa --serial $Serial 2>&1 |
         Set-Content -Encoding UTF8 (Join-Path $stage "wsa-health.json")
