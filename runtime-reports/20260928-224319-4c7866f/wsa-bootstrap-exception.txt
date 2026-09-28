@@ -1,0 +1,13 @@
+﻿python.exe : WAR BOT CLI ERROR: Android runtime services did not become ready: health={'backend': 'wsa', 'serial': '127
+.0.0.1:58526', 'state': 'device', 'boot_completed': '1', 'android': '13', 'abi': 'x86_64', 'abilist': 'x86_64,arm64-v8a
+,x86,armeabi-v7a,armeabi', 'native_bridge': 'libhoudini.so', 'package_running': False, 'model': 'Subsystem for Android(
+TM)', 'resolution': 'Physical size: 1920x1080', 'network_ready': False, 'internet_reachable': False, 'audio_service_rea
+dy': True, 'package_manager_ready': True, 'data_free_mb': 123531, 'ready': True, 'native_arm64': False} framebuffer_err
+or=''; requires package manager and at least 1024 MiB free in /data
+C:\warbot_git\scripts\install_wsa_poc.ps1:832 знак:5
++     & python @bootstrapArgs 2>&1 | Tee-Object -FilePath (Join-Path $s ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WAR BOT CLI ERR...B free in /data:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

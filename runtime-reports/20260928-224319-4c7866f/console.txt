@@ -1,0 +1,9 @@
+﻿[2026-09-28T22:41:19.0994007+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T22:41:20.5959625+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T22:41:21.6947471+03:00] WAR BOT WSA package is already registered; keeping it.
+[2026-09-28T22:41:21.7282764+03:00] Launching Android subsystem settings and waking the Android environment.
+[2026-09-28T22:41:21.7925870+03:00] Requested Android Settings launch to wake the Android environment.
+[2026-09-28T22:41:21.8225888+03:00] Opened subsystem developer settings for the P0 control-channel gate.
+[2026-09-28T22:41:44.5333072+03:00] Android control endpoint 127.0.0.1:58526 -> connect='already connected to 127.0.0.1:58526' state='device'.
+[2026-09-28T22:41:44.6434483+03:00] Android control channel is online at 127.0.0.1:58526.
+[2026-09-28T22:41:44.8590228+03:00] Installing/launching Kingshot through WSA backend.
