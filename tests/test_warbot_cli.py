@@ -56,6 +56,7 @@ class WarBotCliTests(unittest.TestCase):
             with patch("warbot_cli.create_backend", return_value=backend), \
                     patch.object(backend, "health", return_value=ready), \
                     patch.object(backend, "require_ready", return_value=ready), \
+                    patch.object(backend, "wait_runtime_services", return_value=ready) as services, \
                     patch.object(backend, "package_installed", return_value=False), \
                     patch.object(backend, "install_verified_game", return_value="Success") as install, \
                     patch.object(backend, "launch_app", return_value="Starting"), \
@@ -67,6 +68,7 @@ class WarBotCliTests(unittest.TestCase):
                     code = warbot_cli.main(["bootstrap", "--output", output])
 
             self.assertEqual(code, 0)
+            services.assert_called_once_with(timeout=90)
             install.assert_called_once()
             stable.assert_called_once_with(45, expected_pid="1234")
             self.assertTrue(Path(output).is_file())
@@ -108,6 +110,7 @@ class WarBotCliTests(unittest.TestCase):
 
             self.assertEqual(code, 0)
             require_ready.assert_called_once_with(native_arm64=False)
+            services.assert_called_once_with(timeout=90)
             install.assert_called_once()
             self.assertTrue(Path(output).is_file())
             self.assertIn('"backend": "wsa"', out.getvalue())
