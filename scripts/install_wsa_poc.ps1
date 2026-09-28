@@ -828,9 +828,32 @@ if ($CleanGame) { $bootstrapArgs += "--clean-game" }
 
 Write-Log "Installing/launching Kingshot through WSA backend."
 $bootstrapExit = 999
+$bootstrapLog = Join-Path $stage "wsa-bootstrap.txt"
+$bootstrapErr = Join-Path $stage "wsa-bootstrap-stderr.txt"
 try {
-    & python @bootstrapArgs 2>&1 | Tee-Object -FilePath (Join-Path $stage "wsa-bootstrap.txt") | Write-Host
-    $bootstrapExit = $LASTEXITCODE
+    # Windows PowerShell 5.1 converts native stderr into PowerShell ErrorRecords
+    # when ErrorActionPreference=Stop. Run Python through Start-Process so the
+    # full traceback and the real native exit code are always preserved.
+    $pythonExe = (Get-Command python.exe -ErrorAction Stop).Source
+    $argLine = @($bootstrapArgs | ForEach-Object {
+        $v = [string]$_
+        if ($v -match '[\s"]') {
+            '"' + ($v -replace '"', '\"') + '"'
+        }
+        else { $v }
+    }) -join ' '
+
+    $proc = Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -NoNewWindow `
+        -RedirectStandardOutput $bootstrapLog -RedirectStandardError $bootstrapErr
+    $bootstrapExit = [int]$proc.ExitCode
+
+    if (Test-Path $bootstrapLog) {
+        Get-Content -LiteralPath $bootstrapLog | Write-Host
+    }
+    if (Test-Path $bootstrapErr) {
+        $stderrText = Get-Content -LiteralPath $bootstrapErr -Raw
+        if ($stderrText) { Write-Host $stderrText }
+    }
 }
 catch {
     $bootstrapExit = 998
