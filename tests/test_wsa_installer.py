@@ -34,6 +34,11 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$connectDeadline = (Get-Date).AddMinutes(4)", self.source)
         self.assertIn("if ($null -ne $rawStdout)", self.source)
 
+    def test_archive_hash_does_not_depend_on_get_file_hash_cmdlet(self):
+        self.assertIn("function Get-Sha256", self.source)
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.source)
+        self.assertNotIn("Get-FileHash", self.source)
+
     def test_report_workflow_defaults_to_wsa_installer(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn('[string]$Backend = "wsa"', reporter)

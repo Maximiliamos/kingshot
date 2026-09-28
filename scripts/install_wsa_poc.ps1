@@ -48,6 +48,24 @@ function Invoke-SelfElevated {
     return $proc.ExitCode
 }
 
+function Get-Sha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $bytes = $sha.ComputeHash($stream)
+            return ([System.BitConverter]::ToString($bytes) -replace "-", "").ToLowerInvariant()
+        }
+        finally {
+            $sha.Dispose()
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
 if (-not (Test-IsAdmin)) {
     Write-Host "Administrator rights are required for the Android subsystem setup."
     Write-Host "Requesting elevation..."
@@ -245,7 +263,7 @@ if (-not $SkipInstall) {
     else {
         $needDownload = $true
         if (Test-Path $ArchivePath) {
-            $hash = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+            $hash = Get-Sha256 -Path $ArchivePath
             if ($hash -eq $ArchiveSha256) {
                 $needDownload = $false
                 Write-Log "WSA archive already downloaded and SHA-256 matches."
@@ -270,7 +288,7 @@ if (-not $SkipInstall) {
             }
         }
 
-        $hash = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+        $hash = Get-Sha256 -Path $ArchivePath
         Set-Content -Encoding ASCII -Path (Join-Path $stage "archive-sha256.txt") -Value $hash
         if ($hash -ne $ArchiveSha256) {
             Finish-Report -State "ARCHIVE_HASH_MISMATCH" -ExitCode 14 -Extra @{ actual_sha256 = $hash }
