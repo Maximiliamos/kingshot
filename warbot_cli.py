@@ -13,7 +13,7 @@ from device_backend import BackendError, NativeArm64Backend, WsaBackend, create_
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="WAR BOT Android backend CLI")
+    parser = argparse.ArgumentParser(description="TUGARIN BOTS Android backend CLI")
     parser.add_argument(
         "action",
         choices=(
