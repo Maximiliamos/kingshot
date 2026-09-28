@@ -61,6 +61,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$round -ge 6", self.source)
         self.assertIn('"/shutdown"', self.source)
 
+    def test_p0_preserves_full_python_traceback(self):
+        self.assertIn("wsa-bootstrap-stderr.txt", self.source)
+        self.assertIn("Start-Process -FilePath $pythonExe", self.source)
+        self.assertIn("-RedirectStandardError $bootstrapErr", self.source)
+        self.assertIn("$bootstrapExit = [int]$proc.ExitCode", self.source)
+
     def test_p0_failure_bundle_collects_runtime_services(self):
         self.assertIn("wsa-logcat-tail.txt", self.source)
         self.assertIn("wsa-connectivity.txt", self.source)
