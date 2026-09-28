@@ -177,13 +177,27 @@ if (-not (Test-IsAdmin)) {
     exit $childExit
 }
 
-New-Item -ItemType Directory -Force -Path $WorkRoot, $DownloadRoot, $RuntimeRoot | Out-Null
+$ReportsRoot = Join-Path $WorkRoot "reports"
+New-Item -ItemType Directory -Force -Path $WorkRoot, $DownloadRoot, $RuntimeRoot, $ReportsRoot | Out-Null
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$stage = Join-Path $env:TEMP ("warbot-wsa-report-" + $stamp + "-" + $PID)
+$stage = Join-Path $ReportsRoot ("wsa-p0-" + $stamp + "-" + $PID)
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 $manifestPath = Join-Path $stage "manifest.json"
 $consolePath = Join-Path $stage "console.txt"
+$latestLocalPath = Join-Path $ReportsRoot "LATEST-LOCAL.json"
+[ordered]@{
+    report_path = $stage
+    started_at = (Get-Date).ToString("o")
+    state = "RUNNING"
+} | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 $latestLocalPath
+
+# Keep the latest 20 local P0 reports. Persistent storage makes evidence
+# survive reboot while bounding disk use.
+Get-ChildItem -LiteralPath $ReportsRoot -Directory -Filter "wsa-p0-*" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -Skip 20 |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 function Write-Log {
     param([string]$Message)
@@ -236,10 +250,18 @@ function Finish-Report {
         [hashtable]$Extra = @{}
     )
     Save-Manifest -State $State -ExitCode $ExitCode -Extra $Extra
+    [ordered]@{
+        report_path = $stage
+        finished_at = (Get-Date).ToString("o")
+        state = $State
+        exit_code = $ExitCode
+        commit = (& git rev-parse HEAD).Trim()
+    } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 $latestLocalPath
     Upload-Report
     Write-Host ""
     Write-Host "WSA PoC state: $State"
-    Write-Host "Local report: $stage"
+    Write-Host "Persistent local report: $stage"
+    Write-Host "Latest local pointer: $latestLocalPath"
 }
 
 trap {
