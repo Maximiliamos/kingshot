@@ -600,13 +600,25 @@ function Invoke-AdbSafe {
         if ($stdout) { $parts += $stdout }
         if ($stderr) { $parts += $stderr }
         $combined = ($parts -join [Environment]::NewLine).Trim()
-        if (-not $finished) {
+        $exitCode = 124
+        if ($finished) {
+            try {
+                $proc.Refresh()
+                $exitCode = [int]$proc.ExitCode
+            }
+            catch {
+                # ExitCode is diagnostic only; callers must use semantic output
+                # (for example get-state == device) as the success authority.
+                $exitCode = -1
+            }
+        }
+        else {
             if ($stderr) { $stderr += [Environment]::NewLine }
             $stderr += "ADB command timed out after $TimeoutSeconds seconds."
             $combined = (($stdout, $stderr | Where-Object { $_ }) -join [Environment]::NewLine).Trim()
         }
         return [pscustomobject]@{
-            ExitCode = if ($finished) { $proc.ExitCode } else { 124 }
+            ExitCode = $exitCode
             Stdout = $stdout
             Stderr = $stderr
             Text = $combined
@@ -650,10 +662,11 @@ if ($PairEndpoint -and $PairCode) {
     Write-Log "Attempting one-time Android control-channel pairing at $PairEndpoint."
     $pairResult = Invoke-AdbSafe -Arguments @("pair", $PairEndpoint, $PairCode)
     $pairResult.Text | Set-Content -Encoding UTF8 (Join-Path $stage "android-pair.txt")
-    if ($pairResult.ExitCode -ne 0 -or $pairResult.Text -notmatch "(?i)success") {
+    if ($pairResult.Text -notmatch "(?i)success") {
         Finish-Report -State "ANDROID_PAIR_FAILED" -ExitCode 23 -Extra @{
             pair_endpoint = $PairEndpoint
             pair_result = $pairResult.Text
+            pair_exit_code = $pairResult.ExitCode
         }
         throw "Android pairing failed. Check the pairing endpoint/code shown by the subsystem."
     }
@@ -715,8 +728,9 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         ) {
             Write-Log "Android control channel is reachable but awaiting host-key authorization."
         }
-        if ($stateResult.ExitCode -eq 0 -and $stateText -eq "device") {
+        if ($stateText -eq "device") {
             $onlineSerial = $candidate
+            Write-Log "Android control channel accepted on $candidate (state=device, exit=$($stateResult.ExitCode))."
             break
         }
     }
