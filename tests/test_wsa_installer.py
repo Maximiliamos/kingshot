@@ -41,6 +41,14 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("excluded-tcp-ranges.txt", self.source)
         self.assertIn("ANDROID_CONTROL_CHANNEL_REFUSED", self.source)
 
+    def test_p0_developer_fallback_is_pinned_reversible_and_opt_out(self):
+        self.assertIn('[switch]$NoAutoDeveloperModePatch', self.source)
+        self.assertIn('2e04da1be0765a8a248ab7006ed5f7eeeed15b76', self.source)
+        self.assertIn('019f772c0e46e7eed9aaa0a26ea35bf6ef32093e', self.source)
+        self.assertIn('function Get-GitBlobSha1', self.source)
+        self.assertIn('settings.dat.backup-', self.source)
+        self.assertIn('Developer-mode fallback did not recover the channel; original settings restored.', self.source)
+
     def test_p0_opens_developer_settings_and_recycles_once(self):
         self.assertIn('"wsa-client://developer-settings"', self.source)
         self.assertIn("$runtimeRecycled = $false", self.source)
