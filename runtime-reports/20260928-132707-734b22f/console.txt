@@ -1,0 +1,8 @@
+﻿[2026-09-28T13:12:50.3949178+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-28T13:12:52.4455979+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-28T13:12:54.1264755+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-28T13:12:55.1109211+03:00] Extracting WSA archive.
+[2026-09-28T13:13:10.9375971+03:00] Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge).
+[2026-09-28T13:26:59.5175107+03:00] Dependency Microsoft.UI.Xaml.2.8 already satisfies minimum 8.2208.12001.0.
+[2026-09-28T13:26:59.5326890+03:00] Dependency Microsoft.VCLibs.140.00.UWPDesktop already satisfies minimum 14.0.33728.0.
+[2026-09-28T13:26:59.5495811+03:00] Dependency Microsoft.VCLibs.140.00 already satisfies minimum 14.0.33519.0.

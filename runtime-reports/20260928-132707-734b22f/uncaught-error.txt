@@ -1,0 +1,17 @@
+﻿Add-AppxPackage : Сбой развертывания с HRESULT: 0x80073D28, Не удалось установить пакет, так как требуются права админи
+стратора. Обратитесь к администратору, чтобы установить этот пакет.
+
+MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe (0, 0): ошибка 0x80073D28 — не удае
+тся зарегистрировать пакет MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe. Для уст
+ановки пакета обслуживания требуются права администратора
+
+ПРИМЕЧАНИЕ. Чтобы получить дополнительные сведения, найдите [ActivityId] aebeab1d-4b5e-0009-0f89-1baf5e4bdd01 в журнале
+ событий или введите в командной строке Get-AppxLog -ActivityID aebeab1d-4b5e-0009-0f89-1baf5e4bdd01.
+
+C:\warbot_git\scripts\install_wsa_poc.ps1:389 знак:13
++             Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFro ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\warbot_wsa\W...ppxManifest.xml:String) [Add-AppxPackage], Exception
+    + FullyQualifiedErrorId : DeploymentError,Microsoft.Windows.Appx.PackageManager.Commands.AddAppxPackageCommand
+ 
+

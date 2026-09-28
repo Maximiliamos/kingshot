@@ -1,0 +1,560 @@
+﻿
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 493
+LevelDisplayName : Предупреждение
+Message          : Не удалось удалить из папки \\?\C:\Program Files\WindowsApps\Deleted дополнительные файлы (13).
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_200_percent.pak.
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_100_percent.pak.
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x5: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\Microsoft.MicrosoftSolitair
+                   eCollection_4.26.7290.0_x64__8wekyb3d8bbweed4d11ac-933e-414f-a743-97ab506a34b5\clrcompression.dll.
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 404
+LevelDisplayName : Ошибка
+Message          : Сбой операции развертывания AppX для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.4
+                   0000.4.0_x64__8wekyb3d8bbwe. Ошибка: 0x80073D28. Текст ошибки: MicrosoftCorporationII.WindowsSubsyst
+                   emForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe (0, 0): ошибка 0x80073D28 — не удается зарегистрирова
+                   ть пакет MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe. Для ус
+                   тановки пакета обслуживания требуются права администратора
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 401
+LevelDisplayName : Ошибка
+Message          : Произошел сбой операции развертывания Register с конечным томом C: для пакета MicrosoftCorporationII
+                   .WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe из  (AppxManifest.xml) . Ошибка: 0x800
+                   73D28. Для получения справки по диагностике проблем с развертыванием приложений см. страницу http://
+                   go.microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 605
+LevelDisplayName : Сведения
+Message          : Последнее успешное состояние: UndockedDEHEvaluated. Сбой произошел перед достижением следующего сост
+                   ояния: Approved. hr: 0x80073D28
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 9621
+LevelDisplayName : Ошибка
+Message          : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe (0, 0): ошибка 0
+                   x80073D28 — не удается зарегистрировать пакет MicrosoftCorporationII.WindowsSubsystemForAndroid_2407
+                   .40000.4.0_x64__8wekyb3d8bbwe. Для установки пакета обслуживания требуются права администратора
+
+TimeCreated      : 28.09.2026 13:27:00
+Id               : 855
+LevelDisplayName : Сведения
+Message          : Завершено разрешение списков действий. Списки действий DeploymentRequest:  addPackageList: Microsoft
+                   CorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 13:26:59
+Id               : 854
+LevelDisplayName : Сведения
+Message          : Успешно добавлены следующие универсальные коды ресурсов (URI), которые нужно обработать:  C:\warbot_
+                   wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\AppxManifest.xml.
+
+TimeCreated      : 28.09.2026 13:26:59
+Id               : 607
+LevelDisplayName : Сведения
+Message          : Операция развертывания Register в отношении пакета MicrosoftCorporationII.WindowsSubsystemForAndroid
+                   _2407.40000.4.0_x64__8wekyb3d8bbwe выведена из очереди и выполняется для SID пользователя S-1-5-21-1
+                   641294696-4270169483-3689275233-1007.
+
+TimeCreated      : 28.09.2026 13:26:59
+Id               : 10002
+LevelDisplayName : Подробно
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\5406d5b4-e60f-4a88-890c-1
+                   c133201bb21_S-1-5-21-1641294696-4270169483-3689275233-1007_1.rslc для операции Register с пакетом Mi
+                   crosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 13:26:59
+Id               : 603
+LevelDisplayName : Сведения
+Message          : Начата операция развертывания "Register" для пакета. Основной параметр: AppxManifest.xml. Необязател
+                   ьные параметры: ForceApplicationShutdownOption,DevelopmentModeOption,ForceUpdateFromAnyVersion и 0. 
+                   Дополнительные сведения о диагностике проблем с развертыванием приложений см. на странице http://go.
+                   microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 493
+LevelDisplayName : Предупреждение
+Message          : Не удалось удалить из папки \\?\C:\Program Files\WindowsApps\Deleted дополнительные файлы (13).
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_200_percent.pak.
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_100_percent.pak.
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x5: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\Microsoft.MicrosoftSolitair
+                   eCollection_4.26.7290.0_x64__8wekyb3d8bbweed4d11ac-933e-414f-a743-97ab506a34b5\clrcompression.dll.
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 649
+LevelDisplayName : Сведения
+Message          : Операция развертывания "Remove" для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40
+                   000.4.0_x64__8wekyb3d8bbwe: PostDeploymentOperationCheck cost: 0 ms
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 400
+LevelDisplayName : Сведения
+Message          : Операция развертывания Remove с конечным томом C: для пакета MicrosoftCorporationII.WindowsSubsystem
+                   ForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe из  (WSA_2407.40000.4.0_x64)  завершена успешно.
+
+TimeCreated      : 28.09.2026 13:12:49
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x80070490.
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 8761
+LevelDisplayName : Ошибка
+Message          : Отсутствует каталог AppExecutionAlias; код ошибки 0x8007010B.
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 9625
+LevelDisplayName : Подробно
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 9623
+LevelDisplayName : Подробно
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 9622
+LevelDisplayName : Подробно
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 9627
+LevelDisplayName : Подробно
+Message          : AppxManifest.xml(50,12): PackagedServiceDEH успешно проанализировал манифест для удаления пакета Mic
+                   rosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 330
+LevelDisplayName : Предупреждение
+Message          : Ошибка 0x80070005: при удалении запроса системе не удалось отменить регистрацию расширения windows.i
+                   ndexedDB из-за следующей ошибки: Отказано в доступе.
+                   .
+
+TimeCreated      : 28.09.2026 13:12:48
+Id               : 7750
+LevelDisplayName : Предупреждение
+Message          : Предупреждение 0x80070005: при очистке индексированной базы данных во время удаления пакета произошл
+                   а следующая ошибка: AppxManifest.xml (Отказано в доступе.
+                   ).
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 9644
+LevelDisplayName : Подробно
+Message          : 0x0: успешное выполнение AllowUninstall для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid
+                   _2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 10000
+LevelDisplayName : Подробно
+Message          : Будет выполнено обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0
+                   _x64__8wekyb3d8bbwe. При изменении состояния пакета на "отключен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 855
+LevelDisplayName : Сведения
+Message          : Завершено разрешение списков действий. Списки действий DeploymentRequest:  removePackageList: Micros
+                   oftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 607
+LevelDisplayName : Сведения
+Message          : Операция развертывания Remove в отношении пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2
+                   407.40000.4.0_x64__8wekyb3d8bbwe выведена из очереди и выполняется для SID пользователя S-1-5-21-164
+                   1294696-4270169483-3689275233-1001.
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 10002
+LevelDisplayName : Подробно
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\a5e0f89e-1ebe-460e-b9f7-a
+                   4fc0923fcda_S-1-5-21-1641294696-4270169483-3689275233-1001_1.rslc для операции Remove с пакетом Micr
+                   osoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 13:12:47
+Id               : 603
+LevelDisplayName : Сведения
+Message          : Начата операция развертывания "Remove" для пакета. Основной параметр: MicrosoftCorporationII.Windows
+                   SubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe. Необязательные параметры: RemoveForAllUsers и
+                    0. Дополнительные сведения о диагностике проблем с развертыванием приложений см. на странице http:/
+                   /go.microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 28.09.2026 11:57:25
+Id               : 493
+LevelDisplayName : Предупреждение
+Message          : Не удалось удалить из папки \\?\C:\Program Files\WindowsApps\Deleted дополнительные файлы (13).
+
+TimeCreated      : 28.09.2026 11:57:25
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_200_percent.pak.
+
+TimeCreated      : 28.09.2026 11:57:25
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\chrome_100_percent.pak.
+
+TimeCreated      : 28.09.2026 11:57:25
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x5: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\Microsoft.MicrosoftSolitair
+                   eCollection_4.26.7290.0_x64__8wekyb3d8bbweed4d11ac-933e-414f-a743-97ab506a34b5\clrcompression.dll.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 613
+LevelDisplayName : Сведения
+Message          : Сводка по эффективности операции развертывания "Register" для пакета Microsoft.MicrosoftSolitaireCol
+                   lection_4.27.9181.0_neutral_~_8wekyb3d8bbwe: 
+                   Overall time: 718 ms
+                   Enqueue cost: 0 ms
+                   Dequeue delay: 0 ms
+                   Bundle processing cost: 0 ms
+                   Indexing cost: 15 ms
+                   Resolve dependency cost: 32 ms
+                   Gap: 15 ms
+                   Check approval cost: 0 ms
+                   Evaluation cost: 0 ms
+                   Hardlinking evaluation cost: 0 ms
+                   Stage required cost: 16 ms
+                   Flushing and closing files cost: 0 ms
+                   Machine register cost: 0 ms
+                   Stage user data cost: 0 ms
+                   Gap: 15 ms
+                   Registration cost: 266 ms
+                   Gap: 172 ms
+                   Repository commit transaction cost: 109 ms
+                   Gap: 63 ms
+                   Data flush cost: 0 ms
+                   Post DeStage repository commit transaction cost: 0 ms
+                   Remaining cost: 15 ms
+                   
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 649
+LevelDisplayName : Сведения
+Message          : Операция развертывания "Register" для пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neut
+                   ral_~_8wekyb3d8bbwe: PostDeploymentOperationCheck cost: 0 ms
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 472
+LevelDisplayName : Подробно
+Message          : Перемещение папки пакета \\?\C:\Program Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.2
+                   6.7290.0_x64__8wekyb3d8bbwe в \\?\C:\Program Files\WindowsApps\Deleted\Microsoft.MicrosoftSolitaireC
+                   ollection_4.26.7290.0_x64__8wekyb3d8bbweed4d11ac-933e-414f-a743-97ab506a34b5. Результат: 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 472
+LevelDisplayName : Подробно
+Message          : Перемещение папки пакета \\?\C:\Program Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.2
+                   6.7290.0_neutral_~_8wekyb3d8bbwe в \\?\C:\Program Files\WindowsApps\Deleted\Microsoft.MicrosoftSolit
+                   aireCollection_4.26.7290.0_neutral_~_8wekyb3d8bbwe732d209a-905d-45ff-825c-0def6420b4c4. Результат: 0
+                   x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 478
+LevelDisplayName : Подробно
+Message          : Операция развертывания Register с конечным томом C: для пакета Microsoft.MicrosoftSolitaireCollectio
+                   n_4.27.9181.0_x64__8wekyb3d8bbwe из  (AppxBundleManifest.xml)  завершена успешно.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 400
+LevelDisplayName : Сведения
+Message          : Операция развертывания Register с конечным томом C: для пакета Microsoft.MicrosoftSolitaireCollectio
+                   n_4.27.9181.0_neutral_~_8wekyb3d8bbwe из  (AppxBundleManifest.xml)  завершена успешно.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe завершено.
+                    При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe завершено.
+                    При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_~_8wekyb3d8bbwe завер
+                   шено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_~_8wekyb3d8bbwe завер
+                   шено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe завершено.
+                    При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe завершено.
+                    При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10001
+LevelDisplayName : Подробно
+Message          : Обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.26.7290.0_x64__8wekyb3d8bbwe завершено.
+                    При изменении состояния пакета на "включен" было возвращено 0x80070490.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 813
+LevelDisplayName : Подробно
+Message          : Хранилище всех пользователей успешно обновлено пакетом Microsoft.MicrosoftSolitaireCollection_4.27.9
+                   181.0_neutral_~_8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 5507
+LevelDisplayName : Подробно
+Message          : Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe : C:\Program Files\WindowsApps
+                   \Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe\microsoft.system.package.meta
+                   data\Resources.????????.pri : No shared merged files found
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 5507
+LevelDisplayName : Подробно
+Message          : Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe : C:\Program Files\WindowsApps
+                   \Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe\microsoft.system.package.meta
+                   data\S-1-5-21-1641294696-4270169483-3689275233-500-MergedResources-*.pri : No user-specific merged f
+                   iles found
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 5507
+LevelDisplayName : Подробно
+Message          : Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe : C:\Program Files\WindowsApps
+                   \Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe\microsoft.system.package.meta
+                   data\Resources.????????.pri : No shared merged files found
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 5507
+LevelDisplayName : Подробно
+Message          : Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe : C:\Program Files\WindowsApps
+                   \Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe\microsoft.system.package.meta
+                   data\S-1-5-21-1641294696-4270169483-3689275233-500-MergedResources-*.pri : No user-specific merged f
+                   iles found
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 8101
+LevelDisplayName : Подробно
+Message          : Проверка и установка метки доверия для пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64
+                   __8wekyb3d8bbwe с флагами 0x9 завершена.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 8106
+LevelDisplayName : Подробно
+Message          : У пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe уже есть метка довери
+                   я. Флаги: 0x9
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 8100
+LevelDisplayName : Подробно
+Message          : Начинается проверка и установка метки доверия для пакета Microsoft.MicrosoftSolitaireCollection_4.27
+                   .9181.0_x64__8wekyb3d8bbwe с флагами 0x9.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 9645
+LevelDisplayName : Подробно
+Message          : 0x0: успешное выполнение GetActiveAumidsInPackage для пакета Microsoft.MicrosoftSolitaireCollection_
+                   4.26.7290.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10000
+LevelDisplayName : Подробно
+Message          : Будет выполнено обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3d
+                   8bbwe. При изменении состояния пакета на "отключен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 10000
+LevelDisplayName : Подробно
+Message          : Будет выполнено обслуживание пакета Microsoft.MicrosoftSolitaireCollection_4.26.7290.0_x64__8wekyb3d
+                   8bbwe. При изменении состояния пакета на "отключен" было возвращено 0x0.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 9645
+LevelDisplayName : Подробно
+Message          : 0x0: успешное выполнение GetActiveAumidsInPackage для пакета Microsoft.MicrosoftSolitaireCollection_
+                   4.26.7290.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:24
+Id               : 855
+LevelDisplayName : Сведения
+Message          : Завершено разрешение списков действий. Списки действий DeploymentRequest:  updateList: Microsoft.Mic
+                   rosoftSolitaireCollection_4.26.7290.0_neutral_~_8wekyb3d8bbwe is updating to Microsoft.MicrosoftSoli
+                   taireCollection_4.27.9181.0_neutral_~_8wekyb3d8bbwe Microsoft.MicrosoftSolitaireCollection_4.26.7290
+                   .0_x64__8wekyb3d8bbwe is updating to Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_x64__8wekyb3
+                   d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 854
+LevelDisplayName : Сведения
+Message          : Успешно добавлены следующие универсальные коды ресурсов (URI), которые нужно обработать:  C:\Program
+                    Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_~_8wekyb3d8bbwe\AppxMe
+                   tadata\AppxBundleManifest.xml C:\Program Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.
+                   27.9181.0_x64__8wekyb3d8bbwe\AppxManifest.xml.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 614
+LevelDisplayName : Подробно
+Message          : URI набора C:\Program Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_~
+                   _8wekyb3d8bbwe\AppxMetadata\AppxBundleManifest.xml содержит пакеты: "AppxMetadata\Stub\SolitaireCasu
+                   alGamesStub_4.27.9180.0_ARM64.msix": Microsoft.MicrosoftSolitaireCollection_4.27.9180.0_arm64__8weky
+                   b3d8bbwe "AppxMetadata\Stub\SolitaireCasualGamesStub_4.27.9180.0_Win32.msix": Microsoft.MicrosoftSol
+                   itaireCollection_4.27.9180.0_x86__8wekyb3d8bbwe "AppxMetadata\Stub\SolitaireCasualGamesStub_4.27.918
+                   0.0_x64.msix": Microsoft.MicrosoftSolitaireCollection_4.27.9180.0_x64__8wekyb3d8bbwe "Solitaire_4.27
+                   .9181.0_ARM64_Win10_Shipping.msix": Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_arm64__8wekyb
+                   3d8bbwe "Solitaire_4.27.9181.0_Win32_Win10_Shipping.msix": Microsoft.MicrosoftSolitaireCollection_4.
+                   27.9181.0_x86__8wekyb3d8bbwe "Solitaire_4.27.9181.0_x64_Win10_Shipping.msix": Microsoft.MicrosoftSol
+                   itaireCollection_4.27.9181.0_x64__8wekyb3d8bbwe "Solitaire_4.27.9181.0_scale-125.msix": Microsoft.Mi
+                   crosoftSolitaireCollection_4.27.9181.0_neutral_split.scale-125_8wekyb3d8bbwe "Solitaire_4.27.9181.0_
+                   scale-150.msix": Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_split.scale-150_8wekyb3d
+                   8bbwe "Solitaire_4.27.9181.0_scale-200.msix": Microsoft.MicrosoftSolitaireCollection_4.27.9181.0_neu
+                   tral_split.scale-200_8wekyb3d8bbwe "Solitaire_4.27.9181.0_scale-400.msix": Microsoft.MicrosoftSolita
+                   ireCollection_4.27.9181.0_neutral_split.scale-400_8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 607
+LevelDisplayName : Сведения
+Message          : Операция развертывания Register в отношении пакета Microsoft.MicrosoftSolitaireCollection_4.27.9181.
+                   0_neutral_~_8wekyb3d8bbwe выведена из очереди и выполняется для SID пользователя S-1-5-21-1641294696
+                   -4270169483-3689275233-500.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 10002
+LevelDisplayName : Подробно
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\22ae7cdc-8a96-4ae9-9bb9-7
+                   facb82e08fd_S-1-5-21-1641294696-4270169483-3689275233-500_11.rslc для операции Register с пакетом Mi
+                   crosoft.MicrosoftSolitaireCollection_4.27.9181.0_neutral_~_8wekyb3d8bbwe.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 603
+LevelDisplayName : Сведения
+Message          : Начата операция развертывания "RegisterByPackageFamilyName" для пакета. Основной параметр: Microsoft
+                   .MicrosoftSolitaireCollection_8wekyb3d8bbwe. Необязательные параметры: RegisterHighestVersion,FailIf
+                   NeedsRemediation,LowPriorityRequest и SkipDeploymentOperationRpcCallerIsAdminCheck. Дополнительные с
+                   ведения о диагностике проблем с развертыванием приложений см. на странице http://go.microsoft.com/fw
+                   link/?LinkId=235160.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 822
+LevelDisplayName : Подробно
+Message          : Обновление реестра для пакета OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0 завершилось со следующим
+                    результатом: 0x0.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 821
+LevelDisplayName : Подробно
+Message          : Выполняемая при входе регистрация пакета OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0 для пользоват
+                   еля S-1-5-21-1641294696-4270169483-3689275233-1007 завершилась со следующим результатом: 0x80073D25;
+                    обновление реестра...
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 404
+LevelDisplayName : Ошибка
+Message          : Сбой операции развертывания AppX для пакета OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0. Ошибка: 0
+                   x80073D25. Текст ошибки: Ошибка 0x80073D25: не удалось выполнить развертывание пакета OpenAI.Codex_2
+                   6.917.8451.0_x64__2p2nqsd0c76g0, поскольку пользователь S-1-5-21-1641294696-4270169483-3689275233-50
+                   0 с пакетом OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0 вошел в систему. Пакеты с одноэлементным к
+                   омпонентом не будут выполняться, если другие пользователи вошли в систему и для них установлен пакет
+                   .
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 401
+LevelDisplayName : Ошибка
+Message          : Произошел сбой операции развертывания Register с конечным томом C: для пакета OpenAI.Codex_26.924.27
+                   38.0_x64__2p2nqsd0c76g0 из  (AppxManifest.xml) . Ошибка: 0x80073D25. Для получения справки по диагно
+                   стике проблем с развертыванием приложений см. страницу http://go.microsoft.com/fwlink/?LinkId=235160
+                   .
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 605
+LevelDisplayName : Сведения
+Message          : Последнее успешное состояние: Indexed. Сбой произошел перед достижением следующего состояния: Resolv
+                   ed. hr: 0x80073D25
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 459
+LevelDisplayName : Ошибка
+Message          : Ошибка 0x80073D25: не удалось выполнить развертывание пакета OpenAI.Codex_26.917.8451.0_x64__2p2nqsd
+                   0c76g0, поскольку пользователь S-1-5-21-1641294696-4270169483-3689275233-500 с пакетом OpenAI.Codex_
+                   26.924.2738.0_x64__2p2nqsd0c76g0 вошел в систему. Пакеты с одноэлементным компонентом не будут выпол
+                   няться, если другие пользователи вошли в систему и для них установлен пакет.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 854
+LevelDisplayName : Сведения
+Message          : Успешно добавлены следующие универсальные коды ресурсов (URI), которые нужно обработать:  C:\Program
+                    Files\WindowsApps\OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0\AppxManifest.xml.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 607
+LevelDisplayName : Сведения
+Message          : Операция развертывания Register в отношении пакета OpenAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0 выв
+                   едена из очереди и выполняется для SID пользователя S-1-5-21-1641294696-4270169483-3689275233-1007.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 10002
+LevelDisplayName : Подробно
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\22ae7cdc-8a96-4ae9-9bb9-7
+                   facb82e08fd_S-1-5-21-1641294696-4270169483-3689275233-1007_10.rslc для операции Register с пакетом O
+                   penAI.Codex_26.924.2738.0_x64__2p2nqsd0c76g0.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 603
+LevelDisplayName : Сведения
+Message          : Начата операция развертывания "Register" для пакета. Основной параметр: AppxManifest.xml. Необязател
+                   ьные параметры: SkipReregisterIfPackageStatusOk,NormalPriorityRequest и SkipDeploymentOperationRpcCa
+                   llerIsAdminCheck. Дополнительные сведения о диагностике проблем с развертыванием приложений см. на с
+                   транице http://go.microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 493
+LevelDisplayName : Предупреждение
+Message          : Не удалось удалить из папки \\?\C:\Program Files\WindowsApps\Deleted дополнительные файлы (12).
+
+TimeCreated      : 28.09.2026 11:57:23
+Id               : 471
+LevelDisplayName : Сведения
+Message          : Ошибка 0x12C: сбой удаления файла \\?\C:\Program Files\WindowsApps\Deleted\OpenAI.Codex_26.911.7940.
+                   0_x64__2p2nqsd0c76g0ab33a24b-a951-4f1e-adf5-56ede11ab918\app\icudtl.dat.
+
+
+
+
