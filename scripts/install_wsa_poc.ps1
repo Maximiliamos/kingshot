@@ -445,7 +445,17 @@ if (Test-Path $client) {
     catch {
         Write-Log "Android Settings wake request was not available: $($_.Exception.Message)"
     }
+    try {
+        Start-Process -FilePath $client -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue
+        Write-Log "Opened subsystem developer settings for the P0 control-channel gate."
+    }
+    catch {
+        Write-Log "Developer-settings deep link was not available: $($_.Exception.Message)"
+    }
 }
+Write-Host ""
+Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subsystem settings, turn it ON now."
+Write-Host "The verifier will keep retrying automatically while the settings window is open."
 
 function Invoke-AdbSafe {
     param([string[]]$Arguments)
