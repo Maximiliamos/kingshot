@@ -63,8 +63,9 @@ class WsaInstallerTests(unittest.TestCase):
 
     def test_p0_uses_registered_wsa_install_location_for_client(self):
         self.assertIn('$installed.InstallLocation', self.source)
-        self.assertIn('Join-Path $installed.InstallLocation "WsaClient.exe"', self.source)
-        self.assertIn('Write-Log "Using WsaClient at $client."', self.source)
+        self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
+        self.assertIn('Test-Path -LiteralPath $_ -PathType Leaf', self.source)
+        self.assertIn('Write-Log "Using WsaClient executable at $client."', self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
