@@ -1461,7 +1461,7 @@ def main():
     state = load_state()
     validate_templates()
     log("="*70)
-    log(f"WAR BOT v4 | phase={state['phase']} step={state['step']}")
+    log(f"TUGARIN BOTS v4 | phase={state['phase']} step={state['step']}")
     adb_check()
     ensure_game_running()
 
