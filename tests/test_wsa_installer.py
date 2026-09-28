@@ -41,6 +41,11 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("excluded-tcp-ranges.txt", self.source)
         self.assertIn("ANDROID_CONTROL_CHANNEL_REFUSED", self.source)
 
+    def test_p0_classifies_android_authorization_required(self):
+        self.assertIn("ANDROID_AUTHORIZATION_REQUIRED", self.source)
+        self.assertIn("authorization_required = $true", self.source)
+        self.assertIn("Always allow from this computer", self.source)
+
     def test_p0_developer_fallback_is_pinned_reversible_and_opt_out(self):
         self.assertIn('[switch]$NoAutoDeveloperModePatch', self.source)
         self.assertIn('2e04da1be0765a8a248ab7006ed5f7eeeed15b76', self.source)
