@@ -170,6 +170,25 @@ class DeviceBackendTests(unittest.TestCase):
         with self.assertRaises(db.BackendError):
             backend.input_text("Тугарин1")
 
+    def test_wait_runtime_services_requires_frame_network_internet_and_audio(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        ready = db.DeviceHealth(
+            backend="adb",
+            serial="device-1",
+            state="device",
+            boot_completed="1",
+            network_ready=True,
+            internet_reachable=True,
+            audio_service_ready=True,
+        )
+        with patch.object(backend, "health", return_value=ready), \
+                patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
+            result = backend.wait_runtime_services(timeout=1)
+        self.assertIs(result, ready)
+
     def test_backend_capture_keeps_old_capture_contract(self):
         class FakeBackend(db.DeviceBackend):
             backend_name = "fake"
