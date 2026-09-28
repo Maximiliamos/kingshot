@@ -532,6 +532,7 @@ $attempts = @()
 $onlineSerial = $null
 $connectDeadline = (Get-Date).AddMinutes(4)
 $round = 0
+$runtimeRecycled = $false
 while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     $round++
     foreach ($candidate in $serialCandidates) {
@@ -553,7 +554,34 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
             break
         }
     }
-    if (-not $onlineSerial) { Start-Sleep -Seconds 10 }
+
+    # A correctly installed WSA can occasionally leave the localhost bridge
+    # unbound after first launch. Recycle the subsystem once, then keep probing.
+    if (-not $onlineSerial -and -not $runtimeRecycled -and $round -ge 6) {
+        $runtimeRecycled = $true
+        Write-Log "Control channel is still offline; recycling the Android subsystem once."
+        if (Test-Path $client) {
+            try {
+                Start-Process -FilePath $client -ArgumentList "/shutdown" -Wait -ErrorAction SilentlyContinue
+            }
+            catch {}
+        }
+        Start-Sleep -Seconds 5
+        try {
+            Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+        }
+        catch {}
+        try {
+            if (Test-Path $client) {
+                Start-Process -FilePath $client -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue
+            }
+        }
+        catch {}
+        Start-Sleep -Seconds 20
+    }
+    elseif (-not $onlineSerial) {
+        Start-Sleep -Seconds 10
+    }
 }
 
 $attempts | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "android-connect-attempts.json")
