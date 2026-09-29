@@ -340,9 +340,45 @@ if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
     throw "CPU virtualization is disabled in BIOS/UEFI. Enable Intel VT-x/AMD-V and rerun."
 }
 
-& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw "Failed to enable Windows developer package registration."
+$developerRegistrationReady = $false
+$developerRegistrationDetail = ""
+try {
+    $regOutput = (& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" 2>&1 | Out-String).Trim()
+    $regExit = $LASTEXITCODE
+    $developerRegistrationDetail = "reg.exe exit=$regExit output=$regOutput"
+    if ($regExit -eq 0) {
+        $developerRegistrationReady = $true
+    }
+}
+catch {
+    $developerRegistrationDetail = "reg.exe failed: $($_.Exception.Message)"
+}
+
+if (-not $developerRegistrationReady) {
+    try {
+        $devKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+        New-Item -Path $devKey -Force | Out-Null
+        New-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -PropertyType DWord -Value 1 -Force | Out-Null
+        $actual = (Get-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -ErrorAction Stop).AllowDevelopmentWithoutDevLicense
+        if ([int]$actual -eq 1) {
+            $developerRegistrationReady = $true
+            $developerRegistrationDetail += "; PowerShell registry fallback succeeded"
+        }
+    }
+    catch {
+        $developerRegistrationDetail += "; PowerShell registry fallback failed: $($_.Exception.Message)"
+    }
+}
+
+$developerRegistrationDetail | Set-Content -Encoding UTF8 (Join-Path $stage "developer-package-registration.txt")
+if ($developerRegistrationReady) {
+    Write-Log "Windows developer package registration is enabled."
+}
+else {
+    # This setting is only a prerequisite for registration attempts. An already
+    # registered WSA package does not need to be blocked by a registry-policy
+    # write failure; AppX registration below remains the authoritative gate.
+    Write-Log "WARNING: developer package registration setting could not be changed; continuing to authoritative WSA registration check."
 }
 
 $featureState = @{}
