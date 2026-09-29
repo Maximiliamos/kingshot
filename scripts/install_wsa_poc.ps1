@@ -1449,6 +1449,8 @@ try {
 }
 catch {}
 
+Save-WsaHostDiagnostics -ReportStage $stage
+
 if (-not $onlineSerial) {
     $unauthorized = [bool](@($attempts | Where-Object {
         $_.state -eq "unauthorized" -or
@@ -1461,46 +1463,78 @@ if (-not $onlineSerial) {
             installed_version = $installed.Version.ToString()
             attempted_serials = @($serialCandidates)
             authorization_required = $true
+            port_reservation_ok = $portReservationOk
+            loopback_exemption_ok = $loopbackExemptionOk
         }
         Write-Host ""
-        Write-Host "The Android control channel is online, but this PC is not authorized yet."
-        Write-Host "Approve the Android debugging authorization prompt inside the Android environment."
-        Write-Host "Select 'Always allow from this computer' if that option is offered, then rerun the SAME command."
+        Write-Host "WSA is reachable, but ADB authorization is pending. Approve the debugging prompt and rerun the same command."
         exit 24
     }
 
     if ($developerFallbackBackup -and (Test-Path $developerFallbackBackup)) {
         $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         try {
             Copy-Item -LiteralPath $developerFallbackBackup -Destination $settingsPath -Force
-            Write-Log "Developer-mode fallback did not recover the channel; original settings restored."
+            Write-Log "Developer-mode repair did not recover ADB; original settings were restored."
         }
         catch {
-            Write-Log "WARNING: could not restore original settings automatically: $($_.Exception.Message)"
+            Write-Log "WARNING: could not restore original WSA settings automatically: $($_.Exception.Message)"
         }
     }
 
-    $refused = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
-    $state = if ($refused) { "ANDROID_CONTROL_CHANNEL_REFUSED" } else { "ANDROID_CONTROL_CHANNEL_OFFLINE" }
+    $finalSnapshot = Get-WsaRuntimeSnapshot
+    $runtimeAliveNow = [bool]$finalSnapshot.runtime_alive
+    $tcpOpenAny = [bool](@($attempts | Where-Object { $_.tcp_open -eq $true }).Count)
+    $foreignAndroidSeen = [bool](@($attempts | Where-Object { $_.state -eq "device" -and $_.is_wsa -ne $true }).Count)
+    $refused = [bool](@($attempts | Where-Object {
+        $_.connect -match "10061|actively refused|отверг" -or $_.connect -eq "tcp_closed"
+    }).Count)
+
+    $clientCrashSeen = $false
+    $applicationEventsPath = Join-Path $stage "wsa-application-events.txt"
+    if (Test-Path $applicationEventsPath) {
+        try {
+            $eventText = Get-Content -LiteralPath $applicationEventsPath -Raw
+            $clientCrashSeen = [bool]($eventText -match "(?i)WsaClient\.exe" -and $eventText -match "(?i)fault|crash|сбой|exception|0xc000")
+        }
+        catch {}
+    }
+
+    $state = "ANDROID_CONTROL_CHANNEL_OFFLINE"
+    if ($clientCrashSeen) {
+        $state = "WSA_CLIENT_CRASHED"
+    }
+    elseif (-not $runtimeEverSeen -and -not $runtimeAliveNow) {
+        $state = "WSA_RUNTIME_NOT_STARTED"
+    }
+    elseif (($runtimeEverSeen -or $runtimeAliveNow) -and -not $tcpOpenAny) {
+        $state = "WSA_ADB_NOT_EXPOSED"
+    }
+    elseif ($refused) {
+        $state = "ANDROID_CONTROL_CHANNEL_REFUSED"
+    }
+
     Finish-Report -State $state -ExitCode 20 -Extra @{
         installed_version = $installed.Version.ToString()
         attempted_serials = @($serialCandidates)
         pair_attempted = [bool]($PairEndpoint -and $PairCode)
         port_58526_refused = $refused
-        developer_fallback_attempted = $developerFallbackAttempted
-        developer_fallback_succeeded = [bool]($developerFallbackBackup)
+        port_reservation_ok = $portReservationOk
+        loopback_exemption_ok = $loopbackExemptionOk
+        runtime_ever_seen = $runtimeEverSeen
+        runtime_alive_final = $runtimeAliveNow
+        tcp_endpoint_seen = $tcpOpenAny
+        foreign_android_seen = $foreignAndroidSeen
+        developer_repair_attempted = $developerFallbackAttempted
         direct_client_fallback_attempted = $directClientAttempted
+        client_crash_seen = $clientCrashSeen
+        upstream_uri_launch_requested = $upstreamLaunchRequested
     }
     Write-Host ""
-    Write-Host "The Android subsystem is installed successfully, but its local control channel is not online."
-    Write-Host "Complete these P0 steps in the subsystem Settings:"
-    Write-Host "1. Open Advanced settings and turn Developer mode ON."
-    Write-Host "2. Open the developer/wireless-debugging section and note the pairing endpoint/code if shown."
-    Write-Host "3. Pair once by rerunning with -PairEndpoint IP:PORT -PairCode CODE."
-    Write-Host "4. Use -Serial IP:PORT if the connection endpoint shown by the subsystem is not $Serial."
-    Write-Host "The report also contains excluded-tcp-ranges.txt for the known Windows/Hyper-V port-58526 issue."
+    Write-Host "TUGARIN BOTS P0 stopped at state: $state"
+    Write-Host "The report now contains host runtime, HNS, adapter, event-log and WSA diagnostics for the exact failed layer."
     exit 20
 }
 
