@@ -12,26 +12,18 @@ class WsaInstallerTests(unittest.TestCase):
     def setUpClass(cls):
         cls.source = INSTALLER.read_text(encoding="utf-8-sig")
 
-    def test_wsa_setup_is_elevated_but_runtime_returns_to_user_session(self):
-        self.assertIn("[switch]$PrepareOnly", self.source)
-        self.assertIn("[switch]$RuntimeOnly", self.source)
-        self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
+    def test_default_wsa_workflow_self_elevates_and_keeps_runtime_in_same_context(self):
         self.assertIn("$childExit = Invoke-SelfElevated", self.source)
-        self.assertIn('if ($RuntimeOnly -and (Test-IsAdmin))', self.source)
-        self.assertIn('Finish-Report -State "WSA_PREPARE_PASS"', self.source)
+        self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
-    def test_runtime_only_skips_all_admin_host_setup_checks(self):
-        self.assertIn('if (-not $RuntimeOnly) {', self.source)
-        self.assertIn('RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks.', self.source)
-        self.assertIn('Get-WindowsOptionalFeature -Online -FeatureName', self.source)
-        self.assertIn('bcdedit /enum "{current}"', self.source)
-
-    def test_runtime_only_skips_installation_and_setup_elevation(self):
-        self.assertIn('if (-not $SkipInstall -and -not $RuntimeOnly)', self.source)
-        self.assertIn('if ($RuntimeOnly) {', self.source)
-        self.assertIn('Starting WSA runtime verification in the normal interactive user session.', self.source)
-        self.assertIn('-PrepareOnly and -RuntimeOnly cannot be used together.', self.source)
+    def test_proven_wsaclient_launch_and_deeplink_sequence_is_used(self):
+        self.assertIn("Starting the proven WsaClient wake sequence", self.source)
+        self.assertIn('"-ArgumentList "/launch", "wsa://com.android.settings"', self.source)
+        self.assertIn('"-ArgumentList "/deeplink", "wsa-client://developer-settings"', self.source)
+        self.assertIn("-WorkingDirectory $clientWorkDir", self.source)
+        self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
+        self.assertIn("allowing at least 90s before any recycle", self.source)
 
     def test_developer_registration_registry_failure_is_nonfatal(self):
         self.assertIn("developer-package-registration.txt", self.source)
@@ -39,22 +31,9 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("continuing to authoritative WSA registration check", self.source)
         self.assertNotIn('throw "Failed to enable Windows developer package registration."', self.source)
 
-    def test_prepare_phase_unhooks_managed_wsa_from_elevated_account(self):
-        self.assertIn("Removing the managed WSA registration from the elevated setup account", self.source)
-        self.assertIn("Remove-AppxPackage -Package $installed.PackageFullName", self.source)
-        self.assertIn("WSA_PREPARE_UNREGISTER_FAILED", self.source)
-        self.assertIn("elevated_registration_removed = $true", self.source)
-
     def test_report_git_metadata_is_rooted_and_null_safe(self):
         self.assertIn("git -C $Root rev-parse HEAD", self.source)
         self.assertIn('if (-not $commitText) { $commitText = "unknown" }', self.source)
-
-    def test_runtime_phase_can_register_wsa_for_interactive_user(self):
-        self.assertIn("WSA is not registered for the current interactive user", self.source)
-        self.assertIn("WSA registered successfully for the current interactive user.", self.source)
-        self.assertIn("WSA_CURRENT_USER_REGISTRATION_FAILED", self.source)
-        self.assertIn("current-user-registration-error.txt", self.source)
-        self.assertIn('Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register ".\\AppxManifest.xml"', self.source)
 
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
@@ -100,17 +79,15 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('settings.dat.backup-', self.source)
         self.assertIn('Developer-mode fallback did not recover the channel; original settings restored.', self.source)
 
-    def test_p0_avoids_unregistered_windows_uri_handlers(self):
+    def test_p0_avoids_windows_shell_activation_of_unregistered_wsa_protocols(self):
         self.assertNotIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
         self.assertNotIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
-        self.assertIn("does not register that Windows protocol", self.source)
 
-    def test_p0_uses_registered_settings_app_then_safe_wsaclient_fallback(self):
+    def test_p0_uses_registered_settings_app_and_direct_wsaclient(self):
         self.assertIn('shell:AppsFolder\\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp', self.source)
         self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
         self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
-        self.assertIn('App-model wake did not expose ADB yet', self.source)
-        self.assertIn('$directClientAttempted = $false', self.source)
+        self.assertIn('$directClientAttempted = $true', self.source)
 
     def test_p0_stays_on_rootless_nogapps_runtime(self):
         self.assertIn("NoGApps-NoAmazon_Windows_10.7z", self.source)
@@ -130,7 +107,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$directClientStartedAt = Get-Date", self.source)
         self.assertIn("TotalSeconds -ge 90", self.source)
         self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
-        self.assertIn("allowing up to 90s for Android/ADB startup", self.source)
+        self.assertIn("allowing at least 90s before any recycle", self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
@@ -171,32 +148,21 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.source)
         self.assertNotIn("Get-FileHash", self.source)
 
-    def test_report_workflow_refuses_elevated_wsa_parent(self):
-        reporter = REPORTER.read_text(encoding="utf-8-sig")
-        self.assertIn("function Test-IsAdmin", reporter)
-        self.assertIn('if ($Backend -eq "wsa" -and (Test-IsAdmin))', reporter)
-        self.assertIn("must be started from a NORMAL (non-Administrator) PowerShell window", reporter)
-        self.assertIn("exit 91", reporter)
-
     def test_report_workflow_preserves_dirty_worktree_before_pull(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn("TUGARIN_BOTS_AUTO_BACKUP_", reporter)
         self.assertIn("git stash push -u -m", reporter)
         self.assertIn("They will NOT be dropped automatically", reporter)
 
-    def test_report_workflow_defaults_to_two_phase_wsa_installer(self):
+    def test_report_workflow_uses_unified_elevated_wsa_installer(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn('[string]$Backend = "wsa"', reporter)
         self.assertIn('[string]$Serial = "127.0.0.1:58526"', reporter)
-        self.assertIn('[string]$PairEndpoint = ""', reporter)
-        self.assertIn('[string]$PairCode = ""', reporter)
-        self.assertIn('[switch]$NoAutoDeveloperModePatch', reporter)
         self.assertIn('if ($Backend -eq "wsa")', reporter)
+        self.assertIn("WSA P0: unified elevated runtime", reporter)
         self.assertIn('"install_wsa_poc.ps1"', reporter)
-        self.assertIn('"-PrepareOnly"', reporter)
-        self.assertIn('"-RuntimeOnly"', reporter)
-        self.assertIn("WSA PHASE 1/2: privileged setup", reporter)
-        self.assertIn("WSA PHASE 2/2: interactive runtime", reporter)
+        self.assertNotIn('"-PrepareOnly"', reporter)
+        self.assertNotIn('"-RuntimeOnly"', reporter)
         self.assertIn('@("-PairEndpoint", $PairEndpoint)', reporter)
         self.assertIn('@("-PairCode", $PairCode)', reporter)
 
