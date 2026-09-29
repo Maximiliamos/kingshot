@@ -17,6 +17,13 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('PasswordNeverExpires', self.source)
         self.assertIn('S-1-5-32-544', self.source)
 
+    def test_local_user_description_fits_windows_limit(self):
+        marker = 'Description = "'
+        start = self.source.index(marker) + len(marker)
+        end = self.source.index('"', start)
+        description = self.source[start:end]
+        self.assertLessEqual(len(description), 48)
+
     def test_existing_wsa_is_backed_up_and_removed_for_all_users(self):
         self.assertIn('profile-backups', self.source)
         self.assertIn('userdata.vhdx', self.source)
