@@ -100,6 +100,31 @@ winget install --id UB-Mannheim.TesseractOCR --exact
 C:\warbot\templates
 ```
 
+## Чистая переустановка WSA в выделенный Windows-профиль
+
+Если WSA зарегистрирован под другим Windows SID или AppX сообщает `0x80073CFB`,
+используй единый recovery/bootstrap-скрипт:
+
+```powershell
+cd C:\warbot_git
+git pull --ff-only origin feature/unified-android-backend
+powershell -ExecutionPolicy Bypass -File .\scripts\setup_dedicated_wsa_user.ps1
+```
+
+Скрипт:
+
+- сохраняет найденные `userdata.vhdx` и WSA Settings;
+- удаляет WSA-регистрацию у всех Windows-пользователей;
+- создаёт локальный профиль `TugarinBots` и временно даёт ему права локального администратора для установки;
+- переносит старое дерево WSA в backup, сохраняя проверяемый download-cache;
+- ставит продолжение через Task Scheduler на вход `TugarinBots`;
+- после первого входа автоматически обновляет репозиторий, создаёт отдельный Python venv,
+  заново устанавливает/регистрирует WSA, запускает строгий P0;
+- GUI стартует и ярлык создаётся только после `WSA_GAME_PASS`.
+
+Пароль нового пользователя вводится через SecureString и не сохраняется скриптом.
+Автоматический Windows logon намеренно не включается.
+
 ## Запуск
 
 Запустить MVP GUI:
