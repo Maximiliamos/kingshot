@@ -33,6 +33,146 @@ function Test-IsAdmin {
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+
+function Ensure-PackagedActivationType {
+    if ("TugarinBots.PackagedAppActivator" -as [type]) { return }
+
+    $source = @"
+using System;
+using System.Runtime.InteropServices;
+
+namespace TugarinBots
+{
+    [ComImport]
+    [Guid("2E941141-7F97-4756-BA1D-9DECDE894A3D")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IApplicationActivationManager
+    {
+        [PreserveSig]
+        int ActivateApplication(
+            [MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
+            [MarshalAs(UnmanagedType.LPWStr)] string arguments,
+            uint options,
+            out uint processId);
+    }
+
+    [ComImport]
+    [Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")]
+    public class ApplicationActivationManager
+    {
+    }
+
+    public static class PackagedAppActivator
+    {
+        public static uint Activate(string appUserModelId, string arguments)
+        {
+            var manager = (IApplicationActivationManager)new ApplicationActivationManager();
+            try
+            {
+                uint processId;
+                int hr = manager.ActivateApplication(appUserModelId, arguments, 0, out processId);
+                if (hr < 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                return processId;
+            }
+            finally
+            {
+                if (Marshal.IsComObject(manager))
+                {
+                    Marshal.ReleaseComObject(manager);
+                }
+            }
+        }
+    }
+}
+"@
+
+    Add-Type -TypeDefinition $source -Language CSharp -ErrorAction Stop
+}
+
+function Invoke-PackagedApplication {
+    param(
+        [Parameter(Mandatory = $true)][string]$Aumid,
+        [string]$Arguments = ""
+    )
+
+    Ensure-PackagedActivationType
+    $processId = [TugarinBots.PackagedAppActivator]::Activate($Aumid, $Arguments)
+    return [uint32]$processId
+}
+
+function Get-WsaApplicationCatalog {
+    param([Parameter(Mandatory = $true)]$Package)
+
+    $manifest = Get-AppxPackageManifest -Package $Package.PackageFullName -ErrorAction Stop
+    $apps = @()
+    foreach ($app in @($manifest.Package.Applications.Application)) {
+        if ($null -eq $app) { continue }
+        $id = [string]$app.Id
+        if (-not $id) { continue }
+        $apps += [pscustomobject]@{
+            id = $id
+            executable = [string]$app.Executable
+            entry_point = [string]$app.EntryPoint
+            aumid = ($Package.PackageFamilyName + "!" + $id)
+        }
+    }
+    return $apps
+}
+
+function Save-WsaUserContextDiagnostics {
+    param([Parameter(Mandatory = $true)][string]$ReportStage)
+
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $packageUsers = @()
+    try {
+        foreach ($pkg in @(Get-AppxPackage -AllUsers -Name "MicrosoftCorporationII.WindowsSubsystemForAndroid" -ErrorAction SilentlyContinue)) {
+            foreach ($userInfo in @($pkg.PackageUserInformation)) {
+                $packageUsers += [ordered]@{
+                    package_full_name = [string]$pkg.PackageFullName
+                    install_location = [string]$pkg.InstallLocation
+                    user_security_id = [string]$userInfo.UserSecurityId
+                    install_state = [string]$userInfo.InstallState
+                }
+            }
+        }
+    }
+    catch {}
+
+    $explorerOwners = @()
+    try {
+        foreach ($proc in @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'" -ErrorAction SilentlyContinue)) {
+            $owner = Invoke-CimMethod -InputObject $proc -MethodName GetOwner -ErrorAction SilentlyContinue
+            if ($owner -and $owner.User) {
+                $account = if ($owner.Domain) { "$($owner.Domain)\$($owner.User)" } else { [string]$owner.User }
+                $ownerSid = ""
+                try {
+                    $ownerSid = (New-Object System.Security.Principal.NTAccount($account)).Translate([System.Security.Principal.SecurityIdentifier]).Value
+                }
+                catch {}
+                $explorerOwners += [ordered]@{
+                    process_id = [int]$proc.ProcessId
+                    session_id = [int]$proc.SessionId
+                    account = $account
+                    sid = $ownerSid
+                }
+            }
+        }
+    }
+    catch {}
+
+    [ordered]@{
+        current_account = $identity.Name
+        current_sid = $identity.User.Value
+        current_session_id = (Get-Process -Id $PID).SessionId
+        is_admin = (Test-IsAdmin)
+        explorer_owners = $explorerOwners
+        package_users = $packageUsers
+    } | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-user-context.json")
+}
+
 function Invoke-SelfElevated {
     $args = @(
         "-NoProfile",
@@ -327,7 +467,10 @@ function Get-WsaRuntimeSnapshot {
 }
 
 function Save-WsaHostDiagnostics {
-    param([Parameter(Mandatory = $true)][string]$ReportStage)
+    param(
+        [Parameter(Mandatory = $true)][string]$ReportStage,
+        [datetime]$Since = (Get-Date).AddMinutes(-15)
+    )
 
     try {
         $snapshot = Get-WsaRuntimeSnapshot
@@ -384,7 +527,7 @@ function Save-WsaHostDiagnostics {
         try {
             $safe = ($logName -replace "[^A-Za-z0-9.-]", "_")
             Get-WinEvent -LogName $logName -MaxEvents 60 -ErrorAction Stop |
-                Where-Object { $_.TimeCreated -gt (Get-Date).AddMinutes(-15) } |
+                Where-Object { $_.TimeCreated -ge $Since } |
                 Select-Object TimeCreated, Id, LevelDisplayName, ProviderName, Message |
                 Format-List | Out-String |
                 Set-Content -Encoding UTF8 (Join-Path $ReportStage ("event-" + $safe + ".txt"))
@@ -393,7 +536,7 @@ function Save-WsaHostDiagnostics {
     }
 
     try {
-        Get-WinEvent -FilterHashtable @{ LogName = "Application"; StartTime = (Get-Date).AddMinutes(-15) } -ErrorAction SilentlyContinue |
+        Get-WinEvent -FilterHashtable @{ LogName = "Application"; StartTime = $Since } -ErrorAction SilentlyContinue |
             Where-Object { $_.Message -match "(?i)WsaClient|WindowsSubsystemForAndroid|vmmemWSA|WsaService" } |
             Select-Object TimeCreated, Id, LevelDisplayName, ProviderName, Message |
             Format-List | Out-String |
@@ -438,6 +581,7 @@ New-Item -ItemType Directory -Force -Path $WorkRoot, $DownloadRoot, $RuntimeRoot
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $stage = Join-Path $ReportsRoot ("wsa-p0-" + $stamp + "-" + $PID)
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
+$p0StartedAt = Get-Date
 $manifestPath = Join-Path $stage "manifest.json"
 $consolePath = Join-Path $stage "console.txt"
 $latestLocalPath = Join-Path $ReportsRoot "LATEST-LOCAL.json"
@@ -1037,42 +1181,108 @@ $packagePreflight | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-P
 $portReservationOk = Ensure-WsaAdbPortReservation -ReportStage $stage
 $loopbackExemptionOk = Ensure-WsaLoopbackExemption -ReportStage $stage
 
-Write-Log "Launching WSA using the upstream WSABuilds app URI first."
-$upstreamLaunchRequested = $false
-$upstreamLaunchAt = Get-Date
+Save-WsaUserContextDiagnostics -ReportStage $stage
+
+$wsaApplications = @()
 try {
-    Start-Process "wsa://com.android.settings" -ErrorAction Stop | Out-Null
-    $upstreamLaunchRequested = $true
-    Write-Log "Upstream wsa://com.android.settings activation requested."
+    $wsaApplications = @(Get-WsaApplicationCatalog -Package $installed)
 }
 catch {
-    Write-Log "Upstream WSA URI activation failed: $($_.Exception.Message)"
+    Write-Log "Could not enumerate WSA AUMIDs from package manifest: $($_.Exception.Message)"
+}
+$wsaApplications | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-applications.json")
+
+$settingsAumid = ""
+$clientAumid = ""
+$settingsApp = $wsaApplications | Where-Object { $_.id -eq "SettingsApp" } | Select-Object -First 1
+if ($settingsApp) { $settingsAumid = [string]$settingsApp.aumid }
+$clientApp = $wsaApplications | Where-Object {
+    $_.id -eq "App" -or $_.executable -match "(?i)WsaClient\\WsaClient\.exe$|WsaClient\.exe$"
+} | Select-Object -First 1
+if ($clientApp) { $clientAumid = [string]$clientApp.aumid }
+
+if (-not $settingsAumid) {
+    $settingsAumid = $installed.PackageFamilyName + "!SettingsApp"
+}
+if (-not $clientAumid) {
+    $clientAumid = $installed.PackageFamilyName + "!App"
+}
+
+[ordered]@{
+    package_family = $installed.PackageFamilyName
+    settings_aumid = $settingsAumid
+    client_aumid = $clientAumid
+} | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-aumids.json")
+
+$packagedActivationAttempted = $false
+$packagedActivationSucceeded = $false
+$packagedActivationRetried = $false
+$developerDeepLinkAttempted = $false
+$upstreamLaunchRequested = $false
+
+function Invoke-WsaPackagedWake {
+    param([switch]$DeveloperSettings)
+
+    $ok = $false
+    $packagedActivationAttempted = $true
+
+    if ($settingsAumid) {
+        try {
+            $settingsPid = Invoke-PackagedApplication -Aumid $settingsAumid
+            Write-Log "Packaged activation succeeded for SettingsApp AUMID '$settingsAumid' (pid=$settingsPid)."
+            $ok = $true
+        }
+        catch {
+            Write-Log "Packaged SettingsApp activation failed: $($_.Exception.Message)"
+        }
+    }
+
+    if ($clientAumid) {
+        $arguments = if ($DeveloperSettings) {
+            "/deeplink wsa-client://developer-settings"
+        }
+        else {
+            "/launch wsa://com.android.settings"
+        }
+        try {
+            $clientPid = Invoke-PackagedApplication -Aumid $clientAumid -Arguments $arguments
+            Write-Log "Packaged WsaClient activation succeeded for '$clientAumid' args='$arguments' (pid=$clientPid)."
+            $ok = $true
+        }
+        catch {
+            Write-Log "Packaged WsaClient activation failed: $($_.Exception.Message)"
+        }
+    }
+
+    return $ok
+}
+
+Write-Log "Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity."
+$packagedActivationSucceeded = Invoke-WsaPackagedWake
+
+if (-not $packagedActivationSucceeded) {
+    Write-Log "Packaged activation did not start WSA; trying the upstream wsa:// URI as a secondary route."
+    try {
+        Start-Process "wsa://com.android.settings" -ErrorAction Stop | Out-Null
+        $upstreamLaunchRequested = $true
+        Write-Log "Upstream wsa://com.android.settings activation requested."
+    }
+    catch {
+        Write-Log "Upstream WSA URI activation failed: $($_.Exception.Message)"
+    }
 }
 
 try {
     Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp" -ErrorAction SilentlyContinue | Out-Null
 }
 catch {
-    Write-Log "Could not open the WSA Settings app: $($_.Exception.Message)"
+    Write-Log "Could not open the WSA Settings app through Explorer: $($_.Exception.Message)"
 }
 
 $adb = "C:\Android\Sdk\platform-tools\adb.exe"
 if (-not (Test-Path $adb)) {
     Finish-Report -State "ADB_MISSING" -ExitCode 19
     throw "Android control tool not found at $adb."
-}
-
-$client = $null
-$clientWorkDir = $null
-$directClientAttempted = $false
-$directClientStartedAt = $null
-$developerDeepLinkAttempted = $false
-if ($installed.InstallLocation) {
-    $candidateClient = Join-Path $installed.InstallLocation "WsaClient\WsaClient.exe"
-    if (Test-Path -LiteralPath $candidateClient -PathType Leaf) {
-        $client = $candidateClient
-        $clientWorkDir = $installed.InstallLocation
-    }
 }
 
 Write-Host ""
@@ -1406,60 +1616,34 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
 
     $elapsed = ((Get-Date) - $probeStartedAt).TotalSeconds
 
-    if (-not $runtimeEverSeen -and -not $directClientAttempted -and $client -and $clientWorkDir -and $elapsed -ge 15) {
-        $directClientAttempted = $true
-        $directClientStartedAt = Get-Date
-        Write-Log "No WSA runtime process is visible after upstream activation; starting direct WsaClient /launch fallback."
-        $oldPath = $env:PATH
-        try {
-            $env:PATH = "$clientWorkDir;$oldPath"
-            Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
-            Write-Log "Direct WsaClient /launch fallback requested."
-        }
-        catch {
-            Write-Log "Direct WsaClient /launch fallback failed: $($_.Exception.Message)"
-        }
-        finally {
-            $env:PATH = $oldPath
+    if (-not $runtimeEverSeen -and -not $packagedActivationRetried -and $elapsed -ge 15) {
+        $packagedActivationRetried = $true
+        Write-Log "No WSA runtime process is visible after initial package activation; retrying packaged AUMID launch."
+        if (Invoke-WsaPackagedWake) {
+            $packagedActivationSucceeded = $true
         }
     }
-    elseif ($runtimeEverSeen -and -not $developerDeepLinkAttempted -and $client -and $clientWorkDir -and $elapsed -ge 25) {
+    elseif ($runtimeEverSeen -and -not $developerDeepLinkAttempted -and $elapsed -ge 25) {
         $developerDeepLinkAttempted = $true
-        Write-Log "WSA runtime is alive but ADB is not exposed yet; opening WSA Developer settings through WsaClient."
-        $oldPath = $env:PATH
-        try {
-            $env:PATH = "$clientWorkDir;$oldPath"
-            Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction Stop | Out-Null
-        }
-        catch {
-            Write-Log "Developer-settings deep link failed: $($_.Exception.Message)"
-        }
-        finally {
-            $env:PATH = $oldPath
+        Write-Log "WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation."
+        if (Invoke-WsaPackagedWake -DeveloperSettings) {
+            $packagedActivationSucceeded = $true
         }
     }
     elseif (-not $developerFallbackAttempted -and -not $NoAutoDeveloperModePatch -and $elapsed -ge 45) {
         $developerFallbackAttempted = $true
-        Write-Log "ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final relaunch."
+        Write-Log "ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch."
         $developerFallbackBackup = Enable-DeveloperModeFallback -ReportStage $stage
         if ($developerFallbackBackup) {
-            try {
-                Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+            if (Invoke-WsaPackagedWake -DeveloperSettings) {
+                $packagedActivationSucceeded = $true
             }
-            catch {}
-            if ($client -and $clientWorkDir) {
-                $oldPath = $env:PATH
+            elseif (-not $upstreamLaunchRequested) {
                 try {
-                    $env:PATH = "$clientWorkDir;$oldPath"
-                    Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
-                    Start-Sleep -Seconds 2
-                    Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue | Out-Null
-                    $directClientAttempted = $true
-                    $directClientStartedAt = Get-Date
+                    Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+                    $upstreamLaunchRequested = $true
                 }
-                finally {
-                    $env:PATH = $oldPath
-                }
+                catch {}
             }
         }
     }
@@ -1468,21 +1652,15 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         Write-Log "All non-destructive startup routes were exhausted; performing the single allowed WSA recycle."
         Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 4
-        try {
-            Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+        if (Invoke-WsaPackagedWake) {
+            $packagedActivationSucceeded = $true
         }
-        catch {}
-        if ($client -and $clientWorkDir) {
-            $oldPath = $env:PATH
+        elseif (-not $upstreamLaunchRequested) {
             try {
-                $env:PATH = "$clientWorkDir;$oldPath"
-                Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
-                Start-Sleep -Seconds 2
-                Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue | Out-Null
+                Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+                $upstreamLaunchRequested = $true
             }
-            finally {
-                $env:PATH = $oldPath
-            }
+            catch {}
         }
     }
 
@@ -1505,7 +1683,7 @@ try {
 }
 catch {}
 
-Save-WsaHostDiagnostics -ReportStage $stage
+Save-WsaHostDiagnostics -ReportStage $stage -Since $p0StartedAt
 
 if (-not $onlineSerial) {
     $unauthorized = [bool](@($attempts | Where-Object {
@@ -1562,6 +1740,9 @@ if (-not $onlineSerial) {
     if ($clientCrashSeen) {
         $state = "WSA_CLIENT_CRASHED"
     }
+    elseif (-not $packagedActivationSucceeded -and -not $runtimeEverSeen -and -not $runtimeAliveNow) {
+        $state = "WSA_PACKAGE_ACTIVATION_FAILED"
+    }
     elseif (-not $runtimeEverSeen -and -not $runtimeAliveNow) {
         $state = "WSA_RUNTIME_NOT_STARTED"
     }
@@ -1584,7 +1765,10 @@ if (-not $onlineSerial) {
         tcp_endpoint_seen = $tcpOpenAny
         foreign_android_seen = $foreignAndroidSeen
         developer_repair_attempted = $developerFallbackAttempted
-        direct_client_fallback_attempted = $directClientAttempted
+        packaged_activation_attempted = $packagedActivationAttempted
+        packaged_activation_succeeded = $packagedActivationSucceeded
+        packaged_activation_retried = $packagedActivationRetried
+        raw_wsaclient_launch_attempted = $false
         client_crash_seen = $clientCrashSeen
         upstream_uri_launch_requested = $upstreamLaunchRequested
     }
