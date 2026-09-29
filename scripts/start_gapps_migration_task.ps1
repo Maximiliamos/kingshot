@@ -24,6 +24,8 @@ if (-not (Test-Path -LiteralPath $reporter -PathType Leaf)) {
 
 $arguments = @(
     "-NoProfile",
+    "-NonInteractive",
+    "-WindowStyle", "Hidden",
     "-ExecutionPolicy", "Bypass",
     "-File", ('"' + $reporter + '"'),
     "-Backend", "wsa",
@@ -35,7 +37,7 @@ $arguments = @(
 
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $RepoRoot
 $taskPrincipal = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\$TargetUser" -LogonType Interactive -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 2) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 2) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden
 $task = New-ScheduledTask -Action $action -Principal $taskPrincipal -Settings $settings
 Register-ScheduledTask -TaskName $taskName -InputObject $task -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
