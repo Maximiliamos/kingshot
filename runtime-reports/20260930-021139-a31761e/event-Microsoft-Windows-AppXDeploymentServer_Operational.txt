@@ -1,0 +1,446 @@
+﻿
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 613
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Сводка по эффективности операции развертывания "Register" для пакета MicrosoftCorporationII.WindowsS
+                   ubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe: 
+                   Overall time: 34812 ms
+                   Gap: 78 ms
+                   Enqueue cost: 78 ms
+                   Dequeue delay: 0 ms
+                   Bundle processing cost: 0 ms
+                   Indexing cost: 406 ms
+                   Resolve dependency cost: 47 ms
+                   Check approval cost: 47 ms
+                   Evaluation cost: 15 ms
+                   Hardlinking evaluation cost: 0 ms
+                   Stage required cost: 79 ms
+                   Flushing and closing files cost: 0 ms
+                   Gap: 15 ms
+                   Machine register cost: 219 ms
+                   Stage user data cost: 0 ms
+                   Gap: 33328 ms
+                   Registration cost: 125 ms
+                   Repository commit transaction cost: 328 ms
+                   Gap: 31 ms
+                   Data flush cost: 0 ms
+                   Post DeStage repository commit transaction cost: 0 ms
+                   Remaining cost: 16 ms
+                   
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 649
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания "Register" для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.
+                   40000.4.0_x64__8wekyb3d8bbwe: PostDeploymentOperationCheck cost: 0 ms
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 400
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания Register с конечным томом C: для пакета MicrosoftCorporationII.WindowsSubsyst
+                   emForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe из  (AppxManifest.xml)  завершена успешно.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10007
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание одноэлементного пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0
+                   _x64__8wekyb3d8bbwe завершено. При изменении состояния одноэлементного пакета на "включен" было возв
+                   ращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10001
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10001
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10007
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание одноэлементного пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0
+                   _x64__8wekyb3d8bbwe завершено. При изменении состояния одноэлементного пакета на "включен" было возв
+                   ращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10001
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:59
+Id               : 10001
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 5507
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe : C:\warbot_wsa\
+                   WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\microsoft.system.package.metadata\Resources.????????
+                   .pri : No shared merged files found
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 5507
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe : C:\warbot_wsa\
+                   WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\microsoft.system.package.metadata\S-1-5-21-164129469
+                   6-4270169483-3689275233-1008-MergedResources-*.pri : No user-specific merged files found
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 5507
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe : C:\warbot_wsa\
+                   WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\microsoft.system.package.metadata\Resources.????????
+                   .pri : No shared merged files found
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 5507
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe : C:\warbot_wsa\
+                   WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\microsoft.system.package.metadata\S-1-5-21-164129469
+                   6-4270169483-3689275233-1008-MergedResources-*.pri : No user-specific merged files found
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9625
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9623
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9622
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9626
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : AppxManifest.xml(50,12): PackagedServiceDEH успешно проанализировал манифест для установки пакета Mi
+                   crosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9643
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: успешное выполнение TerminateApplications.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9643
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: успешное выполнение TerminateApplications.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 10000
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Будет выполнено обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0
+                   _x64__8wekyb3d8bbwe. При изменении состояния пакета на "отключен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 10000
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Будет выполнено обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0
+                   _x64__8wekyb3d8bbwe. При изменении состояния пакета на "отключен" было возвращено 0x0.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9643
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: успешное выполнение TerminateApplications.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 9643
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: успешное выполнение TerminateApplications.
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 646
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Работа запущенного приложения MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App бы
+                   ла завершена для обслуживания (Приоритет=0x1).
+
+TimeCreated      : 30.09.2026 2:07:25
+Id               : 573
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Настройка состояния "Синхронизация включена", имя семейства пакетов MicrosoftCorporationII.WindowsSu
+                   bsystemForAndroid_8wekyb3d8bbwe, включено false.
+
+TimeCreated      : 30.09.2026 2:07:25
+Id               : 8761
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Отсутствует каталог AppExecutionAlias; код ошибки 0x8007010B.
+
+TimeCreated      : 30.09.2026 2:07:25
+Id               : 855
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Завершено разрешение списков действий. Списки действий DeploymentRequest:  addPackageList: Microsoft
+                   CorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 30.09.2026 2:07:24
+Id               : 854
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Успешно добавлены следующие универсальные коды ресурсов (URI), которые нужно обработать:  C:\warbot_
+                   wsa\WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\AppxManifest.xml.
+
+TimeCreated      : 30.09.2026 2:07:24
+Id               : 607
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания Register в отношении пакета MicrosoftCorporationII.WindowsSubsystemForAndroid
+                   _2407.40000.4.0_x64__8wekyb3d8bbwe выведена из очереди и выполняется для SID пользователя S-1-5-21-1
+                   641294696-4270169483-3689275233-1008.
+
+TimeCreated      : 30.09.2026 2:07:24
+Id               : 10002
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\9b468238-42e4-40ce-b359-a
+                   a0265bee88d_S-1-5-21-1641294696-4270169483-3689275233-1008_2.rslc для операции Register с пакетом Mi
+                   crosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 30.09.2026 2:07:24
+Id               : 603
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Начата операция развертывания "Register" для пакета. Основной параметр: AppxManifest.xml. Необязател
+                   ьные параметры: ForceApplicationShutdownOption,DevelopmentModeOption,ForceUpdateFromAnyVersion и 0. 
+                   Дополнительные сведения о диагностике проблем с развертыванием приложений см. на странице http://go.
+                   microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 30.09.2026 2:07:05
+Id               : 649
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания "Remove" для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40
+                   000.4.0_x64__8wekyb3d8bbwe: PostDeploymentOperationCheck cost: 2031 ms
+
+TimeCreated      : 30.09.2026 2:07:03
+Id               : 400
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания Remove с конечным томом C: для пакета MicrosoftCorporationII.WindowsSubsystem
+                   ForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe из  (WSA_2407.40000.4.0_x64)  завершена успешно.
+
+TimeCreated      : 30.09.2026 2:07:03
+Id               : 10001
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Обслуживание пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8b
+                   bwe завершено. При изменении состояния пакета на "включен" было возвращено 0x80070490.
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 8761
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Отсутствует каталог AppExecutionAlias; код ошибки 0x8007010B.
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 9625
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 9623
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 9622
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : 0x0: PackagedServiceDEH успешно проанализировал манифесты
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 9627
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : AppxManifest.xml(50,12): PackagedServiceDEH успешно проанализировал манифест для удаления пакета Mic
+                   rosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:02
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:01
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:01
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:01
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:00
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:00
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:07:00
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:59
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:59
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:59
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:57
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:57
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:57
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG2. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat.LOG1. Код ошибки: 0x20.
+
+TimeCreated      : 30.09.2026 2:06:56
+Id               : 5224
+LevelDisplayName : Предупреждение
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Ошибка при удалении файла \\?\C:\Users\TugarinBots\AppData\Local\Packages\MicrosoftCorporationII.Win
+                   dowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat. Код ошибки: 0x20.
+
+
+
+

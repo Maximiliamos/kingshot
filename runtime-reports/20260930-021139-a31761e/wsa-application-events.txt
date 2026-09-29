@@ -1,0 +1,61 @@
+﻿
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 1002
+LevelDisplayName : Ошибка
+ProviderName     : Application Hang
+Message          : Программа dllhost.exe версии 10.0.19041.3636 прекратила взаимодействие с Windows и была закрыта. Что
+                   бы узнать, имеются ли дополнительные сведения о проблеме, просмотрите журнал проблем в разделе "Безо
+                   пасность и обслуживание" в панели управления.
+                    Идентификатор процесса: b474
+                    Время запуска: 01dd5061a25860a8
+                    Время завершения: 4294967295
+                    Путь к приложению: C:\Windows\System32\dllhost.exe
+                    Идентификатор отчета: 3dbbb24d-fdbe-448f-b6d7-564cd6b205c2
+                    Полное имя пакета сбоя: MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8weky
+                   b3d8bbwe
+                    Код приложения, связанного со сбойным пакетом: App
+                    Тип зависания: Quiesce
+                   
+
+TimeCreated      : 30.09.2026 2:07:58
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1225468432900460105, тип 5
+                   Имя события: MoAppHang
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+                   P2: praid:App
+                   P3: 10.0.19041.3636
+                   P4: 5f959e44
+                   P5: 463a
+                   P6: 2097152
+                   P7: 
+                   P8: 
+                   P9: 
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER46B6.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER4706.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER4705.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER4754.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppHang_MicrosoftCorpora_b47fe1eba6306d21cdbc
+                   6c7ae674a8e81c860d2_f9dc0030_1d9f258d-bfbb-4813-848b-4384a185c03e
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: 3dbbb24d-fdbe-448f-b6d7-564cd6b205c2
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 7ca1cc0771d677567101bd0c027c8e49
+                   Идентификатор GUID CAB: 0
+
+
+
+

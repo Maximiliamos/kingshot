@@ -1,0 +1,37 @@
+﻿[2026-09-30T02:06:49.0098272+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T02:06:50.9448529+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T02:06:51.1774531+03:00] Windows developer package registration is enabled.
+[2026-09-30T02:06:52.6693980+03:00] Backed up existing WSA userdata metadata to C:\warbot_wsa\profile-backups\wsa-flavor-migration-20260930-020652.
+[2026-09-30T02:07:05.5989553+03:00] Removed the current-user WSA registration for approved GApps migration.
+[2026-09-30T02:07:06.8053834+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-30T02:07:08.0139427+03:00] Extracting WSA archive.
+[2026-09-30T02:07:22.2651373+03:00] Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge).
+[2026-09-30T02:07:22.3166706+03:00] Dependency Microsoft.UI.Xaml.2.8 already satisfies minimum 8.2208.12001.0.
+[2026-09-30T02:07:22.3369779+03:00] Dependency Microsoft.VCLibs.140.00.UWPDesktop already satisfies minimum 14.0.33728.0.
+[2026-09-30T02:07:22.3521547+03:00] Dependency Microsoft.VCLibs.140.00 already satisfies minimum 14.0.33519.0.
+[2026-09-30T02:07:59.2296231+03:00] WSA AppX registration completed.
+[2026-09-30T02:08:02.2175577+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T02:08:02.2470697+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T02:08:02.2897106+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T02:08:05.1525527+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T02:08:05.9439518+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=34248).
+[2026-09-30T02:08:06.0138804+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=47500).
+[2026-09-30T02:08:40.9893049+03:00] WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation.
+[2026-09-30T02:08:41.0243002+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=34248).
+[2026-09-30T02:08:41.0682984+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=45100).
+[2026-09-30T02:09:11.9037282+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch.
+[2026-09-30T02:09:11.9133157+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-09-30T02:09:15.0269619+03:00] Developer-mode fallback applied; original settings preserved at C:\warbot_wsa\developer-mode-fallback\settings.dat.backup-20260930-020911.
+[2026-09-30T02:09:15.3534601+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=44096).
+[2026-09-30T02:09:15.3905411+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=49524).
+[2026-09-30T02:10:02.0846019+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:10:03.8523369+03:00] Android endpoint 10.71.148.193:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:10:06.1949721+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:10:08.2962383+03:00] Android endpoint 172.28.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:10:13.6876886+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:10:48.5190116+03:00] All non-destructive startup routes were exhausted; performing the single allowed WSA recycle.
+[2026-09-30T02:10:52.9372230+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20516).
+[2026-09-30T02:10:52.9653252+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=38112).
+[2026-09-30T02:11:05.6394230+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:11:06.0946739+03:00] Android endpoint 172.28.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T02:11:06.5156462+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
