@@ -11,7 +11,9 @@ $targetSession = @(
         }
     ) | Select-Object -First 1
 Get-Process -IncludeUserName | Where-Object {
-    $null -ne $targetSession -and $_.SessionId -eq $targetSession -and $_.ProcessName -in @("powershell", "powershell_ise", "cmd", "adb", "conhost")
+    $null -ne $targetSession -and $_.SessionId -eq $targetSession -and $_.ProcessName -in @(
+        "powershell", "powershell_ise", "cmd", "adb", "conhost", "python", "pythonw"
+    )
 } | Stop-Process -Force
 
 @{
