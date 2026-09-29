@@ -71,17 +71,42 @@ $commit = (& git rev-parse HEAD).Trim()
 # as one bounded workflow. Keep the native-QEMU experiment below available
 # only when explicitly requested with -Backend native_arm64.
 if ($Backend -eq "wsa") {
-    $wsaArgs = @(
+    $installer = Join-Path $PSScriptRoot "install_wsa_poc.ps1"
+
+    Write-Host ""
+    Write-Host "=== TUGARIN BOTS WSA PHASE 1/2: privileged setup ==="
+    $prepareArgs = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
-        "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1"),
-        "-Serial", $Serial
+        "-File", $installer,
+        "-Serial", $Serial,
+        "-PrepareOnly"
     )
-    if ($PairEndpoint) { $wsaArgs += @("-PairEndpoint", $PairEndpoint) }
-    if ($PairCode) { $wsaArgs += @("-PairCode", $PairCode) }
-    if ($NoAutoDeveloperModePatch) { $wsaArgs += "-NoAutoDeveloperModePatch" }
-    if ($CleanGame) { $wsaArgs += "-CleanGame" }
-    & powershell @wsaArgs
+    if ($NoAutoDeveloperModePatch) { $prepareArgs += "-NoAutoDeveloperModePatch" }
+
+    & powershell @prepareArgs
+    $prepareExit = $LASTEXITCODE
+    if ($prepareExit -ne 0) {
+        Write-Host "WSA setup phase failed with exit code $prepareExit."
+        exit $prepareExit
+    }
+
+    Write-Host ""
+    Write-Host "=== TUGARIN BOTS WSA PHASE 2/2: interactive runtime ==="
+    $runtimeArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", $installer,
+        "-Serial", $Serial,
+        "-RuntimeOnly",
+        "-SkipInstall"
+    )
+    if ($PairEndpoint) { $runtimeArgs += @("-PairEndpoint", $PairEndpoint) }
+    if ($PairCode) { $runtimeArgs += @("-PairCode", $PairCode) }
+    if ($NoAutoDeveloperModePatch) { $runtimeArgs += "-NoAutoDeveloperModePatch" }
+    if ($CleanGame) { $runtimeArgs += "-CleanGame" }
+
+    & powershell @runtimeArgs
     exit $LASTEXITCODE
 }
 
