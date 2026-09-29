@@ -1,0 +1,8 @@
+﻿WSA package is still not registered after installation.
+C:\warbot_git\scripts\install_wsa_poc.ps1:590 знак:5
++     throw "WSA package is still not registered after installation."
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (WSA package is ...r installation.:String) [], RuntimeException
+    + FullyQualifiedErrorId : WSA package is still not registered after installation.
+ 
+
