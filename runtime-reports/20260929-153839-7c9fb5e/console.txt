@@ -1,0 +1,5 @@
+﻿[2026-09-29T15:38:36.3026913+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-29T15:38:37.6400849+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-29T15:38:37.7075300+03:00] Windows developer package registration is enabled.
+[2026-09-29T15:38:38.6572203+03:00] TUGARIN BOTS NoGApps WSA package is already registered; keeping it.
+[2026-09-29T15:38:38.6905759+03:00] WSA setup/registration phase completed. Returning to the normal interactive user session for runtime startup.
