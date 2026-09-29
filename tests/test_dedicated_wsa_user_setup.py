@@ -36,6 +36,12 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('Assert-RunningAsDedicatedUser', self.source)
         self.assertIn('$identity.User.Value -ne $target.SID.Value', self.source)
 
+    def test_acl_bootstrap_does_not_recurse_over_full_wsa_tree(self):
+        self.assertIn("Grant-BootstrapAccess", self.source)
+        self.assertIn("Do NOT recurse over", self.source)
+        self.assertIn("Grant-PathAccess -User $User -Path $WorkRoot", self.source)
+        self.assertNotIn("Grant-PathAccess -User $User -Path $WorkRoot -Recursive", self.source)
+
     def test_continuation_updates_repo_and_uses_dedicated_venv(self):
         self.assertIn('safe.directory', self.source)
         self.assertIn('git -C $RepoRoot pull --ff-only origin $Branch', self.source)
