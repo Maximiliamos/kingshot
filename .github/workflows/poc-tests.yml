@@ -33,5 +33,6 @@ jobs:
           [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/run_and_report.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/upload_runtime_report.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/setup_dedicated_wsa_user.ps1)) | Out-Null
       - name: Run application unit tests
         run: python -m unittest discover -s tests -v
