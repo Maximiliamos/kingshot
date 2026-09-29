@@ -217,13 +217,14 @@ function Save-Manifest {
         [int]$ExitCode = 0,
         [hashtable]$Extra = @{}
     )
-    $commit = (& git rev-parse HEAD).Trim()
+    $commitText = (& git -C $Root rev-parse HEAD 2>$null | Out-String).Trim()
+    if (-not $commitText) { $commitText = "unknown" }
     $payload = [ordered]@{
         schema = 1
         kind = "wsa-poc"
         state = $State
         exit_code = $ExitCode
-        commit = $commit
+        commit = $commitText
         source_branch = (& git branch --show-current).Trim()
         created_at = (Get-Date).ToString("o")
         wsa_release = $ReleaseTag
@@ -260,7 +261,7 @@ function Finish-Report {
         finished_at = (Get-Date).ToString("o")
         state = $State
         exit_code = $ExitCode
-        commit = (& git rev-parse HEAD).Trim()
+        commit = ((& git -C $Root rev-parse HEAD 2>$null | Out-String).Trim())
     } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 $latestLocalPath
     Upload-Report
     Write-Host ""
@@ -597,6 +598,7 @@ if ($RuntimeOnly -and -not $installed) {
     }
 
     $runtimePackageDir = $runtimeManifest.Directory.FullName
+    $currentUserRegistrationError = $null
     try {
         Push-Location $runtimePackageDir
         [xml]$runtimeManifestXml = Get-Content -LiteralPath ".\AppxManifest.xml"
@@ -630,15 +632,19 @@ if ($RuntimeOnly -and -not $installed) {
         Write-Log "WSA registered successfully for the current interactive user."
     }
     catch {
+        $currentUserRegistrationError = $_
         ($_ | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "current-user-registration-error.txt")
-        Finish-Report -State "WSA_CURRENT_USER_REGISTRATION_FAILED" -ExitCode 18 -Extra @{
-            install_location = $runtimePackageDir
-            registration_error = $_.Exception.Message
-        }
-        exit 18
     }
     finally {
         Pop-Location
+    }
+
+    if ($currentUserRegistrationError) {
+        Finish-Report -State "WSA_CURRENT_USER_REGISTRATION_FAILED" -ExitCode 18 -Extra @{
+            install_location = $runtimePackageDir
+            registration_error = $currentUserRegistrationError.Exception.Message
+        }
+        exit 18
     }
 
     $installed = Get-AppxPackage | Where-Object {
@@ -653,10 +659,33 @@ if (-not $installed) {
 $installed | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "installed-wsa.txt")
 
 if ($PrepareOnly) {
-    Write-Log "WSA setup/registration phase completed. Returning to the normal interactive user session for runtime startup."
+    $preparedVersion = $installed.Version.ToString()
+    $preparedLocation = $installed.InstallLocation
+
+    if ($installed.InstallLocation -like "$InstallRoot*") {
+        Write-Log "Removing the managed WSA registration from the elevated setup account so the interactive user can own the unpackaged app registration."
+        try {
+            Remove-AppxPackage -Package $installed.PackageFullName -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            Write-Log "Elevated-account WSA registration removed; extracted package files are preserved."
+        }
+        catch {
+            ($_ | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "prepare-unregister-error.txt")
+            Finish-Report -State "WSA_PREPARE_UNREGISTER_FAILED" -ExitCode 18 -Extra @{
+                installed_version = $preparedVersion
+                installed_location = $preparedLocation
+                unregister_error = $_.Exception.Message
+                phase = "prepare"
+            }
+            exit 18
+        }
+    }
+
+    Write-Log "WSA setup prerequisites are ready. Returning to the normal interactive user session for current-user registration and runtime startup."
     Finish-Report -State "WSA_PREPARE_PASS" -ExitCode 0 -Extra @{
-        installed_version = $installed.Version.ToString()
-        installed_location = $installed.InstallLocation
+        installed_version = $preparedVersion
+        installed_location = $preparedLocation
+        elevated_registration_removed = $true
         phase = "prepare"
     }
     exit 0
