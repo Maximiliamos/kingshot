@@ -623,21 +623,8 @@ if ($installed.InstallLocation) {
         $clientWorkDir = $installed.InstallLocation
     }
 }
-Write-Log "Using registered WSA app-model URIs first; direct WsaClient fallback is available only if needed."
-try {
-    Start-Process explorer.exe "wsa://com.android.settings" -ErrorAction SilentlyContinue
-    Write-Log "Requested Android Settings launch through the interactive Explorer shell."
-}
-catch {
-    Write-Log "Android Settings Explorer wake request was not available: $($_.Exception.Message)"
-}
-try {
-    Start-Process explorer.exe "wsa-client://developer-settings" -ErrorAction SilentlyContinue
-    Write-Log "Opened subsystem developer settings through the interactive Explorer shell."
-}
-catch {
-    Write-Log "Developer-settings Explorer request was not available: $($_.Exception.Message)"
-}
+Write-Log "Using registered WSA SettingsApp first; direct WsaClient fallback is available only if needed."
+Write-Log "Skipping custom wsa-client:// URI activation because this WSABuilds package does not register that Windows protocol."
 Write-Host ""
 Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subsystem settings, turn it ON now."
 Write-Host "The verifier will keep retrying automatically while the settings window is open."
@@ -847,10 +834,6 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
         Start-Sleep -Seconds 5
         try {
             Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
-        }
-        catch {}
-        try {
-            Start-Process explorer.exe "wsa-client://developer-settings" -ErrorAction SilentlyContinue
         }
         catch {}
         Start-Sleep -Seconds 20
