@@ -21,6 +21,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('Finish-Report -State "WSA_PREPARE_PASS"', self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
+    def test_runtime_only_skips_all_admin_host_setup_checks(self):
+        self.assertIn('if (-not $RuntimeOnly) {', self.source)
+        self.assertIn('RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks.', self.source)
+        self.assertIn('Get-WindowsOptionalFeature -Online -FeatureName', self.source)
+        self.assertIn('bcdedit /enum "{current}"', self.source)
+
     def test_runtime_only_skips_installation_and_setup_elevation(self):
         self.assertIn('if (-not $SkipInstall -and -not $RuntimeOnly)', self.source)
         self.assertIn('if ($RuntimeOnly) {', self.source)
