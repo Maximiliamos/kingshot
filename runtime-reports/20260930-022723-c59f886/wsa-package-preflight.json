@@ -1,0 +1,15 @@
+﻿{
+    "install_location":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64",
+    "install_path_length":  61,
+    "filesystem":  "NTFS",
+    "path_short_enough":  true,
+    "appx_manifest":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\AppxManifest.xml",
+    "manifest_min_version":  "",
+    "manifest_has_custom_install":  false,
+    "win10_patch_required":  true,
+    "wsapatch_dll_present":  null,
+    "patched_icu_present":  null,
+    "gfxstream_paths":  [
+
+                        ]
+}

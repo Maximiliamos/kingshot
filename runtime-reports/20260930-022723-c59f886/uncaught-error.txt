@@ -1,0 +1,8 @@
+﻿Невозможно вызвать метод для выражения со значением NULL.
+C:\warbot_git\scripts\install_wsa_poc.ps1:1839 знак:5
++     $value = $probe.Output.Trim()
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : InvokeMethodOnNull
+ 
+
