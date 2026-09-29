@@ -27,6 +27,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('Starting WSA runtime verification in the normal interactive user session.', self.source)
         self.assertIn('-PrepareOnly and -RuntimeOnly cannot be used together.', self.source)
 
+    def test_developer_registration_registry_failure_is_nonfatal(self):
+        self.assertIn("developer-package-registration.txt", self.source)
+        self.assertIn("PowerShell registry fallback", self.source)
+        self.assertIn("continuing to authoritative WSA registration check", self.source)
+        self.assertNotIn('throw "Failed to enable Windows developer package registration."', self.source)
+
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
             'Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register',
