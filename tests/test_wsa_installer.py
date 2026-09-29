@@ -12,12 +12,20 @@ class WsaInstallerTests(unittest.TestCase):
     def setUpClass(cls):
         cls.source = INSTALLER.read_text(encoding="utf-8-sig")
 
-    def test_full_wsa_workflow_runs_elevated(self):
-        self.assertNotIn("[switch]$AdminBootstrap", self.source)
-        self.assertNotIn("function Invoke-AdminBootstrap", self.source)
+    def test_wsa_setup_is_elevated_but_runtime_returns_to_user_session(self):
+        self.assertIn("[switch]$PrepareOnly", self.source)
+        self.assertIn("[switch]$RuntimeOnly", self.source)
+        self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn("$childExit = Invoke-SelfElevated", self.source)
-        self.assertIn("exit $childExit", self.source)
+        self.assertIn('if ($RuntimeOnly -and (Test-IsAdmin))', self.source)
+        self.assertIn('Finish-Report -State "WSA_PREPARE_PASS"', self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
+
+    def test_runtime_only_skips_installation_and_setup_elevation(self):
+        self.assertIn('if (-not $SkipInstall -and -not $RuntimeOnly)', self.source)
+        self.assertIn('if ($RuntimeOnly) {', self.source)
+        self.assertIn('Starting WSA runtime verification in the normal interactive user session.', self.source)
+        self.assertIn('-PrepareOnly and -RuntimeOnly cannot be used together.', self.source)
 
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
@@ -142,7 +150,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("git stash push -u -m", reporter)
         self.assertIn("They will NOT be dropped automatically", reporter)
 
-    def test_report_workflow_defaults_to_wsa_installer(self):
+    def test_report_workflow_defaults_to_two_phase_wsa_installer(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn('[string]$Backend = "wsa"', reporter)
         self.assertIn('[string]$Serial = "127.0.0.1:58526"', reporter)
@@ -151,6 +159,10 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('[switch]$NoAutoDeveloperModePatch', reporter)
         self.assertIn('if ($Backend -eq "wsa")', reporter)
         self.assertIn('"install_wsa_poc.ps1"', reporter)
+        self.assertIn('"-PrepareOnly"', reporter)
+        self.assertIn('"-RuntimeOnly"', reporter)
+        self.assertIn("WSA PHASE 1/2: privileged setup", reporter)
+        self.assertIn("WSA PHASE 2/2: interactive runtime", reporter)
         self.assertIn('@("-PairEndpoint", $PairEndpoint)', reporter)
         self.assertIn('@("-PairCode", $PairCode)', reporter)
 
