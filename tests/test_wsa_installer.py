@@ -30,6 +30,8 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('$value = $probe.Stdout.Trim()', self.source)
         self.assertNotIn('$probe.Output.Trim()', self.source)
         self.assertIn('Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -WindowStyle Hidden', self.source)
+        self.assertIn('tugarin-venv\\Scripts\\python.exe', self.source)
+        self.assertNotIn('& python .\\warbot_cli.py', self.source)
 
     def test_packaged_aumid_activation_is_primary_and_raw_exe_is_not_used(self):
         self.assertIn("IApplicationActivationManager", self.source)

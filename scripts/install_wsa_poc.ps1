@@ -1855,11 +1855,17 @@ Write-Log "Installing/launching Kingshot through WSA backend."
 $bootstrapExit = 999
 $bootstrapLog = Join-Path $stage "wsa-bootstrap.txt"
 $bootstrapErr = Join-Path $stage "wsa-bootstrap-stderr.txt"
+$dedicatedPython = Join-Path $WorkRoot "tugarin-venv\Scripts\python.exe"
+$pythonExe = if (Test-Path -LiteralPath $dedicatedPython -PathType Leaf) {
+    $dedicatedPython
+}
+else {
+    (Get-Command python.exe -ErrorAction Stop).Source
+}
 try {
     # Windows PowerShell 5.1 converts native stderr into PowerShell ErrorRecords
     # when ErrorActionPreference=Stop. Run Python through Start-Process so the
     # full traceback and the real native exit code are always preserved.
-    $pythonExe = (Get-Command python.exe -ErrorAction Stop).Source
     $argLine = @($bootstrapArgs | ForEach-Object {
         $v = [string]$_
         if ($v -match '[\s"]') {
@@ -1893,14 +1899,21 @@ Save-AdbDiagnostic -Name "wsa-connectivity.txt" -Arguments @("-s", $Serial, "she
 Save-AdbDiagnostic -Name "wsa-audio.txt" -Arguments @("-s", $Serial, "shell", "dumpsys", "audio") -TimeoutSeconds 15
 Save-AdbDiagnostic -Name "wsa-processes.txt" -Arguments @("-s", $Serial, "shell", "dumpsys", "activity", "processes") -TimeoutSeconds 15
 try {
-    & python .\warbot_cli.py status --backend wsa --serial $Serial 2>&1 |
-        Set-Content -Encoding UTF8 (Join-Path $stage "wsa-health.json")
+    $healthOut = Join-Path $stage "wsa-health.json"
+    $healthErr = Join-Path $stage "wsa-health-stderr.txt"
+    $healthArgs = '.\warbot_cli.py status --backend wsa --serial "' + $Serial + '"'
+    Start-Process -FilePath $pythonExe -ArgumentList $healthArgs -Wait -WindowStyle Hidden `
+        -RedirectStandardOutput $healthOut -RedirectStandardError $healthErr
 }
 catch {}
 if (-not (Test-Path (Join-Path $stage "wsa-bootstrap.png"))) {
     try {
-        & python .\warbot_cli.py screenshot --backend wsa --serial $Serial --output (Join-Path $stage "wsa-failure-frame.png") 2>&1 |
-            Set-Content -Encoding UTF8 (Join-Path $stage "wsa-failure-frame.txt")
+        $failureFrame = Join-Path $stage "wsa-failure-frame.png"
+        $failureText = Join-Path $stage "wsa-failure-frame.txt"
+        $failureErr = Join-Path $stage "wsa-failure-frame-stderr.txt"
+        $failureArgs = '.\warbot_cli.py screenshot --backend wsa --serial "' + $Serial + '" --output "' + $failureFrame + '"'
+        Start-Process -FilePath $pythonExe -ArgumentList $failureArgs -Wait -WindowStyle Hidden `
+            -RedirectStandardOutput $failureText -RedirectStandardError $failureErr
     }
     catch {}
 }
