@@ -1,0 +1,14 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "WSA_NOT_REGISTERED",
+    "exit_code":  18,
+    "commit":  "f55ff1f425c2d56f7f02e84c161107baf41f2806",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-29T15:45:43.3087948+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10"
+}
