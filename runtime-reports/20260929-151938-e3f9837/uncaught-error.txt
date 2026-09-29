@@ -1,0 +1,8 @@
+﻿Failed to enable Windows developer package registration.
+C:\warbot_git\scripts\install_wsa_poc.ps1:345 знак:5
++     throw "Failed to enable Windows developer package registration."
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Failed to enabl...e registration.:String) [], RuntimeException
+    + FullyQualifiedErrorId : Failed to enable Windows developer package registration.
+ 
+
