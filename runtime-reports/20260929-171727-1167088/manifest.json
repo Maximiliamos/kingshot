@@ -1,0 +1,24 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "ANDROID_CONTROL_CHANNEL_REFUSED",
+    "exit_code":  20,
+    "commit":  "1167088c42cf1b083f51cc0288dbd9d33a8e8701",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-29T17:17:27.4989352+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "developer_fallback_attempted":  true,
+    "pair_attempted":  false,
+    "port_58526_refused":  true,
+    "attempted_serials":  [
+                              "127.0.0.1:58526",
+                              "192.168.1.101:58526"
+                          ],
+    "installed_version":  "2407.40000.4.0",
+    "direct_client_fallback_attempted":  true,
+    "developer_fallback_succeeded":  true
+}
