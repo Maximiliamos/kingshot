@@ -1,0 +1,8 @@
+﻿Невозможно вызвать метод для выражения со значением NULL.
+C:\warbot_git\scripts\install_wsa_poc.ps1:220 знак:5
++     $commit = (& git rev-parse HEAD).Trim()
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [], RuntimeException
+    + FullyQualifiedErrorId : InvokeMethodOnNull
+ 
+

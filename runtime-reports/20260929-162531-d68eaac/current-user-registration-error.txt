@@ -1,0 +1,18 @@
+﻿Add-AppxPackage : Сбой развертывания с HRESULT: 0x80073CFB, Предоставленный пакет уже установлен, и переустановка пакет
+а заблокирована. Подробности см. в журнале событий AppXDeployment-Server.
+
+Другой пользователь уже установил неупакованную версию этого приложения. Текущий пользователь не может заменить ее упак
+ованной версией. Вызвавший конфликт пакет MicrosoftCorporationII.WindowsSubsystemForAndroid был опубликован CN=Microsof
+t Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US.
+
+ПРИМЕЧАНИЕ. Чтобы получить дополнительные сведения, найдите [ActivityId] 1f71a8e9-4f67-0005-993b-771f674fdd01 в журнале
+ событий или введите в командной строке Get-AppxLog -ActivityID 1f71a8e9-4f67-0005-993b-771f674fdd01.
+
+C:\warbot_git\scripts\install_wsa_poc.ps1:629 знак:9
++         Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAny ...
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceExists: (C:\warbot_wsa\W...ppxManifest.xml:String) [Add-AppxPackage], PSInvalidO 
+   perationException
+    + FullyQualifiedErrorId : DeploymentError,Microsoft.Windows.Appx.PackageManager.Commands.AddAppxPackageCommand
+ 
+
