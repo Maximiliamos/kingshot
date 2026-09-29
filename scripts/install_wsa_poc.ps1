@@ -720,8 +720,29 @@ if ($installed.InstallLocation) {
         $clientWorkDir = $installed.InstallLocation
     }
 }
-Write-Log "Using registered WSA SettingsApp first; direct WsaClient fallback is available only if needed."
-Write-Log "Skipping custom wsa-client:// URI activation because this WSABuilds package does not register that Windows protocol."
+
+if ($client -and $clientWorkDir) {
+    $directClientAttempted = $true
+    $directClientStartedAt = Get-Date
+    Write-Log "Starting the proven WsaClient wake sequence in the registered/elevated package context."
+    $oldPath = $env:PATH
+    try {
+        $env:PATH = "$clientWorkDir;$oldPath"
+        Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
+        Start-Sleep -Seconds 2
+        Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction Stop | Out-Null
+        Write-Log "WsaClient /launch + /deeplink wake sequence requested; allowing at least 90s before any recycle."
+    }
+    catch {
+        Write-Log "Initial WsaClient wake sequence could not be started: $($_.Exception.Message)"
+    }
+    finally {
+        $env:PATH = $oldPath
+    }
+}
+else {
+    Write-Log "WsaClient executable was not found; SettingsApp wake remains the only startup path."
+}
 Write-Host ""
 Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subsystem settings, turn it ON now."
 Write-Host "The verifier will keep retrying automatically while the settings window is open."
