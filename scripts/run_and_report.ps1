@@ -7,7 +7,11 @@ param(
     [switch]$NoAutoDeveloperModePatch,
     [switch]$WipeRuntime,
     [switch]$CleanGame,
-    [switch]$SkipPull
+    [switch]$SkipPull,
+    [ValidateSet("NoGApps", "GApps")]
+    [string]$WsaFlavor = "NoGApps",
+    [switch]$ReplaceExistingWsa,
+    [switch]$AllowMagisk
 )
 
 $ErrorActionPreference = "Stop"
@@ -53,6 +57,7 @@ if (-not $SkipPull) {
             "-File", $PSCommandPath,
             "-Backend", $Backend,
             "-Serial", $Serial,
+            "-WsaFlavor", $WsaFlavor,
             "-SkipPull"
         )
         if ($PairEndpoint) { $reexec += @("-PairEndpoint", $PairEndpoint) }
@@ -60,6 +65,8 @@ if (-not $SkipPull) {
         if ($NoAutoDeveloperModePatch) { $reexec += "-NoAutoDeveloperModePatch" }
         if ($WipeRuntime) { $reexec += "-WipeRuntime" }
         if ($CleanGame) { $reexec += "-CleanGame" }
+        if ($ReplaceExistingWsa) { $reexec += "-ReplaceExistingWsa" }
+        if ($AllowMagisk) { $reexec += "-AllowMagisk" }
         & powershell @reexec
         exit $LASTEXITCODE
     }
@@ -80,12 +87,15 @@ if ($Backend -eq "wsa") {
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1"),
-        "-Serial", $Serial
+        "-Serial", $Serial,
+        "-WsaFlavor", $WsaFlavor
     )
     if ($PairEndpoint) { $wsaArgs += @("-PairEndpoint", $PairEndpoint) }
     if ($PairCode) { $wsaArgs += @("-PairCode", $PairCode) }
     if ($NoAutoDeveloperModePatch) { $wsaArgs += "-NoAutoDeveloperModePatch" }
     if ($CleanGame) { $wsaArgs += "-CleanGame" }
+    if ($ReplaceExistingWsa) { $wsaArgs += "-ReplaceExistingWsa" }
+    if ($AllowMagisk) { $wsaArgs += "-AllowMagisk" }
 
     & powershell @wsaArgs
     exit $LASTEXITCODE

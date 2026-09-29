@@ -17,6 +17,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
+    def test_gapps_migration_is_explicit_pinned_and_backed_up(self):
+        self.assertIn('[ValidateSet("NoGApps", "GApps")]', self.source)
+        self.assertIn('if (-not $AllowMagisk)', self.source)
+        self.assertIn('501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458', self.source)
+        self.assertIn('$ReplaceExistingWsa', self.source)
+        self.assertIn('wsa-flavor-migration-', self.source)
+
     def test_packaged_aumid_activation_is_primary_and_raw_exe_is_not_used(self):
         self.assertIn("IApplicationActivationManager", self.source)
         self.assertIn("45BA127D-10A8-46EA-8AB7-56EA9078943C", self.source)

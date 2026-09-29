@@ -6,7 +6,11 @@ param(
     [switch]$SkipInstall,
     [switch]$NoAutoDeveloperModePatch,
     [switch]$PrepareOnly,
-    [switch]$RuntimeOnly
+    [switch]$RuntimeOnly,
+    [ValidateSet("NoGApps", "GApps")]
+    [string]$WsaFlavor = "NoGApps",
+    [switch]$ReplaceExistingWsa,
+    [switch]$AllowMagisk
 )
 
 $ErrorActionPreference = "Stop"
@@ -708,6 +712,9 @@ $hostInfo = [ordered]@{
 $hostInfo | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $stage "host.json")
 
 if ($build -ge 22000) {
+    if ($WsaFlavor -eq "GApps") {
+        throw "The pinned GApps migration is currently validated only for Windows 10 22H2."
+    }
     $ReleaseTag = "Windows_11_2407.40000.4.0_LTS_8"
     $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon.7z"
     $ArchiveSha256 = "9c51759762f14cdebde7da08ccf94deb220484215468526e1ef688fd669ab7c1"
@@ -716,10 +723,20 @@ if ($build -ge 22000) {
 }
 elseif ($build -eq 19045 -and $ubr -ge 2311) {
     $ReleaseTag = "Windows_10_2407.40000.4.0_LTS_8"
-    $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z"
-    $ArchiveSha256 = "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8"
-    $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10"
-    Write-Log "Selected WSABuilds LTS 8 package for Windows 10 22H2 ($fullBuild)."
+    if ($WsaFlavor -eq "GApps") {
+        if (-not $AllowMagisk) {
+            throw "The pinned WSABuilds LTS 8 GApps package includes Magisk. Pass -AllowMagisk only after explicit user approval."
+        }
+        $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-GApps-13.0-NoAmazon_Windows_10.7z"
+        $ArchiveSha256 = "501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458"
+        $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10_GApps"
+    }
+    else {
+        $ArchiveName = "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z"
+        $ArchiveSha256 = "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8"
+        $InstallRoot = Join-Path $WorkRoot "WSA_LTS8_Windows10"
+    }
+    Write-Log "Selected WSABuilds LTS 8 $WsaFlavor package for Windows 10 22H2 ($fullBuild)."
 }
 else {
     Finish-Report -State "UNSUPPORTED_WINDOWS_BUILD" -ExitCode 11 -Extra @{ host = $hostInfo }
@@ -826,13 +843,37 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
         $existing | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "existing-wsa.txt")
 
         if (-not ($existing.InstallLocation -like "$InstallRoot*")) {
-            Finish-Report -State "EXISTING_WSA_CONFLICT" -ExitCode 13 -Extra @{
-                existing_package = $existing.PackageFullName
-                existing_location = $existing.InstallLocation
+            if (-not $ReplaceExistingWsa) {
+                Finish-Report -State "EXISTING_WSA_CONFLICT" -ExitCode 13 -Extra @{
+                    existing_package = $existing.PackageFullName
+                    existing_location = $existing.InstallLocation
+                }
+                throw ("Another WSA installation already exists at '$($existing.InstallLocation)'. Pass -ReplaceExistingWsa only for an explicitly approved migration.")
             }
-            throw ("Another WSA installation already exists at '$($existing.InstallLocation)'. TUGARIN BOTS will not uninstall or overwrite it automatically.")
+
+            $migrationBackup = Join-Path $WorkRoot ("profile-backups\wsa-flavor-migration-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+            New-Item -ItemType Directory -Force -Path $migrationBackup | Out-Null
+            $packageData = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe"
+            $userdata = Join-Path $packageData "LocalCache\userdata.vhdx"
+            if (Test-Path -LiteralPath $userdata -PathType Leaf) {
+                Copy-Item -LiteralPath $userdata -Destination (Join-Path $migrationBackup "userdata.vhdx") -Force
+            }
+            @{
+                package = $existing.PackageFullName
+                install_location = $existing.InstallLocation
+                flavor_before = if ($existing.InstallLocation -match "GApps") { "GApps" } else { "NoGApps" }
+                flavor_after = $WsaFlavor
+            } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $migrationBackup "migration.json")
+            Write-Log "Backed up existing WSA userdata metadata to $migrationBackup."
+            Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+            Remove-AppxPackage -Package $existing.PackageFullName -ErrorAction Stop
+            $existing = $null
+            $needsPackageInstall = $true
+            Write-Log "Removed the current-user WSA registration for approved $WsaFlavor migration."
         }
-        Write-Log "TUGARIN BOTS NoGApps WSA package is already registered; keeping it."
+        else {
+            Write-Log "TUGARIN BOTS $WsaFlavor WSA package is already registered; keeping it."
+        }
     }
 
     if ($needsPackageInstall) {
@@ -850,7 +891,7 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
         }
 
         if ($needDownload) {
-            Write-Log "Downloading WSABuilds LTS 8 NoGApps/NoAmazon package for this Windows build (~556 MB)."
+            Write-Log "Downloading WSABuilds LTS 8 $WsaFlavor/NoAmazon package for this Windows build."
             $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
             if ($curl) {
                 & curl.exe -L --fail --retry 5 --retry-all-errors --output $ArchivePath $ArchiveUrl
