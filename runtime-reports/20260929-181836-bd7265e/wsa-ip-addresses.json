@@ -1,0 +1,86 @@
+﻿[
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.240.1",
+        "PrefixLength":  20,
+        "AddressState":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  8,
+        "IPAddress":  "169.254.110.228",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.22.144.1",
+        "PrefixLength":  20,
+        "AddressState":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "169.254.138.138",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "169.254.116.236",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  13,
+        "IPAddress":  "169.254.150.6",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 2",
+        "InterfaceIndex":  5,
+        "IPAddress":  "169.254.36.224",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  16,
+        "IPAddress":  "169.254.246.111",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.101",
+        "PrefixLength":  24,
+        "AddressState":  4
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "169.254.170.99",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "169.254.120.105",
+        "PrefixLength":  16,
+        "AddressState":  1
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "127.0.0.1",
+        "PrefixLength":  8,
+        "AddressState":  4
+    }
+]

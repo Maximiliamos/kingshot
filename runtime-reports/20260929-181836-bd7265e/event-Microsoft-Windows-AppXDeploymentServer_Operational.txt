@@ -1,0 +1,86 @@
+﻿
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 404
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Сбой операции развертывания AppX для пакета MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.4
+                   0000.4.0_x64__8wekyb3d8bbwe. Ошибка: 0x80073CFB. Текст ошибки: Другой пользователь уже установил неу
+                   пакованную версию этого приложения. Текущий пользователь не может заменить ее упакованной версией. В
+                   ызвавший конфликт пакет MicrosoftCorporationII.WindowsSubsystemForAndroid был опубликован CN=Microso
+                   ft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 401
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Произошел сбой операции развертывания Register с конечным томом C: для пакета MicrosoftCorporationII
+                   .WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe из  (AppxManifest.xml) . Ошибка: 0x800
+                   73CFB. Для получения справки по диагностике проблем с развертыванием приложений см. страницу http://
+                   go.microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 605
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Последнее успешное состояние: BundleProcessed. Сбой произошел перед достижением следующего состояния
+                   : Indexed. hr: 0x80073CFB
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 408
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Другой пользователь уже установил неупакованную версию этого приложения. Текущий пользователь не мож
+                   ет заменить ее упакованной версией. Вызвавший конфликт пакет MicrosoftCorporationII.WindowsSubsystem
+                   ForAndroid был опубликован CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washingto
+                   n, C=US.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 854
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Успешно добавлены следующие универсальные коды ресурсов (URI), которые нужно обработать:  C:\warbot_
+                   wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\AppxManifest.xml.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 607
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Операция развертывания Register в отношении пакета MicrosoftCorporationII.WindowsSubsystemForAndroid
+                   _2407.40000.4.0_x64__8wekyb3d8bbwe выведена из очереди и выполняется для SID пользователя S-1-5-21-1
+                   641294696-4270169483-3689275233-1007.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 10002
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Создание файла устойчивости C:\ProgramData\Microsoft\Windows\AppRepository\558d7bdc-7185-4a59-988e-a
+                   4a5fa924378_S-1-5-21-1641294696-4270169483-3689275233-1007_1.rslc для операции Register с пакетом Mi
+                   crosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 603
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Начата операция развертывания "RegisterByPackageFamilyName" для пакета. Основной параметр: Microsoft
+                   CorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe. Необязательные параметры: SkipReregisterIfPa
+                   ckageStatusOk,ImmediatePriorityRequest и 0. Дополнительные сведения о диагностике проблем с разверты
+                   ванием приложений см. на странице http://go.microsoft.com/fwlink/?LinkId=235160.
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 857
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Получение состояния регистрации семейства пакетов MicrosoftCorporationII.WindowsSubsystemForAndroid_
+                   8wekyb3d8bbwe завершено со следующим результатом: 0x0.(statusFound: false, состояние: 0x0)
+
+TimeCreated      : 29.09.2026 18:15:13
+Id               : 856
+LevelDisplayName : Подробно
+ProviderName     : Microsoft-Windows-AppXDeployment-Server
+Message          : Получение состояния регистрации семейства пакетов MicrosoftCorporationII.WindowsSubsystemForAndroid_
+                   8wekyb3d8bbwe для пользователя S-1-5-21-1641294696-4270169483-3689275233-1007.
+
+
+
+

@@ -1,0 +1,17 @@
+﻿[2026-09-29T18:15:05.4138572+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-29T18:15:06.8704860+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-29T18:15:06.9032505+03:00] Windows developer package registration is enabled.
+[2026-09-29T18:15:08.1826568+03:00] TUGARIN BOTS NoGApps WSA package is already registered; keeping it.
+[2026-09-29T18:15:10.4162034+03:00] WSA ADB port 58526 is not reserved; applying the official WSABuilds 10061 prevention before WSA starts.
+[2026-09-29T18:15:12.6279801+03:00] WSA ADB port 58526 reservation is active.
+[2026-09-29T18:15:12.6621385+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-29T18:15:12.7110185+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-29T18:15:12.7140209+03:00] Launching WSA using the upstream WSABuilds app URI first.
+[2026-09-29T18:15:12.9678275+03:00] Upstream WSA URI activation failed: Не удается выполнить команду из-за следующей ошибки: Указанный сеанс работы не существует.  Возможно, он уже  завершен.
+[2026-09-29T18:15:51.1653402+03:00] No WSA runtime process is visible after upstream activation; starting direct WsaClient /launch fallback.
+[2026-09-29T18:15:51.1856587+03:00] Direct WsaClient /launch fallback requested.
+[2026-09-29T18:16:08.4323430+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final relaunch.
+[2026-09-29T18:16:08.4425409+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-09-29T18:16:11.5628980+03:00] Developer-mode fallback applied; original settings preserved at C:\warbot_wsa\developer-mode-fallback\settings.dat.backup-20260929-181608.
+[2026-09-29T18:17:24.3894079+03:00] All non-destructive startup routes were exhausted; performing the single allowed WSA recycle.
+[2026-09-29T18:18:35.0488069+03:00] Developer-mode repair did not recover ADB; original settings were restored.

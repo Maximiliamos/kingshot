@@ -1,0 +1,285 @@
+﻿
+
+TimeCreated      : 29.09.2026 18:17:32
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1335175488942738665, тип 5
+                   Имя события: BEX64
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: WsaClient.exe
+                   P2: 2407.40000.4.0
+                   P3: 67527b33
+                   P4: ucrtbase.dll
+                   P5: 10.0.19041.3636
+                   P6: 81cf5d89
+                   P7: 000000000007286e
+                   P8: c0000409
+                   P9: 0000000000000007
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9767.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER97E5.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9834.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER983A.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9889.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_WsaClient.exe_86714997933dccfb79579b
+                   8dce652d707771a7_a4b00066_3b23837c-8b67-4308-87d9-cf6493ab1b5a
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: 0b3502a5-a2d9-4045-92be-75572b533103
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 24af85bdf28b0f40a2877f087b3d8ce9
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 29.09.2026 18:17:31
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1335175488942738665, тип 5
+                   Имя события: BEX64
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: WsaClient.exe
+                   P2: 2407.40000.4.0
+                   P3: 67527b33
+                   P4: ucrtbase.dll
+                   P5: 10.0.19041.3636
+                   P6: 81cf5d89
+                   P7: 000000000007286e
+                   P8: c0000409
+                   P9: 0000000000000007
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER8FA7.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9025.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9074.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER9078.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER90C7.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_WsaClient.exe_86714997933dccfb79579b
+                   8dce652d707771a7_a4b00066_ac8ac63f-f915-43e0-98ac-186eee2c253e
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: f3805dd6-74b3-42e4-845e-a593731b90a8
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 24af85bdf28b0f40a2877f087b3d8ce9
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 29.09.2026 18:17:30
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: ucrtbase.dll, версия: 10.0.19041.3636, метка времени: 0x81cf5d89
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x000000000007286e
+                   Идентификатор сбойного процесса: 0x330c
+                   Время запуска сбойного приложения: 0x01dd5025a516242f
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\WsaClient\WsaClien
+                   t.exe
+                   Путь сбойного модуля: C:\WINDOWS\System32\ucrtbase.dll
+                   Идентификатор отчета: 0b3502a5-a2d9-4045-92be-75572b533103
+                   Полное имя сбойного пакета: 
+                   Код приложения, связанного со сбойным пакетом: 
+
+TimeCreated      : 29.09.2026 18:17:28
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: ucrtbase.dll, версия: 10.0.19041.3636, метка времени: 0x81cf5d89
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x000000000007286e
+                   Идентификатор сбойного процесса: 0x4c64
+                   Время запуска сбойного приложения: 0x01dd5025a3e1592f
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\WsaClient\WsaClien
+                   t.exe
+                   Путь сбойного модуля: C:\WINDOWS\System32\ucrtbase.dll
+                   Идентификатор отчета: f3805dd6-74b3-42e4-845e-a593731b90a8
+                   Полное имя сбойного пакета: 
+                   Код приложения, связанного со сбойным пакетом: 
+
+TimeCreated      : 29.09.2026 18:16:15
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1335175488942738665, тип 5
+                   Имя события: BEX64
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: WsaClient.exe
+                   P2: 2407.40000.4.0
+                   P3: 67527b33
+                   P4: ucrtbase.dll
+                   P5: 10.0.19041.3636
+                   P6: 81cf5d89
+                   P7: 000000000007286e
+                   P8: c0000409
+                   P9: 0000000000000007
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER6B99.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER6C17.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER6C47.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER6C59.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER6C98.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_WsaClient.exe_86714997933dccfb79579b
+                   8dce652d707771a7_a4b00066_48ee5e09-6cb8-4b78-861d-9ca883951e11
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: 0ecfe030-94e6-4fde-8192-bcd2893efb92
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 24af85bdf28b0f40a2877f087b3d8ce9
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 29.09.2026 18:16:13
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: ucrtbase.dll, версия: 10.0.19041.3636, метка времени: 0x81cf5d89
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x000000000007286e
+                   Идентификатор сбойного процесса: 0x1e4c
+                   Время запуска сбойного приложения: 0x01dd50257747b0c4
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\WsaClient\WsaClien
+                   t.exe
+                   Путь сбойного модуля: C:\WINDOWS\System32\ucrtbase.dll
+                   Идентификатор отчета: 0ecfe030-94e6-4fde-8192-bcd2893efb92
+                   Полное имя сбойного пакета: 
+                   Код приложения, связанного со сбойным пакетом: 
+
+TimeCreated      : 29.09.2026 18:16:13
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1335175488942738665, тип 5
+                   Имя события: BEX64
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: WsaClient.exe
+                   P2: 2407.40000.4.0
+                   P3: 67527b33
+                   P4: ucrtbase.dll
+                   P5: 10.0.19041.3636
+                   P6: 81cf5d89
+                   P7: 000000000007286e
+                   P8: c0000409
+                   P9: 0000000000000007
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER632D.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER639B.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER63CB.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER63DB.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER641A.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_WsaClient.exe_86714997933dccfb79579b
+                   8dce652d707771a7_a4b00066_c2cd2e77-c373-43ff-b6e8-ed9ef60f8e62
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: acb91e5f-97fd-4f11-9392-8587bfd289a2
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 24af85bdf28b0f40a2877f087b3d8ce9
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 29.09.2026 18:16:11
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: ucrtbase.dll, версия: 10.0.19041.3636, метка времени: 0x81cf5d89
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x000000000007286e
+                   Идентификатор сбойного процесса: 0x9404
+                   Время запуска сбойного приложения: 0x01dd50257611eed5
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\WsaClient\WsaClien
+                   t.exe
+                   Путь сбойного модуля: C:\WINDOWS\System32\ucrtbase.dll
+                   Идентификатор отчета: acb91e5f-97fd-4f11-9392-8587bfd289a2
+                   Полное имя сбойного пакета: 
+                   Код приложения, связанного со сбойным пакетом: 
+
+TimeCreated      : 29.09.2026 18:15:53
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1335175488942738665, тип 5
+                   Имя события: BEX64
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: WsaClient.exe
+                   P2: 2407.40000.4.0
+                   P3: 67527b33
+                   P4: ucrtbase.dll
+                   P5: 10.0.19041.3636
+                   P6: 81cf5d89
+                   P7: 000000000007286e
+                   P8: c0000409
+                   P9: 0000000000000007
+                   P10: 
+                   
+                   Вложенные файлы:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER13E4.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1481.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER14C1.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER14BF.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER150E.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_WsaClient.exe_86714997933dccfb79579b
+                   8dce652d707771a7_a4b00066_0941b13b-a7c0-4e70-b573-6c50f43c1fa9
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: e090ff8b-8fad-4b70-ba58-8e7f2ecc9f30
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: 24af85bdf28b0f40a2877f087b3d8ce9
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 29.09.2026 18:15:51
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: ucrtbase.dll, версия: 10.0.19041.3636, метка времени: 0x81cf5d89
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x000000000007286e
+                   Идентификатор сбойного процесса: 0x8e80
+                   Время запуска сбойного приложения: 0x01dd502569e79033
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64\WsaClient\WsaClien
+                   t.exe
+                   Путь сбойного модуля: C:\WINDOWS\System32\ucrtbase.dll
+                   Идентификатор отчета: e090ff8b-8fad-4b70-ba58-8e7f2ecc9f30
+                   Полное имя сбойного пакета: 
+                   Код приложения, связанного со сбойным пакетом: 
+
+
+
+

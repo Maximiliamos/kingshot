@@ -1,0 +1,162 @@
+﻿[
+    {
+        "timestamp":  "2026-09-29T18:15:22.0127828+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:15:39.7785642+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:15:56.8888097+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:16:19.2854747+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:16:36.5713421+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:16:54.8024948+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:17:12.6070327+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:17:36.4823293+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:17:54.2021261+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    },
+    {
+        "timestamp":  "2026-09-29T18:18:11.7438932+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  13144,
+                              "ParentProcessId":  18148,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  false
+    }
+]

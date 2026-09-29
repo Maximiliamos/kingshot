@@ -1,0 +1,16 @@
+﻿{
+    "timestamp":  "2026-09-29T18:18:29.5435925+03:00",
+    "processes":  [
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  13144,
+                          "ParentProcessId":  18148,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      }
+                  ],
+    "listeners":  [
+
+                  ],
+    "runtime_alive":  false
+}
