@@ -28,6 +28,9 @@ import numpy as np
 
 DEFAULT_PACKAGE = "com.got.globalru"
 DEFAULT_ACTIVITY = "com.unity3d.player.MyMainPlayerActivity"
+WINDOWS_NO_WINDOW = (
+    getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+)
 
 
 class BackendError(RuntimeError):
@@ -204,6 +207,7 @@ class AdbDeviceBackend(DeviceBackend):
                 errors="replace" if text else None,
                 timeout=timeout,
                 check=False,
+                creationflags=WINDOWS_NO_WINDOW,
             )
         except subprocess.TimeoutExpired as exc:
             detail = " ".join(str(x) for x in args)
@@ -253,6 +257,7 @@ class AdbDeviceBackend(DeviceBackend):
             errors="replace",
             timeout=15,
             check=False,
+            creationflags=WINDOWS_NO_WINDOW,
         )
         return (result.stdout or result.stderr or "").strip()
 

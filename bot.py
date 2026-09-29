@@ -19,6 +19,11 @@ import numpy as np
 from device_backend import BackendCapture, BackendError, create_backend
 
 
+WINDOWS_NO_WINDOW = (
+    getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+)
+
+
 ADB = os.environ.get("WAR_BOT_ADB", "")
 BACKEND_NAME = os.environ.get("WAR_BOT_BACKEND", "wsa").strip().lower()
 ANDROID_SERIAL = os.environ.get("WAR_BOT_ANDROID_SERIAL", "127.0.0.1:58526")
@@ -631,6 +636,7 @@ def ocr_lines(phone):
     run = subprocess.run(
         [TESSERACT, "stdin", "stdout", "-l", "rus+eng", "--psm", "11", "tsv"],
         input=raw.tobytes(), capture_output=True, env=env, check=False,
+        creationflags=WINDOWS_NO_WINDOW,
     )
     if run.returncode:
         log("OCR недоступен: " + run.stderr.decode("utf-8", "ignore").strip())

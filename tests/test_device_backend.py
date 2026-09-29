@@ -1,4 +1,5 @@
 import subprocess
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -181,6 +182,24 @@ Current Networks:
             with self.assertRaises(db.BackendError) as ctx:
                 backend._run(["shell", "getprop", "sys.boot_completed"], timeout=3)
         self.assertIn("ADB timeout after 3s", str(ctx.exception))
+
+    def test_adb_commands_never_open_windows_console(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        completed = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="device\n", stderr=""
+        )
+        with patch.object(Path, "is_file", return_value=True), \
+                patch.object(backend, "_ensure_transport"), \
+                patch("device_backend.subprocess.run", return_value=completed) as run:
+            backend._run(["get-state"])
+
+        expected = (
+            getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+        )
+        self.assertEqual(run.call_args.kwargs["creationflags"], expected)
 
     def test_screenshot_decodes_png(self):
         backend = db.AdbDeviceBackend(
