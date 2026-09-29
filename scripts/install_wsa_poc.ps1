@@ -230,6 +230,11 @@ function Enable-DeveloperModeFallback {
 
     try {
         Write-Log "Preparing reversible Developer-mode settings fallback."
+        # WSA holds settings.dat open while its SettingsApp/runtime is alive.
+        # Stop the same WSA processes that will be restarted below *before*
+        # copying the backup, otherwise this reversible repair can never run.
+        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 3
         Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force
 
         $needDownload = $true
@@ -272,9 +277,6 @@ function Enable-DeveloperModeFallback {
             original_settings = $settingsPath
             backup = $backupPath
         } | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $ReportStage "developer-mode-fallback.json")
-
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 3
 
         Copy-Item -LiteralPath $patchPath -Destination $settingsPath -Force
         Write-Log "Developer-mode fallback applied; original settings preserved at $backupPath."

@@ -87,6 +87,15 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('settings.dat.backup-', self.source)
         self.assertIn('original settings were restored.', self.source)
 
+    def test_developer_fallback_stops_wsa_before_reading_locked_settings(self):
+        fallback_start = self.source.index('function Enable-DeveloperModeFallback')
+        fallback_end = self.source.index('function Get-Sha256', fallback_start)
+        fallback = self.source[fallback_start:fallback_end]
+        self.assertLess(
+            fallback.index('Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA"'),
+            fallback.index('Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force'),
+        )
+
     def test_p0_avoids_windows_shell_activation_of_unregistered_wsa_protocols(self):
         self.assertNotIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
         self.assertNotIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
