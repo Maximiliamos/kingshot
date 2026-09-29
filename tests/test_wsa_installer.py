@@ -148,6 +148,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.source)
         self.assertNotIn("Get-FileHash", self.source)
 
+    def test_report_workflow_refuses_elevated_wsa_parent(self):
+        reporter = REPORTER.read_text(encoding="utf-8-sig")
+        self.assertIn("function Test-IsAdmin", reporter)
+        self.assertIn('if ($Backend -eq "wsa" -and (Test-IsAdmin))', reporter)
+        self.assertIn("must be started from a NORMAL (non-Administrator) PowerShell window", reporter)
+        self.assertIn("exit 91", reporter)
+
     def test_report_workflow_preserves_dirty_worktree_before_pull(self):
         reporter = REPORTER.read_text(encoding="utf-8-sig")
         self.assertIn("TUGARIN_BOTS_AUTO_BACKUP_", reporter)
