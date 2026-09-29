@@ -167,6 +167,256 @@ function Get-Sha256 {
         $stream.Dispose()
     }
 }
+
+
+function Get-WsaExcludedPortRanges {
+    try {
+        return (& netsh.exe interface ipv4 show excludedportrange protocol=tcp 2>&1 | Out-String)
+    }
+    catch {
+        return ""
+    }
+}
+
+function Test-WsaPortReserved {
+    param([int]$Port = 58526)
+    $text = Get-WsaExcludedPortRanges
+    foreach ($line in ($text -split "`r?`n")) {
+        if ($line -match "^\s*(\d+)\s+(\d+)") {
+            $start = [int]$matches[1]
+            $finish = [int]$matches[2]
+            if ($Port -ge $start -and $Port -le $finish) {
+                return $true
+            }
+        }
+    }
+    return $false
+}
+
+function Ensure-WsaAdbPortReservation {
+    param(
+        [Parameter(Mandatory = $true)][string]$ReportStage,
+        [int]$Port = 58526
+    )
+
+    $before = Get-WsaExcludedPortRanges
+    $before | Set-Content -Encoding UTF8 (Join-Path $ReportStage "excluded-tcp-ranges-before.txt")
+    if (Test-WsaPortReserved -Port $Port) {
+        Write-Log "WSA ADB port $Port is already reserved from the Windows dynamic/Hyper-V port pool."
+        return $true
+    }
+
+    Write-Log "WSA ADB port $Port is not reserved; applying the official WSABuilds 10061 prevention before WSA starts."
+    Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+
+    $result = ""
+    try {
+        $result = (& netsh.exe int ipv4 add excludedportrange protocol=tcp startport=$Port numberofports=1 2>&1 | Out-String).Trim()
+    }
+    catch {
+        $result = $_.Exception.Message
+    }
+    $result | Set-Content -Encoding UTF8 (Join-Path $ReportStage "port-58526-reservation.txt")
+
+    $after = Get-WsaExcludedPortRanges
+    $after | Set-Content -Encoding UTF8 (Join-Path $ReportStage "excluded-tcp-ranges-after.txt")
+    $ok = Test-WsaPortReserved -Port $Port
+    if ($ok) {
+        Write-Log "WSA ADB port $Port reservation is active."
+    }
+    else {
+        Write-Log "WARNING: Windows did not reserve WSA ADB port $Port. The verifier will continue with guest-IP/HNS fallbacks instead of assuming localhost is usable."
+    }
+    return $ok
+}
+
+function Ensure-WsaLoopbackExemption {
+    param([Parameter(Mandatory = $true)][string]$ReportStage)
+
+    $family = "microsoftcorporationii.windowssubsystemforandroid_8wekyb3d8bbwe"
+    $before = ""
+    try {
+        $before = (& CheckNetIsolation.exe LoopbackExempt -s 2>&1 | Out-String)
+    }
+    catch {}
+    $before | Set-Content -Encoding UTF8 (Join-Path $ReportStage "loopback-exempt-before.txt")
+
+    if ($before -match [regex]::Escape($family)) {
+        Write-Log "WSA loopback exemption is already present."
+        return $true
+    }
+
+    Write-Log "Adding WSA loopback exemption for localhost ADB forwarding."
+    $add = ""
+    try {
+        $add = (& CheckNetIsolation.exe LoopbackExempt -a -n=$family 2>&1 | Out-String).Trim()
+    }
+    catch {
+        $add = $_.Exception.Message
+    }
+    $add | Set-Content -Encoding UTF8 (Join-Path $ReportStage "loopback-exempt-add.txt")
+
+    $after = ""
+    try {
+        $after = (& CheckNetIsolation.exe LoopbackExempt -s 2>&1 | Out-String)
+    }
+    catch {}
+    $after | Set-Content -Encoding UTF8 (Join-Path $ReportStage "loopback-exempt-after.txt")
+    $ok = ($after -match [regex]::Escape($family))
+    if (-not $ok) {
+        Write-Log "WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled."
+    }
+    return $ok
+}
+
+function Test-TcpEndpoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$HostName,
+        [Parameter(Mandatory = $true)][int]$Port,
+        [int]$TimeoutMs = 700
+    )
+
+    $tcp = New-Object System.Net.Sockets.TcpClient
+    try {
+        $async = $tcp.BeginConnect($HostName, $Port, $null, $null)
+        if (-not $async.AsyncWaitHandle.WaitOne($TimeoutMs, $false)) {
+            return $false
+        }
+        try {
+            $tcp.EndConnect($async)
+            return $tcp.Connected
+        }
+        catch {
+            return $false
+        }
+    }
+    catch {
+        return $false
+    }
+    finally {
+        try { $tcp.Close() } catch {}
+    }
+}
+
+function Get-WsaRuntimeSnapshot {
+    $processRows = @()
+    try {
+        $processRows = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+            $_.Name -match "(?i)wsa|vmmem"
+        } | Select-Object Name, ProcessId, ParentProcessId, ExecutablePath, CommandLine)
+    }
+    catch {}
+
+    $listeners = @()
+    try {
+        $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object {
+            $_.LocalPort -eq 58526 -or $_.LocalPort -eq 5555
+        } | Select-Object LocalAddress, LocalPort, OwningProcess, State)
+    }
+    catch {}
+
+    return [pscustomobject]@{
+        timestamp = (Get-Date).ToString("o")
+        processes = $processRows
+        listeners = $listeners
+        runtime_alive = [bool](@($processRows | Where-Object {
+            $_.Name -match "(?i)^WsaClient\.exe$|^WsaService\.exe$|^WindowsSubsystemForAndroid\.exe$|^vmmemWSA\.exe$"
+        }).Count)
+    }
+}
+
+function Save-WsaHostDiagnostics {
+    param([Parameter(Mandatory = $true)][string]$ReportStage)
+
+    try {
+        $snapshot = Get-WsaRuntimeSnapshot
+        $snapshot | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-host-runtime.json")
+    }
+    catch {}
+
+    try {
+        Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match "(?i)WSA|vEthernet|Hyper-V" -or $_.InterfaceDescription -match "(?i)Hyper-V|virtual" } |
+            Select-Object Name, InterfaceDescription, Status, MacAddress, LinkSpeed, ifIndex |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-net-adapters.json")
+    }
+    catch {}
+
+    try {
+        Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+            Select-Object InterfaceAlias, InterfaceIndex, IPAddress, PrefixLength, AddressState |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-ip-addresses.json")
+    }
+    catch {}
+
+    try {
+        Get-NetNeighbor -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+            Select-Object InterfaceAlias, InterfaceIndex, IPAddress, LinkLayerAddress, State |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-neighbors.json")
+    }
+    catch {}
+
+    try {
+        if (Get-Command Get-HnsEndpoint -ErrorAction SilentlyContinue) {
+            Get-HnsEndpoint | ConvertTo-Json -Depth 12 | Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-hns-endpoints.json")
+        }
+    }
+    catch {}
+
+    try {
+        $hnsdiag = Get-Command hnsdiag.exe -ErrorAction SilentlyContinue
+        if ($hnsdiag) {
+            (& $hnsdiag.Source list endpoints 2>&1 | Out-String) |
+                Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-hnsdiag-endpoints.txt")
+        }
+    }
+    catch {}
+
+    foreach ($logName in @(
+        "Microsoft-Windows-AppXDeploymentServer/Operational",
+        "Microsoft-Windows-Hyper-V-Compute-Admin",
+        "Microsoft-Windows-Host-Network-Service-Admin"
+    )) {
+        try {
+            $safe = ($logName -replace "[^A-Za-z0-9.-]", "_")
+            Get-WinEvent -LogName $logName -MaxEvents 60 -ErrorAction Stop |
+                Where-Object { $_.TimeCreated -gt (Get-Date).AddMinutes(-15) } |
+                Select-Object TimeCreated, Id, LevelDisplayName, ProviderName, Message |
+                Format-List | Out-String |
+                Set-Content -Encoding UTF8 (Join-Path $ReportStage ("event-" + $safe + ".txt"))
+        }
+        catch {}
+    }
+
+    try {
+        Get-WinEvent -FilterHashtable @{ LogName = "Application"; StartTime = (Get-Date).AddMinutes(-15) } -ErrorAction SilentlyContinue |
+            Where-Object { $_.Message -match "(?i)WsaClient|WindowsSubsystemForAndroid|vmmemWSA|WsaService" } |
+            Select-Object TimeCreated, Id, LevelDisplayName, ProviderName, Message |
+            Format-List | Out-String |
+            Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-application-events.txt")
+    }
+    catch {}
+
+    try {
+        $diagRoot = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\LocalState\diagnostics"
+        if (Test-Path $diagRoot) {
+            Get-ChildItem -LiteralPath $diagRoot -Force -ErrorAction SilentlyContinue |
+                Select-Object FullName, Length, LastWriteTime |
+                Format-Table -AutoSize | Out-String |
+                Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-local-diagnostics-files.txt")
+            $logcat = Join-Path $diagRoot "logcat"
+            if (Test-Path $logcat -PathType Leaf) {
+                Get-Content -LiteralPath $logcat -Tail 3000 -ErrorAction SilentlyContinue |
+                    Set-Content -Encoding UTF8 (Join-Path $ReportStage "wsa-host-logcat-tail.txt")
+            }
+        }
+    }
+    catch {}
+}
 if ($PrepareOnly -and $RuntimeOnly) {
     throw "-PrepareOnly and -RuntimeOnly cannot be used together."
 }
