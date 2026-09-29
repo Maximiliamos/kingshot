@@ -77,15 +77,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('settings.dat.backup-', self.source)
         self.assertIn('Developer-mode fallback did not recover the channel; original settings restored.', self.source)
 
-    def test_p0_opens_developer_settings_and_recycles_once(self):
-        self.assertIn('"wsa-client://developer-settings"', self.source)
-        self.assertIn("$runtimeRecycled = $false", self.source)
-        self.assertIn("$round -ge 6", self.source)
-        self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
+    def test_p0_avoids_unregistered_windows_uri_handlers(self):
+        self.assertNotIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
+        self.assertNotIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
+        self.assertIn("does not register that Windows protocol", self.source)
 
-    def test_p0_uses_interactive_explorer_then_safe_wsaclient_fallback(self):
-        self.assertIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
-        self.assertIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
+    def test_p0_uses_registered_settings_app_then_safe_wsaclient_fallback(self):
+        self.assertIn('shell:AppsFolder\\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp', self.source)
         self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
         self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
         self.assertIn('App-model wake did not expose ADB yet', self.source)
