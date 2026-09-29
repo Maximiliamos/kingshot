@@ -24,6 +24,11 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('$ReplaceExistingWsa', self.source)
         self.assertIn('wsa-flavor-migration-', self.source)
 
+    def test_all_runtime_adb_and_python_probes_are_hidden(self):
+        self.assertIn('Start-Process -FilePath $adb -ArgumentList $Arguments -WindowStyle Hidden', self.source)
+        self.assertNotIn('& $adb -s $Serial shell getprop', self.source)
+        self.assertIn('Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -WindowStyle Hidden', self.source)
+
     def test_packaged_aumid_activation_is_primary_and_raw_exe_is_not_used(self):
         self.assertIn("IApplicationActivationManager", self.source)
         self.assertIn("45BA127D-10A8-46EA-8AB7-56EA9078943C", self.source)

@@ -1342,7 +1342,7 @@ function Invoke-AdbSafe {
     $stdoutPath = Join-Path $env:TEMP ("warbot-android-out-" + $token + ".txt")
     $stderrPath = Join-Path $env:TEMP ("warbot-android-err-" + $token + ".txt")
     try {
-        $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -NoNewWindow -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+        $proc = Start-Process -FilePath $adb -ArgumentList $Arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
         $finished = $proc.WaitForExit([Math]::Max(1, $TimeoutSeconds) * 1000)
         if (-not $finished) {
             try { $proc.Kill() } catch {}
@@ -1835,7 +1835,8 @@ $props = @(
 )
 $propLines = @()
 foreach ($prop in $props) {
-    $value = (& $adb -s $Serial shell getprop $prop 2>&1 | Out-String).Trim()
+    $probe = Invoke-AdbSafe -Arguments @("-s", $Serial, "shell", "getprop", $prop) -TimeoutSeconds 10
+    $value = $probe.Output.Trim()
     $propLines += "$prop=$value"
 }
 $propLines | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-properties.txt")
@@ -1867,7 +1868,7 @@ try {
         else { $v }
     }) -join ' '
 
-    $proc = Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -NoNewWindow `
+    $proc = Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -WindowStyle Hidden `
         -RedirectStandardOutput $bootstrapLog -RedirectStandardError $bootstrapErr
     $bootstrapExit = [int]$proc.ExitCode
 
