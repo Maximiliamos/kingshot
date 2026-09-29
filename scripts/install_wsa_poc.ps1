@@ -1280,137 +1280,161 @@ if ($PairEndpoint -and $PairCode) {
     Write-Log "Android pairing completed."
 }
 
-$serialCandidates = New-Object System.Collections.Generic.List[string]
-$serialCandidates.Add($Serial)
-
-if ($Serial -match ":58526$") {
-    try {
-        $routes = Get-NetRoute -AddressFamily IPv4 -DestinationPrefix "0.0.0.0/0" -ErrorAction Stop | Sort-Object RouteMetric, InterfaceMetric
-        foreach ($route in $routes) {
-            $addresses = Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue | Where-Object {
-                $_.IPAddress -and
-                $_.IPAddress -ne "127.0.0.1" -and
-                -not $_.IPAddress.StartsWith("169.254.")
-            }
-            foreach ($address in $addresses) {
-                $candidate = "$($address.IPAddress):58526"
-                if (-not $serialCandidates.Contains($candidate)) {
-                    $serialCandidates.Add($candidate)
-                }
-            }
-        }
-    }
-    catch {
-        Write-Log "Could not enumerate alternate host IPv4 endpoints: $($_.Exception.Message)"
-    }
-}
-
 $attempts = @()
+$runtimeSnapshots = @()
+$serialCandidateMap = @{}
 $onlineSerial = $null
-$connectDeadline = (Get-Date).AddMinutes(4)
+$probeStartedAt = Get-Date
+$connectDeadline = $probeStartedAt.AddMinutes(3)
 $round = 0
+$runtimeEverSeen = $false
 $runtimeRecycled = $false
 $developerFallbackAttempted = $false
 $developerFallbackBackup = $null
+
 while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     $round++
-    foreach ($candidate in $serialCandidates) {
-        $connectResult = Invoke-AdbSafe -Arguments @("connect", $candidate)
-        $stateResult = Invoke-AdbSafe -Arguments @("-s", $candidate, "get-state")
-        $stateText = ([string]$stateResult.Stdout).Trim()
+    $snapshot = Get-WsaRuntimeSnapshot
+    $runtimeSnapshots += $snapshot
+    if ($snapshot.runtime_alive) {
+        $runtimeEverSeen = $true
+    }
+
+    $candidates = @(Get-WsaEndpointCandidates -ExplicitSerial $Serial)
+    foreach ($candidateRecord in $candidates) {
+        $candidate = [string]$candidateRecord.endpoint
+        $source = [string]$candidateRecord.source
+        if (-not $serialCandidateMap.ContainsKey($candidate)) {
+            $serialCandidateMap[$candidate] = $source
+        }
+
+        $probe = Invoke-WsaCandidateProbe -Endpoint $candidate -Source $source
         $attempts += [ordered]@{
             round = $round
+            timestamp = (Get-Date).ToString("o")
             serial = $candidate
-            connect_exit = $connectResult.ExitCode
-            connect = $connectResult.Text
-            state_exit = $stateResult.ExitCode
-            state = $stateText
-            state_error = $stateResult.Stderr
+            source = $source
+            tcp_open = $probe.tcp_open
+            connect_exit = $probe.connect_exit
+            connect = $probe.connect
+            state_exit = $probe.state_exit
+            state = $probe.state
+            state_error = $probe.state_error
+            model = $probe.model
+            boot_completed = $probe.boot_completed
+            is_wsa = $probe.is_wsa
         }
-        Write-Log "Android control endpoint $candidate -> connect='$($connectResult.Text)' state='$stateText'."
-        if (
-            $stateText -eq "unauthorized" -or
-            $stateResult.Stderr -match "(?i)unauthorized|authenticate" -or
-            $connectResult.Text -match "(?i)unauthorized|failed to authenticate"
-        ) {
-            Write-Log "Android control channel is reachable but awaiting host-key authorization."
+
+        if ($probe.state -eq "unauthorized" -or
+            $probe.state_error -match "(?i)unauthorized|authenticate" -or
+            $probe.connect -match "(?i)unauthorized|failed to authenticate") {
+            Write-Log "Android endpoint $candidate is reachable but awaiting ADB host-key authorization."
         }
-        if ($stateText -eq "device") {
-            $onlineSerial = $candidate
-            Write-Log "Android control channel accepted on $candidate (state=device, exit=$($stateResult.ExitCode))."
-            break
+
+        if ($probe.state -eq "device" -and -not $probe.is_wsa) {
+            Write-Log "Ignoring Android endpoint $candidate from $source because model '$($probe.model)' is not WSA."
+            continue
+        }
+
+        if ($probe.is_wsa) {
+            if ($probe.boot_completed -eq "1") {
+                $onlineSerial = $candidate
+                Write-Log "WSA control channel accepted on $candidate from $source (model=$($probe.model), boot_completed=1)."
+                break
+            }
+            Write-Log "WSA endpoint $candidate is connected but Android boot is not complete yet."
         }
     }
 
-    # A correctly installed WSA can occasionally leave the localhost bridge
-    # unbound after first launch. Recycle the subsystem once, then keep probing.
-    if (
-        -not $onlineSerial -and
-        -not $directClientAttempted -and
-        $client -and
-        $clientWorkDir -and
-        $round -ge 3
-    ) {
+    if ($onlineSerial) { break }
+
+    $elapsed = ((Get-Date) - $probeStartedAt).TotalSeconds
+
+    if (-not $runtimeEverSeen -and -not $directClientAttempted -and $client -and $clientWorkDir -and $elapsed -ge 15) {
         $directClientAttempted = $true
         $directClientStartedAt = Get-Date
-        Write-Log "App-model wake did not expose ADB yet; starting WsaClient fallback with package-root working directory."
+        Write-Log "No WSA runtime process is visible after upstream activation; starting direct WsaClient /launch fallback."
+        $oldPath = $env:PATH
         try {
-            $oldPath = $env:PATH
             $env:PATH = "$clientWorkDir;$oldPath"
             Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
-            $env:PATH = $oldPath
-            Write-Log "WsaClient fallback start requested from $clientWorkDir; allowing up to 90s for Android/ADB startup."
+            Write-Log "Direct WsaClient /launch fallback requested."
         }
         catch {
-            if ($null -ne $oldPath) { $env:PATH = $oldPath }
-            Write-Log "WsaClient fallback could not be started: $($_.Exception.Message)"
+            Write-Log "Direct WsaClient /launch fallback failed: $($_.Exception.Message)"
         }
-        Start-Sleep -Seconds 20
+        finally {
+            $env:PATH = $oldPath
+        }
     }
-    elseif (
-        -not $onlineSerial -and
-        -not $runtimeRecycled -and
-        $round -ge 6 -and
-        (
-            -not $directClientAttempted -or
-            ($directClientStartedAt -and ((Get-Date) - $directClientStartedAt).TotalSeconds -ge 90)
-        )
-    ) {
-        $runtimeRecycled = $true
-        Write-Log "Control channel is still offline; recycling the Android subsystem once."
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 5
+    elseif ($runtimeEverSeen -and -not $developerDeepLinkAttempted -and $client -and $clientWorkDir -and $elapsed -ge 25) {
+        $developerDeepLinkAttempted = $true
+        Write-Log "WSA runtime is alive but ADB is not exposed yet; opening WSA Developer settings through WsaClient."
+        $oldPath = $env:PATH
         try {
-            Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+            $env:PATH = "$clientWorkDir;$oldPath"
+            Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction Stop | Out-Null
         }
-        catch {}
-        Start-Sleep -Seconds 20
+        catch {
+            Write-Log "Developer-settings deep link failed: $($_.Exception.Message)"
+        }
+        finally {
+            $env:PATH = $oldPath
+        }
     }
-    elseif (
-        -not $onlineSerial -and
-        $runtimeRecycled -and
-        -not $developerFallbackAttempted -and
-        -not $NoAutoDeveloperModePatch -and
-        $round -ge 8
-    ) {
-        $refusedSoFar = [bool](@($attempts | Where-Object { $_.connect -match "10061|actively refused|отверг" }).Count)
-        if ($refusedSoFar) {
-            $developerFallbackAttempted = $true
-            $developerFallbackBackup = Enable-DeveloperModeFallback -ReportStage $stage
-            if ($developerFallbackBackup) {
+    elseif (-not $developerFallbackAttempted -and -not $NoAutoDeveloperModePatch -and $elapsed -ge 45) {
+        $developerFallbackAttempted = $true
+        Write-Log "ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final relaunch."
+        $developerFallbackBackup = Enable-DeveloperModeFallback -ReportStage $stage
+        if ($developerFallbackBackup) {
+            try {
+                Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+            }
+            catch {}
+            if ($client -and $clientWorkDir) {
+                $oldPath = $env:PATH
                 try {
-                    Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+                    $env:PATH = "$clientWorkDir;$oldPath"
+                    Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+                    Start-Sleep -Seconds 2
+                    Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue | Out-Null
+                    $directClientAttempted = $true
+                    $directClientStartedAt = Get-Date
                 }
-                catch {}
-                Start-Sleep -Seconds 25
+                finally {
+                    $env:PATH = $oldPath
+                }
             }
         }
     }
-    elseif (-not $onlineSerial) {
-        Start-Sleep -Seconds 10
+    elseif (-not $runtimeRecycled -and $elapsed -ge 120) {
+        $runtimeRecycled = $true
+        Write-Log "All non-destructive startup routes were exhausted; performing the single allowed WSA recycle."
+        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 4
+        try {
+            Start-Process "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+        }
+        catch {}
+        if ($client -and $clientWorkDir) {
+            $oldPath = $env:PATH
+            try {
+                $env:PATH = "$clientWorkDir;$oldPath"
+                Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction SilentlyContinue | Out-Null
+                Start-Sleep -Seconds 2
+                Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction SilentlyContinue | Out-Null
+            }
+            finally {
+                $env:PATH = $oldPath
+            }
+        }
     }
+
+    Start-Sleep -Seconds 5
 }
 
+$serialCandidates = @($serialCandidateMap.Keys)
+$runtimeSnapshots | ConvertTo-Json -Depth 9 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-runtime-snapshots.json")
 $attempts | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "android-connect-attempts.json")
 $portNetstat = ""
 $excludedRanges = ""
