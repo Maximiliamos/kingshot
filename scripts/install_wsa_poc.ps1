@@ -1103,7 +1103,161 @@ function Save-AdbDiagnostic {
     }
 }
 
-Start-Sleep -Seconds 20
+function Test-PrivateIPv4 {
+    param([string]$Address)
+    if (-not $Address) { return $false }
+    if ($Address -match "^10\.") { return $true }
+    if ($Address -match "^192\.168\.") { return $true }
+    if ($Address -match "^172\.(1[6-9]|2[0-9]|3[0-1])\.") { return $true }
+    return $false
+}
+
+function Get-WsaEndpointCandidates {
+    param([string]$ExplicitSerial)
+
+    $records = New-Object System.Collections.ArrayList
+    $seen = @{}
+
+    function Add-WsaCandidate {
+        param([string]$Endpoint, [string]$Source)
+        if (-not $Endpoint) { return }
+        $key = $Endpoint.ToLowerInvariant()
+        if ($seen.ContainsKey($key)) { return }
+        $seen[$key] = $true
+        [void]$records.Add([pscustomobject]@{
+            endpoint = $Endpoint
+            source = $Source
+        })
+    }
+
+    Add-WsaCandidate -Endpoint $ExplicitSerial -Source "explicit"
+    Add-WsaCandidate -Endpoint "127.0.0.1:58526" -Source "localhost-default"
+
+    try {
+        $devices = Invoke-AdbSafe -Arguments @("devices") -TimeoutSeconds 5
+        foreach ($line in (($devices.Stdout -split "`r?`n") | Where-Object { $_ -match "\t(device|unauthorized|offline)$" })) {
+            $deviceSerial = ($line -split "\s+")[0]
+            Add-WsaCandidate -Endpoint $deviceSerial -Source "adb-devices"
+        }
+    }
+    catch {}
+
+    try {
+        $mdns = Invoke-AdbSafe -Arguments @("mdns", "services") -TimeoutSeconds 5
+        foreach ($m in [regex]::Matches([string]$mdns.Text, "(?<!\d)((?:\d{1,3}\.){3}\d{1,3}:\d+)")) {
+            Add-WsaCandidate -Endpoint $m.Groups[1].Value -Source "adb-mdns"
+        }
+    }
+    catch {}
+
+    try {
+        Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object {
+            $_.IPAddress -and
+            $_.IPAddress -ne "127.0.0.1" -and
+            -not $_.IPAddress.StartsWith("169.254.")
+        } | ForEach-Object {
+            Add-WsaCandidate -Endpoint ($_.IPAddress + ":58526") -Source ("host-ip:" + $_.InterfaceAlias)
+        }
+    }
+    catch {}
+
+    $guestIps = New-Object System.Collections.Generic.HashSet[string]
+    try {
+        if (Get-Command Get-HnsEndpoint -ErrorAction SilentlyContinue) {
+            $hnsJson = (Get-HnsEndpoint | ConvertTo-Json -Depth 20)
+            foreach ($m in [regex]::Matches([string]$hnsJson, "(?<!\d)((?:\d{1,3}\.){3}\d{1,3})(?!\d)")) {
+                $ip = $m.Groups[1].Value
+                if (Test-PrivateIPv4 -Address $ip) { [void]$guestIps.Add($ip) }
+            }
+        }
+    }
+    catch {}
+
+    try {
+        $hnsdiag = Get-Command hnsdiag.exe -ErrorAction SilentlyContinue
+        if ($hnsdiag) {
+            $hnsText = (& $hnsdiag.Source list endpoints 2>&1 | Out-String)
+            foreach ($m in [regex]::Matches([string]$hnsText, "(?<!\d)((?:\d{1,3}\.){3}\d{1,3})(?!\d)")) {
+                $ip = $m.Groups[1].Value
+                if (Test-PrivateIPv4 -Address $ip) { [void]$guestIps.Add($ip) }
+            }
+        }
+    }
+    catch {}
+
+    try {
+        Get-NetNeighbor -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object {
+            $_.InterfaceAlias -match "(?i)WSA|vEthernet|Hyper-V" -and
+            (Test-PrivateIPv4 -Address $_.IPAddress)
+        } | ForEach-Object {
+            [void]$guestIps.Add($_.IPAddress)
+        }
+    }
+    catch {}
+
+    foreach ($ip in $guestIps) {
+        Add-WsaCandidate -Endpoint ($ip + ":5555") -Source "guest-ip:5555"
+        Add-WsaCandidate -Endpoint ($ip + ":58526") -Source "guest-ip:58526"
+    }
+
+    return @($records)
+}
+
+function Invoke-WsaCandidateProbe {
+    param(
+        [Parameter(Mandatory = $true)][string]$Endpoint,
+        [Parameter(Mandatory = $true)][string]$Source
+    )
+
+    $tcpOpen = $null
+    if ($Endpoint -match "^([^:]+):(\d+)$") {
+        $tcpOpen = Test-TcpEndpoint -HostName $matches[1] -Port ([int]$matches[2]) -TimeoutMs 700
+    }
+
+    $alreadyKnown = ($Source -eq "adb-devices")
+    $connectResult = $null
+    if ($alreadyKnown -or $null -eq $tcpOpen -or $tcpOpen) {
+        $connectResult = Invoke-AdbSafe -Arguments @("connect", $Endpoint) -TimeoutSeconds 6
+    }
+    else {
+        $connectResult = [pscustomobject]@{
+            ExitCode = 0
+            Stdout = ""
+            Stderr = ""
+            Text = "tcp_closed"
+            TimedOut = $false
+        }
+    }
+
+    $stateResult = Invoke-AdbSafe -Arguments @("-s", $Endpoint, "get-state") -TimeoutSeconds 5
+    $stateText = ([string]$stateResult.Stdout).Trim()
+    $model = ""
+    $boot = ""
+    if ($stateText -eq "device") {
+        try {
+            $model = ([string](Invoke-AdbSafe -Arguments @("-s", $Endpoint, "shell", "getprop", "ro.product.model") -TimeoutSeconds 5).Stdout).Trim()
+            $boot = ([string](Invoke-AdbSafe -Arguments @("-s", $Endpoint, "shell", "getprop", "sys.boot_completed") -TimeoutSeconds 5).Stdout).Trim()
+        }
+        catch {}
+    }
+
+    $isWsa = ($stateText -eq "device" -and $model -eq "Subsystem for Android(TM)")
+    return [pscustomobject]@{
+        endpoint = $Endpoint
+        source = $Source
+        tcp_open = $tcpOpen
+        connect_exit = $connectResult.ExitCode
+        connect = $connectResult.Text
+        state_exit = $stateResult.ExitCode
+        state = $stateText
+        state_error = $stateResult.Stderr
+        model = $model
+        boot_completed = $boot
+        is_wsa = $isWsa
+    }
+}
+
+Start-Sleep -Seconds 8
 
 if (($PairEndpoint -and -not $PairCode) -or ($PairCode -and -not $PairEndpoint)) {
     Finish-Report -State "PAIRING_ARGUMENTS_INCOMPLETE" -ExitCode 22 -Extra @{
