@@ -55,6 +55,12 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('tugarin-venv', self.source)
         self.assertIn('pip install --disable-pip-version-check -r', self.source)
 
+    def test_native_command_stdout_cannot_pollute_scalar_return_values(self):
+        self.assertIn('2>&1 | ForEach-Object { Write-Host $_ }', self.source)
+        self.assertIn('return [string]$venvPython', self.source)
+        self.assertIn('[string]$head = Update-Repository', self.source)
+        self.assertIn('[string]$venvPython = Ensure-PythonEnvironment', self.source)
+
     def test_gui_launch_is_fail_closed_on_p0(self):
         p0_check = self.source.index('if ($p0Exit -ne 0)')
         shortcut = self.source.index('$shortcutPath = Create-GuiShortcut', p0_check)
