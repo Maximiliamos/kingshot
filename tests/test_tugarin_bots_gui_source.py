@@ -30,6 +30,15 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("audio_service_ready: bool = False", self.backend)
         self.assertIn('self.shell(["dumpsys", "audio"]', self.backend)
 
+    def test_gui_is_single_instance_and_reports_runtime_identity(self):
+        self.assertIn("QLockFile", self.gui)
+        self.assertIn("tugarin-bots-gui.lock", self.gui)
+        self.assertIn("Windows SID/User", self.gui)
+        self.assertIn("WSA flavor", self.gui)
+        self.assertIn("ADB authorization", self.gui)
+        self.assertIn("Google Services", self.gui)
+        self.assertIn("P0 manifest", self.gui)
+
 
 if __name__ == "__main__":
     unittest.main()

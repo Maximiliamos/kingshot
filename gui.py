@@ -1,12 +1,13 @@
 import json
 import os
 import sys
+import tempfile
 import threading
 import time
 from datetime import datetime
 
 import cv2
-from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Qt, Signal
+from PySide6.QtCore import QLockFile, QProcess, QProcessEnvironment, QTimer, Qt, Signal
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout,
@@ -302,12 +303,22 @@ class WarBotWindow(QMainWindow):
         self.network_value = QLabel("—")
         self.internet_value = QLabel("—")
         self.audio_value = QLabel("—")
+        self.windows_user_value = QLabel(os.environ.get("USERNAME", "—"))
+        self.wsa_flavor_value = QLabel("—")
+        self.adb_auth_value = QLabel("—")
+        self.google_services_value = QLabel("—")
+        self.p0_value = QLabel("—")
         for row, (name, widget) in enumerate((
             ("Режим", self.phase_value), ("Шаг", self.step_value),
             ("Следующее имя", self.name_value), ("Создано всего", self.created_value),
             ("Цикл", self.cycle_value), ("В этом цикле", self.cycle_created_value),
             ("Сеть Android", self.network_value), ("Интернет", self.internet_value),
             ("Аудиосервис", self.audio_value),
+            ("Windows SID/User", self.windows_user_value),
+            ("WSA flavor", self.wsa_flavor_value),
+            ("ADB authorization", self.adb_auth_value),
+            ("Google Services", self.google_services_value),
+            ("P0 manifest", self.p0_value),
             ("Последняя остановка", self.stop_reason_value),
         )):
             caption = QLabel(name)
@@ -799,7 +810,30 @@ class WarBotWindow(QMainWindow):
         def worker():
             try:
                 backend = self._manual_backend()
-                self.health_ready.emit(backend.health().to_dict())
+                health = backend.health().to_dict()
+                health["windows_user"] = os.environ.get("USERNAME", "—")
+                package_pointer = r"C:\warbot_wsa\package-path.txt"
+                try:
+                    package_path = open(package_pointer, encoding="utf-8-sig").read().strip()
+                except OSError:
+                    package_path = ""
+                health["wsa_flavor"] = "GApps" if "gapps" in package_path.lower() else "NoGApps"
+                health["adb_authorized"] = bool(health.get("ready"))
+                try:
+                    packages = backend.shell(["pm", "list", "packages"], timeout=20)
+                except Exception:
+                    packages = ""
+                required_google = (
+                    "com.google.android.gms",
+                    "com.google.android.gsf",
+                    "com.android.vending",
+                )
+                health["google_services"] = all(
+                    f"package:{name}" in packages for name in required_google
+                )
+                latest_p0 = read_json(r"C:\warbot_wsa\reports\LATEST-LOCAL.json", {})
+                health["p0_state"] = str(latest_p0.get("state", "—"))
+                self.health_ready.emit(health)
             except Exception as error:
                 self.health_ready.emit({"error": str(error)})
 
@@ -821,6 +855,11 @@ class WarBotWindow(QMainWindow):
         self.network_value.setText("готово" if health.get("network_ready") else "нет")
         self.internet_value.setText("доступен" if health.get("internet_reachable") else "нет")
         self.audio_value.setText("готов" if health.get("audio_service_ready") else "нет")
+        self.windows_user_value.setText(str(health.get("windows_user", "—")))
+        self.wsa_flavor_value.setText(str(health.get("wsa_flavor", "—")))
+        self.adb_auth_value.setText("авторизован" if health.get("adb_authorized") else "нет")
+        self.google_services_value.setText("готовы" if health.get("google_services") else "нет")
+        self.p0_value.setText(str(health.get("p0_state", "—")))
         if ready:
             self.device_status.setToolTip(
                 "Android готов; сеть/интернет/аудио контролируются TUGARIN BOTS."
@@ -1030,6 +1069,15 @@ class WarBotWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("TUGARIN BOTS")
+    instance_lock = QLockFile(os.path.join(tempfile.gettempdir(), "tugarin-bots-gui.lock"))
+    instance_lock.setStaleLockTime(0)
+    if not instance_lock.tryLock(100):
+        QMessageBox.information(
+            None,
+            "TUGARIN BOTS",
+            "TUGARIN BOTS уже запущен. Второй экземпляр не будет открыт.",
+        )
+        return 0
     window = WarBotWindow()
     window.show()
     return app.exec()
