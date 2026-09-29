@@ -1,0 +1,15 @@
+﻿[2026-09-30T02:39:38.6092697+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T02:39:40.2451784+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T02:39:40.3355098+03:00] Windows developer package registration is enabled.
+[2026-09-30T02:39:41.4627459+03:00] TUGARIN BOTS GApps WSA package is already registered; keeping it.
+[2026-09-30T02:39:43.4507901+03:00] Could not fully inspect WSA package preflight: Не удается преобразовать значение "System.Object[]" в тип "System.Xml.XmlDocument". Ошибка: "Невозможно вставить указанный узел в качестве действительного дочернего узла данного узла, т.к. указанный узел имеет неверный тип."
+[2026-09-30T02:39:43.6057461+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T02:39:43.6370029+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T02:39:43.6734320+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T02:39:46.5215158+03:00] Could not enumerate WSA AUMIDs from package manifest: Недопустимые данные на корневом уровне., строка 1, позиция 1.
+[2026-09-30T02:39:46.5389757+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T02:39:46.7178299+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20516).
+[2026-09-30T02:39:46.7667144+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=33780).
+[2026-09-30T02:40:00.1529795+03:00] WSA control channel accepted on 127.0.0.1:58526 from explicit (model=Subsystem for Android(TM), boot_completed=1).
+[2026-09-30T02:40:04.8091841+03:00] Android control channel is online at 127.0.0.1:58526.
+[2026-09-30T02:40:05.9378480+03:00] Installing/launching Kingshot through WSA backend.
