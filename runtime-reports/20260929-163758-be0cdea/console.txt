@@ -1,0 +1,4 @@
+﻿[2026-09-29T16:37:50.1993263+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-29T16:37:51.5972807+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-29T16:37:51.6032809+03:00] RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks.
+[2026-09-29T16:37:51.7262706+03:00] WSA is not registered for the current interactive user; registering the already extracted package in this user context.

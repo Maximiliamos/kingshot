@@ -1,0 +1,16 @@
+﻿{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "WSA_CURRENT_USER_REGISTRATION_FAILED",
+    "exit_code":  18,
+    "commit":  "be0cdea70236093f995b344670894e078c0c5beb",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-29T16:37:57.7506160+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "install_location":  "C:\\warbot_wsa\\WSA_LTS8_Windows10\\WSA_2407.40000.4.0_x64",
+    "registration_error":  "Сбой развертывания с HRESULT: 0x80073D28, Не удалось установить пакет, так как требуются права администратора. Обратитесь к администратору, чтобы установить этот пакет.\r\n\r\nMicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe (0, 0): ошибка 0x80073D28 — не удается зарегистрировать пакет MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe. Для установки пакета обслуживания требуются права администратора\n\nПРИМЕЧАНИЕ. Чтобы получить дополнительные сведения, найдите [ActivityId] 1f71a8e9-4f67-0005-a643-771f674fdd01 в журнале событий или введите в командной строке Get-AppxLog -ActivityID 1f71a8e9-4f67-0005-a643-771f674fdd01.\n"
+}
