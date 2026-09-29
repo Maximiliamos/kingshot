@@ -313,26 +313,55 @@ function Assert-RunningAsDedicatedUser {
     Write-SetupLog "Verified dedicated runtime identity SID=$($identity.User.Value)."
 }
 
+function Invoke-GitWithOutput {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [Parameter(Mandatory = $true)][string]$Operation
+    )
+
+    # PowerShell 7 can turn Git's normal remote-progress stderr (for example,
+    # "From https://...") into a terminating NativeCommandError when
+    # $ErrorActionPreference is Stop.  Keep native output visible, then rely on
+    # Git's exit code as the authoritative success signal.
+    $previousErrorActionPreference = $ErrorActionPreference
+    $hadNativeErrorPreference = Test-Path Variable:PSNativeCommandUseErrorActionPreference
+    if ($hadNativeErrorPreference) {
+        $previousNativeErrorPreference = $PSNativeCommandUseErrorActionPreference
+        $PSNativeCommandUseErrorActionPreference = $false
+    }
+    $ErrorActionPreference = "Continue"
+    try {
+        & git @Arguments 2>&1 | ForEach-Object { Write-Host $_ }
+        $exitCode = [int]$LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+        if ($hadNativeErrorPreference) {
+            $PSNativeCommandUseErrorActionPreference = $previousNativeErrorPreference
+        }
+    }
+
+    if ($exitCode -ne 0) {
+        throw "git $Operation failed with exit code $exitCode."
+    }
+}
+
 function Update-Repository {
     $safePath = $RepoRoot -replace "\\", "/"
     & git config --global --add safe.directory $safePath | Out-Null
 
     Write-SetupLog "Updating repository branch $Branch."
-    & git -C $RepoRoot fetch origin $Branch 2>&1 | ForEach-Object { Write-Host $_ }
-    if ($LASTEXITCODE -ne 0) { throw "git fetch failed." }
+    Invoke-GitWithOutput -Arguments @("-C", $RepoRoot, "fetch", "origin", $Branch) -Operation "fetch"
 
     $dirty = (& git -C $RepoRoot status --porcelain | Out-String).Trim()
     if ($dirty) {
         $stashName = "TUGARIN_BOTS_DEDICATED_USER_BACKUP_" + (Get-Date -Format "yyyyMMdd-HHmmss")
-        & git -C $RepoRoot stash push -u -m $stashName 2>&1 | ForEach-Object { Write-Host $_ }
-        if ($LASTEXITCODE -ne 0) { throw "Could not preserve dirty repository state." }
+        Invoke-GitWithOutput -Arguments @("-C", $RepoRoot, "stash", "push", "-u", "-m", $stashName) -Operation "stash backup"
         Write-SetupLog "Preserved local repository changes in stash $stashName."
     }
 
-    & git -C $RepoRoot checkout $Branch 2>&1 | ForEach-Object { Write-Host $_ }
-    if ($LASTEXITCODE -ne 0) { throw "git checkout failed." }
-    & git -C $RepoRoot pull --ff-only origin $Branch 2>&1 | ForEach-Object { Write-Host $_ }
-    if ($LASTEXITCODE -ne 0) { throw "git pull failed." }
+    Invoke-GitWithOutput -Arguments @("-C", $RepoRoot, "checkout", $Branch) -Operation "checkout"
+    Invoke-GitWithOutput -Arguments @("-C", $RepoRoot, "pull", "--ff-only", "origin", $Branch) -Operation "pull"
 
     $head = (& git -C $RepoRoot rev-parse HEAD | Out-String).Trim()
     Write-SetupLog "Repository HEAD=$head."

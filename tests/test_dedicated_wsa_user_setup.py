@@ -51,7 +51,9 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
 
     def test_continuation_updates_repo_and_uses_dedicated_venv(self):
         self.assertIn('safe.directory', self.source)
-        self.assertIn('git -C $RepoRoot pull --ff-only origin $Branch', self.source)
+        self.assertIn('function Invoke-GitWithOutput', self.source)
+        self.assertIn('PSNativeCommandUseErrorActionPreference', self.source)
+        self.assertIn('Invoke-GitWithOutput -Arguments @("-C", $RepoRoot, "pull", "--ff-only", "origin", $Branch) -Operation "pull"', self.source)
         self.assertIn('tugarin-venv', self.source)
         self.assertIn('pip install --disable-pip-version-check -r', self.source)
 
