@@ -118,6 +118,19 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("$elapsed -ge 120", self.source)
         self.assertIn("single allowed WSA recycle", self.source)
 
+    def test_p0_validates_windows10_wsapatch_package(self):
+        self.assertIn("WSA_WIN10_PATCH_INVALID", self.source)
+        self.assertIn("WsaPatch.dll", self.source)
+        self.assertIn("icu.dll", self.source)
+        self.assertIn("manifest_min_version", self.source)
+        self.assertIn("manifest_has_custom_install", self.source)
+        self.assertIn("wsa-package-preflight.json", self.source)
+
+    def test_p0_requires_ntfs_and_warns_on_long_install_path(self):
+        self.assertIn("WSA_INSTALL_VOLUME_UNSUPPORTED", self.source)
+        self.assertIn('FileSystem -ne "NTFS"', self.source)
+        self.assertIn("WSABuilds documents long extracted paths", self.source)
+
     def test_p0_reserves_58526_before_startup(self):
         self.assertIn("function Ensure-WsaAdbPortReservation", self.source)
         self.assertIn("add excludedportrange protocol=tcp startport=$Port numberofports=1", self.source)
