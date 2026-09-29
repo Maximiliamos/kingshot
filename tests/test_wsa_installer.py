@@ -39,6 +39,13 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("continuing to authoritative WSA registration check", self.source)
         self.assertNotIn('throw "Failed to enable Windows developer package registration."', self.source)
 
+    def test_runtime_phase_can_register_wsa_for_interactive_user(self):
+        self.assertIn("WSA is not registered for the current interactive user", self.source)
+        self.assertIn("WSA registered successfully for the current interactive user.", self.source)
+        self.assertIn("WSA_CURRENT_USER_REGISTRATION_FAILED", self.source)
+        self.assertIn("current-user-registration-error.txt", self.source)
+        self.assertIn('Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register ".\\AppxManifest.xml"', self.source)
+
     def test_registration_is_checked_for_current_user(self):
         self.assertIn(
             'Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register',
