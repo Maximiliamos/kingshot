@@ -1,0 +1,1 @@
+﻿reg.exe failed: Ошибка: Отказано в доступе.; PowerShell registry fallback failed: Запрошенный доступ к реестру запрещен.

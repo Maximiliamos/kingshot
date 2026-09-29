@@ -1,0 +1,9 @@
+﻿Get-WindowsOptionalFeature : Запрошенная операция требует повышения.
+
+C:\warbot_git\scripts\install_wsa_poc.ps1:387 знак:23
++ ... ntFeature = Get-WindowsOptionalFeature -Online -FeatureName $featureN ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Get-WindowsOptionalFeature], COMException
+    + FullyQualifiedErrorId : Microsoft.Dism.Commands.GetWindowsOptionalFeatureCommand
+ 
+
