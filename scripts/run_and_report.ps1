@@ -15,19 +15,6 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
-function Test-IsAdmin {
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-if ($Backend -eq "wsa" -and (Test-IsAdmin)) {
-    Write-Host ""
-    Write-Host "TUGARIN BOTS P0 must be started from a NORMAL (non-Administrator) PowerShell window."
-    Write-Host "Phase 1 will request UAC by itself, then Phase 2 will continue in the normal user session."
-    Write-Host "Close this Administrator PowerShell window and rerun the same command from a normal PowerShell."
-    exit 91
-}
 
 if (-not $SkipPull) {
     $status = (& git status --porcelain)
@@ -85,42 +72,22 @@ $commit = (& git rev-parse HEAD).Trim()
 # as one bounded workflow. Keep the native-QEMU experiment below available
 # only when explicitly requested with -Backend native_arm64.
 if ($Backend -eq "wsa") {
-    $installer = Join-Path $PSScriptRoot "install_wsa_poc.ps1"
-
     Write-Host ""
-    Write-Host "=== TUGARIN BOTS WSA PHASE 1/2: privileged setup ==="
-    $prepareArgs = @(
+    Write-Host "=== TUGARIN BOTS WSA P0: unified elevated runtime ==="
+    Write-Host "The WSA package requires elevation on this Windows 10 host. The installer will request UAC once and keep registration + runtime in the same Windows account context."
+
+    $wsaArgs = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
-        "-File", $installer,
-        "-Serial", $Serial,
-        "-PrepareOnly"
+        "-File", (Join-Path $PSScriptRoot "install_wsa_poc.ps1"),
+        "-Serial", $Serial
     )
-    if ($NoAutoDeveloperModePatch) { $prepareArgs += "-NoAutoDeveloperModePatch" }
+    if ($PairEndpoint) { $wsaArgs += @("-PairEndpoint", $PairEndpoint) }
+    if ($PairCode) { $wsaArgs += @("-PairCode", $PairCode) }
+    if ($NoAutoDeveloperModePatch) { $wsaArgs += "-NoAutoDeveloperModePatch" }
+    if ($CleanGame) { $wsaArgs += "-CleanGame" }
 
-    & powershell @prepareArgs
-    $prepareExit = $LASTEXITCODE
-    if ($prepareExit -ne 0) {
-        Write-Host "WSA setup phase failed with exit code $prepareExit."
-        exit $prepareExit
-    }
-
-    Write-Host ""
-    Write-Host "=== TUGARIN BOTS WSA PHASE 2/2: interactive runtime ==="
-    $runtimeArgs = @(
-        "-NoProfile",
-        "-ExecutionPolicy", "Bypass",
-        "-File", $installer,
-        "-Serial", $Serial,
-        "-RuntimeOnly",
-        "-SkipInstall"
-    )
-    if ($PairEndpoint) { $runtimeArgs += @("-PairEndpoint", $PairEndpoint) }
-    if ($PairCode) { $runtimeArgs += @("-PairCode", $PairCode) }
-    if ($NoAutoDeveloperModePatch) { $runtimeArgs += "-NoAutoDeveloperModePatch" }
-    if ($CleanGame) { $runtimeArgs += "-CleanGame" }
-
-    & powershell @runtimeArgs
+    & powershell @wsaArgs
     exit $LASTEXITCODE
 }
 
