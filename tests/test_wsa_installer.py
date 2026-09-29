@@ -17,16 +17,15 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
-    def test_upstream_uri_is_primary_and_wsaclient_is_fallback(self):
-        upstream = self.source.index('Start-Process "wsa://com.android.settings"')
-        direct = self.source.index('Start-Process -FilePath $client', upstream)
-        self.assertLess(upstream, direct)
-        self.assertIn("Launching WSA using the upstream WSABuilds app URI first.", self.source)
-        self.assertIn("No WSA runtime process is visible after upstream activation", self.source)
-        self.assertIn('-ArgumentList "/launch"', self.source)
-        self.assertIn('-ArgumentList "/deeplink"', self.source)
-        self.assertIn("-WorkingDirectory $clientWorkDir", self.source)
-        self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
+    def test_packaged_aumid_activation_is_primary_and_raw_exe_is_not_used(self):
+        self.assertIn("IApplicationActivationManager", self.source)
+        self.assertIn("45BA127D-10A8-46EA-8AB7-56EA9078943C", self.source)
+        self.assertIn("Get-WsaApplicationCatalog", self.source)
+        self.assertIn("Invoke-WsaPackagedWake", self.source)
+        self.assertIn("Launching WSA through registered AppX AUMIDs", self.source)
+        self.assertIn("/launch wsa://com.android.settings", self.source)
+        self.assertIn("/deeplink wsa-client://developer-settings", self.source)
+        self.assertNotIn("Start-Process -FilePath $client", self.source)
 
     def test_developer_registration_registry_failure_is_nonfatal(self):
         self.assertIn("developer-package-registration.txt", self.source)
@@ -92,11 +91,12 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertNotIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
         self.assertNotIn('Start-Process explorer.exe "wsa://com.android.settings"', self.source)
 
-    def test_p0_uses_registered_settings_app_and_direct_wsaclient(self):
+    def test_p0_uses_registered_settings_app_and_packaged_wsaclient(self):
         self.assertIn('shell:AppsFolder\\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp', self.source)
-        self.assertIn('Join-Path $installed.InstallLocation "WsaClient\\WsaClient.exe"', self.source)
-        self.assertIn('-WorkingDirectory $clientWorkDir', self.source)
-        self.assertIn('$directClientAttempted = $true', self.source)
+        self.assertIn('$settingsAumid = $installed.PackageFamilyName + "!SettingsApp"', self.source)
+        self.assertIn('$clientAumid = $installed.PackageFamilyName + "!App"', self.source)
+        self.assertIn("Invoke-PackagedApplication -Aumid $clientAumid", self.source)
+        self.assertIn("raw_wsaclient_launch_attempted = $false", self.source)
 
     def test_p0_stays_on_rootless_nogapps_runtime(self):
         self.assertIn("NoGApps-NoAmazon_Windows_10.7z", self.source)
@@ -112,11 +112,11 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('if ($onlineSerial) { break }', self.source)
 
     def test_p0_recycle_is_last_resort_after_two_minutes(self):
-        self.assertIn("$directClientStartedAt = $null", self.source)
-        self.assertIn("$directClientStartedAt = Get-Date", self.source)
-        self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
+        self.assertIn("$packagedActivationRetried = $false", self.source)
         self.assertIn("$elapsed -ge 120", self.source)
         self.assertIn("single allowed WSA recycle", self.source)
+        self.assertIn("Invoke-WsaPackagedWake", self.source)
+        self.assertNotIn("$directClientStartedAt", self.source)
 
     def test_p0_validates_windows10_wsapatch_package(self):
         self.assertIn("WSA_WIN10_PATCH_INVALID", self.source)
@@ -136,7 +136,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("add excludedportrange protocol=tcp startport=$Port numberofports=1", self.source)
         self.assertIn("official WSABuilds 10061 prevention", self.source)
         reserve = self.source.index("Ensure-WsaAdbPortReservation -ReportStage $stage")
-        launch = self.source.index('Start-Process "wsa://com.android.settings"', reserve)
+        launch = self.source.index("Launching WSA through registered AppX AUMIDs", reserve)
         self.assertLess(reserve, launch)
 
     def test_p0_repairs_loopback_exemption(self):
@@ -166,9 +166,22 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("wsa-application-events.txt", self.source)
         self.assertIn("wsa-host-logcat-tail.txt", self.source)
 
+    def test_p0_records_user_and_package_registration_context(self):
+        self.assertIn("function Save-WsaUserContextDiagnostics", self.source)
+        self.assertIn("Get-AppxPackage -AllUsers", self.source)
+        self.assertIn("wsa-user-context.json", self.source)
+        self.assertIn("wsa-applications.json", self.source)
+        self.assertIn("wsa-aumids.json", self.source)
+
+    def test_p0_scopes_windows_crash_events_to_current_run(self):
+        self.assertIn("[datetime]$Since", self.source)
+        self.assertIn("StartTime = $Since", self.source)
+        self.assertIn("Save-WsaHostDiagnostics -ReportStage $stage -Since $p0StartedAt", self.source)
+
     def test_p0_classifies_failure_by_runtime_layer(self):
         for state in (
             "WSA_CLIENT_CRASHED",
+            "WSA_PACKAGE_ACTIVATION_FAILED",
             "WSA_RUNTIME_NOT_STARTED",
             "WSA_ADB_NOT_EXPOSED",
             "ANDROID_CONTROL_CHANNEL_REFUSED",
@@ -188,6 +201,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('Operation "fetch reports branch"', uploader)
         self.assertIn('Operation "push report"', uploader)
         self.assertIn("Attempts = 3", uploader)
+        self.assertIn("git -C $worktree add -f runtime-reports", uploader)
 
     def test_p0_post_failure_diagnostics_are_bounded_and_nonfatal(self):
         self.assertIn("function Save-AdbDiagnostic", self.source)
