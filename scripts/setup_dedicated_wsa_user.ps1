@@ -111,15 +111,41 @@ function Ensure-DedicatedUser {
 function Grant-PathAccess {
     param(
         [Parameter(Mandatory = $true)]$User,
-        [Parameter(Mandatory = $true)][string]$Path
+        [Parameter(Mandatory = $true)][string]$Path,
+        [switch]$Recursive
     )
     if (-not (Test-Path -LiteralPath $Path)) {
         New-Item -ItemType Directory -Force -Path $Path | Out-Null
     }
+
     $grant = "*$($User.SID.Value):(OI)(CI)M"
-    & icacls.exe $Path /grant $grant /T /C | Out-Null
+    Write-SetupLog "Granting $TargetUser access to $Path (recursive=$([bool]$Recursive))."
+
+    if ($Recursive) {
+        & icacls.exe $Path /grant $grant /T /C | Out-Null
+    }
+    else {
+        & icacls.exe $Path /grant $grant /C | Out-Null
+    }
+
     if ($LASTEXITCODE -ne 0) {
         throw "icacls failed for $Path."
+    }
+    Write-SetupLog "Access grant completed for $Path."
+}
+
+function Grant-BootstrapAccess {
+    param([Parameter(Mandatory = $true)]$User)
+
+    # The repository is small enough to update recursively. Do NOT recurse over
+    # the extracted WSA tree: it contains thousands of files and made the first
+    # bootstrap appear hung after the password prompt.
+    Grant-PathAccess -User $User -Path $RepoRoot -Recursive
+    Grant-PathAccess -User $User -Path $WorkRoot
+
+    $downloads = Join-Path $WorkRoot "downloads"
+    if (Test-Path -LiteralPath $downloads -PathType Container) {
+        Grant-PathAccess -User $User -Path $downloads -Recursive
     }
 }
 
@@ -349,15 +375,14 @@ function Create-GuiShortcut {
 function Invoke-Prepare {
     Assert-Repository
     $user = Ensure-DedicatedUser
-    Grant-PathAccess -User $user -Path $RepoRoot
-    Grant-PathAccess -User $user -Path $WorkRoot
+    Grant-BootstrapAccess -User $user
 
     Stop-WsaProcesses
     $profileBackup = Backup-WsaProfileData
     Remove-WsaRegistrations
     $filesBackup = Move-OldWsaFilesAside
 
-    Grant-PathAccess -User $user -Path $WorkRoot
+    Grant-BootstrapAccess -User $user
     Register-ContinuationTask
     Save-Handoff -User $user -ProfileBackup $profileBackup -FilesBackup $filesBackup
 
