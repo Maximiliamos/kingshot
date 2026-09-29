@@ -17,14 +17,16 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
-    def test_proven_wsaclient_launch_and_deeplink_sequence_is_used(self):
-        self.assertIn("Starting the proven WsaClient wake sequence", self.source)
-        self.assertIn("Start-Process -FilePath $client", self.source)
+    def test_upstream_uri_is_primary_and_wsaclient_is_fallback(self):
+        upstream = self.source.index('Start-Process "wsa://com.android.settings"')
+        direct = self.source.index('Start-Process -FilePath $client', upstream)
+        self.assertLess(upstream, direct)
+        self.assertIn("Launching WSA using the upstream WSABuilds app URI first.", self.source)
+        self.assertIn("No WSA runtime process is visible after upstream activation", self.source)
         self.assertIn('-ArgumentList "/launch"', self.source)
         self.assertIn('-ArgumentList "/deeplink"', self.source)
         self.assertIn("-WorkingDirectory $clientWorkDir", self.source)
         self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
-        self.assertIn("allowing at least 90s before any recycle", self.source)
 
     def test_developer_registration_registry_failure_is_nonfatal(self):
         self.assertIn("developer-package-registration.txt", self.source)
@@ -46,24 +48,30 @@ class WsaInstallerTests(unittest.TestCase):
             self.source,
         )
 
-    def test_p0_accepts_semantic_adb_device_state_without_exit_code_gate(self):
-        self.assertIn('if ($stateText -eq "device")', self.source)
+    def test_p0_accepts_semantic_wsa_device_without_exit_code_gate(self):
+        self.assertIn('$probe.is_wsa', self.source)
+        self.assertIn('$probe.boot_completed -eq "1"', self.source)
+        self.assertIn('$onlineSerial = $candidate', self.source)
         self.assertNotIn('$stateResult.ExitCode -eq 0 -and $stateText -eq "device"', self.source)
-        self.assertIn('Android control channel accepted on $candidate', self.source)
         self.assertIn('$exitCode = 124', self.source)
         self.assertIn('$proc.Refresh()', self.source)
         self.assertIn('ExitCode = $exitCode', self.source)
 
-    def test_adb_probe_is_null_safe_and_bounded(self):
-        self.assertIn("$connectResult = Invoke-AdbSafe", self.source)
-        self.assertIn("$connectDeadline = (Get-Date).AddMinutes(4)", self.source)
+    def test_adb_probe_is_null_safe_bounded_and_adaptive(self):
+        self.assertIn("Invoke-WsaCandidateProbe", self.source)
+        self.assertIn("$connectDeadline = $probeStartedAt.AddMinutes(3)", self.source)
         self.assertIn("if ($null -ne $rawStdout)", self.source)
+        self.assertIn("$elapsed -ge 15", self.source)
+        self.assertIn("$elapsed -ge 25", self.source)
+        self.assertIn("$elapsed -ge 45", self.source)
+        self.assertIn("$elapsed -ge 120", self.source)
 
     def test_p0_pairing_and_port_diagnostics_are_supported(self):
         self.assertIn('[string]$PairEndpoint = ""', self.source)
         self.assertIn('[string]$PairCode = ""', self.source)
         self.assertIn('@("pair", $PairEndpoint, $PairCode)', self.source)
-        self.assertIn("excluded-tcp-ranges.txt", self.source)
+        self.assertIn("excluded-tcp-ranges-before.txt", self.source)
+        self.assertIn("excluded-tcp-ranges-after.txt", self.source)
         self.assertIn("ANDROID_CONTROL_CHANNEL_REFUSED", self.source)
 
     def test_p0_classifies_android_authorization_required(self):
@@ -78,7 +86,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('019f772c0e46e7eed9aaa0a26ea35bf6ef32093e', self.source)
         self.assertIn('function Get-GitBlobSha1', self.source)
         self.assertIn('settings.dat.backup-', self.source)
-        self.assertIn('Developer-mode fallback did not recover the channel; original settings restored.', self.source)
+        self.assertIn('original settings were restored.', self.source)
 
     def test_p0_avoids_windows_shell_activation_of_unregistered_wsa_protocols(self):
         self.assertNotIn('Start-Process explorer.exe "wsa-client://developer-settings"', self.source)
@@ -97,18 +105,62 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertNotIn("preparing safe migration to GApps", self.source)
         self.assertNotIn("userdata-before-gapps-", self.source)
 
-    def test_p0_does_not_recycle_after_real_adb_device_state(self):
-        self.assertIn('if ($stateText -eq "device")', self.source)
+    def test_p0_does_not_recycle_after_verified_wsa_device(self):
+        self.assertIn('if ($probe.is_wsa)', self.source)
+        self.assertIn('$probe.boot_completed -eq "1"', self.source)
         self.assertIn('$onlineSerial = $candidate', self.source)
-        self.assertIn('break', self.source)
-        self.assertIn('Android control channel accepted on $candidate', self.source)
+        self.assertIn('if ($onlineSerial) { break }', self.source)
 
-    def test_p0_direct_client_fallback_gets_full_startup_grace(self):
+    def test_p0_recycle_is_last_resort_after_two_minutes(self):
         self.assertIn("$directClientStartedAt = $null", self.source)
         self.assertIn("$directClientStartedAt = Get-Date", self.source)
-        self.assertIn("TotalSeconds -ge 90", self.source)
         self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
-        self.assertIn("allowing at least 90s before any recycle", self.source)
+        self.assertIn("$elapsed -ge 120", self.source)
+        self.assertIn("single allowed WSA recycle", self.source)
+
+    def test_p0_reserves_58526_before_startup(self):
+        self.assertIn("function Ensure-WsaAdbPortReservation", self.source)
+        self.assertIn("add excludedportrange protocol=tcp startport=$Port numberofports=1", self.source)
+        self.assertIn("official WSABuilds 10061 prevention", self.source)
+        reserve = self.source.index("Ensure-WsaAdbPortReservation -ReportStage $stage")
+        launch = self.source.index('Start-Process "wsa://com.android.settings"', reserve)
+        self.assertLess(reserve, launch)
+
+    def test_p0_repairs_loopback_exemption(self):
+        self.assertIn("function Ensure-WsaLoopbackExemption", self.source)
+        self.assertIn("CheckNetIsolation.exe LoopbackExempt -a", self.source)
+        self.assertIn("loopback-exempt-before.txt", self.source)
+        self.assertIn("loopback-exempt-after.txt", self.source)
+
+    def test_p0_discovers_hns_mdns_and_guest_5555(self):
+        self.assertIn("function Get-WsaEndpointCandidates", self.source)
+        self.assertIn('Invoke-AdbSafe -Arguments @("mdns", "services")', self.source)
+        self.assertIn("Get-HnsEndpoint", self.source)
+        self.assertIn("hnsdiag.exe", self.source)
+        self.assertIn('($ip + ":5555")', self.source)
+        self.assertIn('($ip + ":58526")', self.source)
+
+    def test_p0_fingerprints_wsa_before_accepting_device(self):
+        self.assertIn('"ro.product.model"', self.source)
+        self.assertIn('"sys.boot_completed"', self.source)
+        self.assertIn('"Subsystem for Android(TM)"', self.source)
+        self.assertIn("Ignoring Android endpoint", self.source)
+
+    def test_p0_collects_host_side_runtime_diagnostics(self):
+        self.assertIn("function Save-WsaHostDiagnostics", self.source)
+        self.assertIn("wsa-host-runtime.json", self.source)
+        self.assertIn("wsa-hns-endpoints.json", self.source)
+        self.assertIn("wsa-application-events.txt", self.source)
+        self.assertIn("wsa-host-logcat-tail.txt", self.source)
+
+    def test_p0_classifies_failure_by_runtime_layer(self):
+        for state in (
+            "WSA_CLIENT_CRASHED",
+            "WSA_RUNTIME_NOT_STARTED",
+            "WSA_ADB_NOT_EXPOSED",
+            "ANDROID_CONTROL_CHANNEL_REFUSED",
+        ):
+            self.assertIn(state, self.source)
 
     def test_p0_reports_persist_outside_temp_across_reboot(self):
         self.assertIn('$ReportsRoot = Join-Path $WorkRoot "reports"', self.source)
