@@ -92,7 +92,7 @@ class WsaInstallerTests(unittest.TestCase):
         fallback_end = self.source.index('function Get-Sha256', fallback_start)
         fallback = self.source[fallback_start:fallback_end]
         self.assertLess(
-            fallback.index('Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA"'),
+            fallback.index('Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA"'),
             fallback.index('Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force'),
         )
 

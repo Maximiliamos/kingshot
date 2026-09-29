@@ -233,7 +233,7 @@ function Enable-DeveloperModeFallback {
         # WSA holds settings.dat open while its SettingsApp/runtime is alive.
         # Stop the same WSA processes that will be restarted below *before*
         # copying the backup, otherwise this reversible repair can never run.
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
         Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force
 
@@ -1652,7 +1652,7 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     elseif (-not $runtimeRecycled -and $elapsed -ge 120) {
         $runtimeRecycled = $true
         Write-Log "All non-destructive startup routes were exhausted; performing the single allowed WSA recycle."
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 4
         if (Invoke-WsaPackagedWake) {
             $packagedActivationSucceeded = $true
