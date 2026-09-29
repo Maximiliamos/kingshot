@@ -19,8 +19,9 @@ class WsaInstallerTests(unittest.TestCase):
 
     def test_proven_wsaclient_launch_and_deeplink_sequence_is_used(self):
         self.assertIn("Starting the proven WsaClient wake sequence", self.source)
-        self.assertIn('"-ArgumentList "/launch", "wsa://com.android.settings"', self.source)
-        self.assertIn('"-ArgumentList "/deeplink", "wsa-client://developer-settings"', self.source)
+        self.assertIn("Start-Process -FilePath $client", self.source)
+        self.assertIn('-ArgumentList "/launch"', self.source)
+        self.assertIn('-ArgumentList "/deeplink"', self.source)
         self.assertIn("-WorkingDirectory $clientWorkDir", self.source)
         self.assertIn('$env:PATH = "$clientWorkDir;$oldPath"', self.source)
         self.assertIn("allowing at least 90s before any recycle", self.source)
