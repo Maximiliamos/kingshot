@@ -76,7 +76,7 @@ try {
     }
     $latest | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $reportsRoot "LATEST.json")
 
-    & git -C $worktree add runtime-reports
+    & git -C $worktree add -f runtime-reports
     Assert-GitSuccess "stage report"
 
     & git -C $worktree -c user.name="WAR BOT Runtime Reporter" -c user.email="warbot-runtime@local.invalid" commit -m "runtime: upload host report $reportName"
