@@ -1,0 +1,15 @@
+﻿{
+    "round":  1,
+    "timestamp":  "2026-09-30T02:34:31.4006195+03:00",
+    "serial":  "127.0.0.1:58526",
+    "source":  "explicit",
+    "tcp_open":  true,
+    "connect_exit":  0,
+    "connect":  "already connected to 127.0.0.1:58526",
+    "state_exit":  0,
+    "state":  "device",
+    "state_error":  "",
+    "model":  "Subsystem for Android(TM)",
+    "boot_completed":  "1",
+    "is_wsa":  true
+}

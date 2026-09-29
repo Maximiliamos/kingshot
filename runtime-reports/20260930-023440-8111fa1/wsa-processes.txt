@@ -1,0 +1,1475 @@
+﻿ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)
+  All known processes:
+  *PERS* UID 1000 ProcessRecord{9becf06 915:com.microsoft.windows.systemapp/1000}
+    user #0 uid=1000 gids={2001, 1065, 3003, 3007, 1007, 1000, 9997, 1079, 1077}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.microsoft.windows.systemapp.SystemApp
+    dir=/system_ext/priv-app/SystemApp/SystemApp.apk publicDir=/system_ext/priv-app/SystemApp/SystemApp.apk data=/data/user/0/com.microsoft.windows.systemapp
+    packageList={com.microsoft.windows.systemapp}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@8aafe8e
+    pid=915
+    lastActivityTime=-15m59s50ms    startUptimeTime=-23m32s936ms    startElapsedTime=-23m32s936ms
+    persistent=true removed=false
+    startSeq=11
+    mountMode=INSTALLER
+    lastPssTime=-21s13ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s899ms
+    lastPss=18MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=115MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s122ms reportLowMemory=true
+    currentHostingComponentTypes=0x2 historicalHostingComponentTypes=0x2
+    reportedInteraction=true time=-3m3s423ms
+    adjSeq=5472 lruSeq=46
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m32s836ms
+    curCapability=LCMN setCapability=LCMN
+
+    hasShownUi=true pendingUiClean=false
+    cached=false empty=false
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->915:com.microsoft.windows.systemapp/1000 s1/1 u0/0 +23m29s311ms
+    mReceivers:
+      - ReceiverList{8caf6 915 com.microsoft.windows.systemapp/1000/u0 remote:2058b91}
+      - ReceiverList{77313a 915 com.microsoft.windows.systemapp/1000/u0 remote:4985065}
+      - ReceiverList{b90bdb 915 com.microsoft.windows.systemapp/1000/u0 remote:e9e5cea}
+      - ReceiverList{cc28de1 915 com.microsoft.windows.systemapp/1000/u0 remote:3102b48}
+      - ReceiverList{eb487cf 915 com.microsoft.windows.systemapp/1000/u0 remote:8f3402e}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=true isPendingFreeze=false isFrozen=false
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.43 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.43 fontWeightAdjustment=0}
+  *APP* UID 10054 ProcessRecord{659d8c1 917:com.google.android.gms.persistent/u0a54}
+    user #0 uid=10054 gids={2001, 1005, 3002, 3003, 3001, 3007, 1007, 3006, 50054, 20054, 9997}
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    class=co.g.App
+    manageSpaceActivityName=co.g.Space
+    dir=/product/priv-app/GmsCore/GmsCore.apk publicDir=/product/priv-app/GmsCore/GmsCore.apk data=/data/user/0/com.google.android.gms
+    packageList={com.google.android.gms}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@fbeabc
+    pid=917
+    lastActivityTime=-5s472ms    startUptimeTime=-23m32s925ms    startElapsedTime=-23m32s925ms
+    startSeq=13
+    mountMode=DEFAULT
+    lastPssTime=-12m49s246ms pssProcState=8 pssStatType=1 nextPssTime=+22m8s898ms
+    lastPss=110MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=214MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=2 (2=2 2.25x)
+    lastRequestedGc=-- lastLowMemory=-21s123ms reportLowMemory=true
+    currentHostingComponentTypes=0x280 historicalHostingComponentTypes=0x2e0
+    adjSeq=5490 lruSeq=2252
+    oom adj: max=1001 curRaw=200 setRaw=200 cur=200 set=200
+    mCurSchedGroup=0 setSchedGroup=0 systemNoUi=false
+    curProcState=8 mRepProcState=8 setProcState=8 lastStateTime=-23m32s806ms
+    curCapability=---- setCapability=----
+
+    cached=false empty=true
+    hasStartedServices=true
+    Services:
+      - ServiceRecord{23e3b8d u0 com.google.android.gms/.location.persistent.LocationPersistentService}
+      - ServiceRecord{2bf3580 u0 com.google.android.gms/.thunderbird.EmergencyPersistentService}
+      - ServiceRecord{307baea u0 com.google.android.gms/.chimera.PersistentDirectBootAwareApiService}
+      - ServiceRecord{3d12fff u0 com.google.android.gms/.tron.CollectionService}
+      - ServiceRecord{58c31fe u0 com.google.android.gms/.common.stats.GmsCoreStatsService}
+      - ServiceRecord{6305b97 u0 com.google.android.gms/.nearby.exposurenotification.service.ExposureMatchingService}
+      - ServiceRecord{655c694 u0 com.google.android.gms/com.google.android.location.fused.FusedLocationService}
+      - ServiceRecord{6f40637 u0 com.google.android.gms/.gcm.nts.SchedulerService}
+      - ServiceRecord{8279132 u0 com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService}
+      - ServiceRecord{88467d3 u0 com.google.android.gms/.fido.authenticator.service.AuthenticatorService}
+      - ServiceRecord{8c80f37 u0 com.google.android.gms/.fido.fido2.pollux.CableAuthenticatorService}
+      - ServiceRecord{93db90b u0 com.google.android.gms/com.google.android.location.network.NetworkLocationService}
+      - ServiceRecord{a502789 u0 com.google.android.gms/.auth.setup.devicesignals.LockScreenService}
+      - ServiceRecord{bdce0d1 u0 com.google.android.gms/.gcm.GcmService}
+      - ServiceRecord{c6ecca0 u0 com.google.android.gms/com.google.android.contextmanager.service.ContextManagerService}
+      - ServiceRecord{d71cf5b u0 com.google.android.gms/.clearcut.debug.ClearcutDebugDumpService}
+      - ServiceRecord{f7ed53d u0 com.google.android.gms/.location.geocode.GeocodeService}
+      - ServiceRecord{fd13e61 u0 com.google.android.gms/.deviceconnection.service.DeviceConnectionWatcherService}
+      - ServiceRecord{feb542c u0 com.google.android.gms/com.google.android.location.internal.GoogleLocationManagerService}
+    mConnections:
+      - ConnectionRecord{e3df0b7 u0 CR WACT CAPS com.google.android.gms/.chimera.PersistentDirectBootAwareApiService:@d1e9bb6}
+    lastProviderTime=-14s503ms
+    Published Providers:
+      - com.google.android.gms.auth.account.be.accountstate.AccountStateContentProvider
+        -> ContentProviderRecord{6306a45 u0 com.google.android.gms/.auth.account.be.accountstate.AccountStateContentProvider}
+      - com.google.android.gms.drivingmode.DrivingModeProvider
+        -> ContentProviderRecord{95c759a u0 com.google.android.gms/.drivingmode.DrivingModeProvider}
+      - com.google.android.gms.security.provider.SecurityProvider
+        -> ContentProviderRecord{74f2ecb u0 com.google.android.gms/.security.provider.SecurityProvider}
+      - com.google.android.gms.fitness.sync.FitnessContentProvider
+        -> ContentProviderRecord{8faf6a8 u0 com.google.android.gms/.fitness.sync.FitnessContentProvider}
+      - com.google.android.gms.instantapps.routing.InstantAppsContentProvider
+        -> ContentProviderRecord{7f265c1 u0 com.google.android.gms/.instantapps.routing.InstantAppsContentProvider}
+      - com.google.android.gms.fonts.provider.FontsProvider
+        -> ContentProviderRecord{17c5166 u0 com.google.android.gms/.fonts.provider.FontsProvider}
+      - com.google.android.location.internal.LocationContentProvider
+        -> ContentProviderRecord{d9feca7 u0 com.google.android.gms/com.google.android.location.internal.LocationContentProvider}
+      - com.google.android.gms.common.appdoctor.AppDoctorProvider
+        -> ContentProviderRecord{75cd554 u0 com.google.android.gms/.common.appdoctor.AppDoctorProvider}
+      - com.google.android.gms.auth.account.be.accountstate.CredentialStateContentProvider
+        -> ContentProviderRecord{e7e9cfd u0 com.google.android.gms/.auth.account.be.accountstate.CredentialStateContentProvider}
+      - com.google.android.gms.phenotype.provider.ConfigurationProvider
+        -> ContentProviderRecord{86c1df2 u0 com.google.android.gms/.phenotype.provider.ConfigurationProvider}
+      - com.google.android.gms.trustagent.framework.model.be.ModelContentProvider
+        -> ContentProviderRecord{254ac43 u0 com.google.android.gms/.trustagent.framework.model.be.ModelContentProvider}
+      - com.google.android.gms.auth.account.be.legacy.AccountContentProvider
+        -> ContentProviderRecord{95bf2c0 u0 com.google.android.gms/.auth.account.be.legacy.AccountContentProvider}
+      - com.google.android.gms.chimera.container.GmsModuleProvider
+        -> ContentProviderRecord{9d0bf9 u0 com.google.android.gms/.chimera.container.GmsModuleProvider}
+      - com.google.android.location.reporting.service.utils.ReportingContentProvider
+        -> ContentProviderRecord{81a273e u0 com.google.android.gms/com.google.android.location.reporting.service.utils.ReportingContentProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->917:com.google.android.gms.persistent/u0a54 s1/1 u0/0 +23m32s436ms
+    mReceivers:
+      - ReceiverList{10aa776 917 com.google.android.gms.persistent/10054/u0 remote:5ab0a11}
+      - ReceiverList{12d79a1 917 com.google.android.gms.persistent/10054/u0 remote:5686e08}
+      - ReceiverList{1375028 917 com.google.android.gms.persistent/10054/u0 remote:ac6fe4b}
+      - ReceiverList{1a229ac 917 com.google.android.gms.persistent/10054/u0 remote:2fefb5f}
+      - ReceiverList{1c58fb8 917 com.google.android.gms.persistent/10054/u0 remote:64f421b}
+      - ReceiverList{22004a2 917 com.google.android.gms.persistent/10054/u0 remote:c6c306d}
+      - ReceiverList{258f623 917 com.google.android.gms.persistent/10054/u0 remote:ccde352}
+      - ReceiverList{2b109e7 917 com.google.android.gms.persistent/10054/u0 remote:a569ba6}
+      - ReceiverList{2e3544c 917 com.google.android.gms.persistent/10054/u0 remote:175ac7f}
+      - ReceiverList{3a76c6b 917 com.google.android.gms.persistent/10054/u0 remote:15ea5ba}
+      - ReceiverList{460a231 917 com.google.android.gms.persistent/10054/u0 remote:ee39ed8}
+      - ReceiverList{481454b 917 com.google.android.gms.persistent/10054/u0 remote:b46d61a}
+      - ReceiverList{50c2123 917 com.google.android.gms.persistent/10054/u0 remote:8f6da52}
+      - ReceiverList{51a62b4 917 com.google.android.gms.persistent/10054/u0 remote:48fd387}
+      - ReceiverList{54bd134 917 com.google.android.gms.persistent/10054/u0 remote:2ffec07}
+      - ReceiverList{5570d11 917 com.google.android.gms.persistent/10054/u0 remote:176938}
+      - ReceiverList{592ca0f 917 com.google.android.gms.persistent/10054/u0 remote:5b4236e}
+      - ReceiverList{5b28a52 917 com.google.android.gms.persistent/10054/u0 remote:2237edd}
+      - ReceiverList{6410697 917 com.google.android.gms.persistent/10054/u0 remote:a4add16}
+      - ReceiverList{65ac387 917 com.google.android.gms.persistent/10054/u0 remote:e52b7c6}
+      - ReceiverList{74c1e62 917 com.google.android.gms.persistent/10054/u0 remote:e35992d}
+      - ReceiverList{75d758b 917 com.google.android.gms.persistent/10054/u0 remote:ab09f5a}
+      - ReceiverList{7c1395a 917 com.google.android.gms.persistent/10054/u0 remote:962e505}
+      - ReceiverList{8ad5b2a 917 com.google.android.gms.persistent/10054/u0 remote:8e62c15}
+      - ReceiverList{92f57eb 917 com.google.android.gms.persistent/10054/u0 remote:4ad0f3a}
+      - ReceiverList{955da0f 917 com.google.android.gms.persistent/10054/u0 remote:159736e}
+      - ReceiverList{9b6f64a 917 com.google.android.gms.persistent/10054/u0 remote:d36bfb5}
+      - ReceiverList{a77852f 917 com.google.android.gms.persistent/10054/u0 remote:5d8570e}
+      - ReceiverList{aae1679 917 com.google.android.gms.persistent/10054/u0 remote:d389740}
+      - ReceiverList{accd42a 917 com.google.android.gms.persistent/10054/u0 remote:463e915}
+      - ReceiverList{ae7840e 917 com.google.android.gms.persistent/10054/u0 remote:2259a09}
+      - ReceiverList{aec39e6 917 com.google.android.gms.persistent/10054/u0 remote:6a041}
+      - ReceiverList{b588474 917 com.google.android.gms.persistent/10054/u0 remote:7ce6447}
+      - ReceiverList{b9b7770 917 com.google.android.gms.persistent/10054/u0 remote:76195b3}
+      - ReceiverList{bff9b29 917 com.google.android.gms.persistent/10054/u0 remote:a5f80b0}
+      - ReceiverList{c75e0e4 917 com.google.android.gms.persistent/10054/u0 remote:92eac77}
+      - ReceiverList{cb75d72 917 com.google.android.gms.persistent/10054/u0 remote:6f92a7d}
+      - ReceiverList{d36b7af 917 com.google.android.gms.persistent/10054/u0 remote:d22c38e}
+      - ReceiverList{e270191 917 com.google.android.gms.persistent/10054/u0 remote:145fb8}
+      - ReceiverList{e286669 917 com.google.android.gms.persistent/10054/u0 remote:84b70f0}
+      - ReceiverList{e3e5915 917 com.google.android.gms.persistent/10054/u0 remote:d0412cc}
+      - ReceiverList{e900527 917 com.google.android.gms.persistent/10054/u0 remote:b337be6}
+      - ReceiverList{ea3d1b9 917 com.google.android.gms.persistent/10054/u0 remote:14f3780}
+      - ReceiverList{fdbff7d 917 com.google.android.gms.persistent/10054/u0 remote:92031d4}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[10054, 1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.41 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.41 fontWeightAdjustment=0}
+  *PERS* UID 10066 ProcessRecord{e2ef1d 916:com.microsoft.windows.userapp/u0a66}
+    user #0 uid=10066 gids={2001, 3003, 50066, 20066, 9997, 1077}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.microsoft.windows.userapp.UserApp
+    dir=/system_ext/priv-app/UserApp/UserApp.apk publicDir=/system_ext/priv-app/UserApp/UserApp.apk data=/data/user/0/com.microsoft.windows.userapp
+    packageList={com.microsoft.windows.userapp}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@30bc99f
+    pid=916
+    lastActivityTime=-16m22s140ms    startUptimeTime=-23m32s936ms    startElapsedTime=-23m32s936ms
+    persistent=true removed=false
+    startSeq=12
+    mountMode=DEFAULT
+    lastPssTime=-21s25ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s898ms
+    lastPss=28MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=130MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s123ms reportLowMemory=true
+    currentHostingComponentTypes=0x202 historicalHostingComponentTypes=0x202
+    reportedInteraction=true time=-3m3s424ms
+    adjSeq=5490 lruSeq=51
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m32s816ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=false
+    hasClientActivities=false hasAboveClient=false treatLikeActivity=true
+    Services:
+      - ServiceRecord{d931b16 u0 com.microsoft.windows.userapp/com.microsoft.windows.input.MicrosoftInputMethod}
+      - ServiceRecord{ea87c64 u0 com.microsoft.windows.userapp/com.microsoft.windows.input.InputAccessibilityService}
+    Published Providers:
+      - androidx.startup.InitializationProvider
+        -> ContentProviderRecord{36d7aec u0 com.microsoft.windows.userapp/androidx.startup.InitializationProvider}
+      - com.microsoft.windows.util.WindowsContentProvider
+        -> ContentProviderRecord{f996eb5 u0 com.microsoft.windows.userapp/com.microsoft.windows.util.WindowsContentProvider}
+      - androidx.core.content.FileProvider
+        -> ContentProviderRecord{90d794a u0 com.microsoft.windows.userapp/androidx.core.content.FileProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->916:com.microsoft.windows.userapp/u0a66 s1/1 u0/0 +23m25s721ms
+    mReceivers:
+      - ReceiverList{cfd68fc 916 com.microsoft.windows.userapp/10066/u0 remote:1ed65ef}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    Background activity start tokens (token: originating token):
+      - ServiceRecord{ea87c64 u0 com.microsoft.windows.userapp/com.microsoft.windows.input.InputAccessibilityService}: null
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42 fontWeightAdjustment=0}
+  *PERS* UID 1000 ProcessRecord{6a2e6b1 425:system/1000}
+    user #0 uid=1000 gids={}
+    mRequiredAbi=null instructionSet=null
+    dir=/system/framework/framework-res.apk publicDir=/system/framework/framework-res.apk data=/data/system
+    packageList={android, com.android.providers.settings, com.android.location.fused}
+    compat=null
+    thread=android.app.ActivityThread$ApplicationThread@eed60bb
+    pid=425
+    lastActivityTime=-20s785ms    startUptimeTime=--    startElapsedTime=--
+    persistent=true removed=false
+    startSeq=0
+    mountMode=NONE
+    lastPssTime=-20s972ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s898ms
+    lastPss=221MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=360MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-15s758ms lastLowMemory=-21s123ms reportLowMemory=false
+    currentHostingComponentTypes=0x241 historicalHostingComponentTypes=0x241
+    reportedInteraction=true time=-2m43s548ms
+    adjSeq=5490 lruSeq=1
+    oom adj: max=-900 curRaw=-900 setRaw=-900 cur=-900 set=-900
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m35s192ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=false
+    Services:
+      - ServiceRecord{224d40e u0 android/.hardware.location.GeofenceHardwareService}
+    mConnections:
+      - ConnectionRecord{50e1fd0 u0 CR FGS android.ext.services/com.android.textclassifier.DefaultTextClassifierService:@f8e2393}
+      - ConnectionRecord{5429c89 u0 CR FGS CAPS android.ext.services/.autofill.InlineSuggestionRenderServiceImpl:@2722b90}
+      - ConnectionRecord{5ad7856 u0 CR IMP com.android.networkstack/com.android.server.NetworkStackService:@1851271}
+      - ConnectionRecord{5c62a09 u0 CR android/.hardware.location.GeofenceHardwareService:@abd7f10}
+      - ConnectionRecord{5c8998b u0 CR !FG !VIS com.google.android.gms/com.google.android.location.internal.GoogleLocationManagerService:@901d35a}
+      - ConnectionRecord{5ddb052 u0 CR FGS CAPS android.ext.services/.autofill.InlineSuggestionRenderServiceImpl:@50b7cdd}
+      - ConnectionRecord{5df6dc7 u0 CR IMP com.android.networkstack.tethering/.TetheringService:@e32a306}
+      - ConnectionRecord{65616f7 u0 CR FGS CAPS android.ext.services/.autofill.InlineSuggestionRenderServiceImpl:@e0272f6}
+      - ConnectionRecord{8081e3b u0 CR FGS CAPS android.ext.services/.autofill.InlineSuggestionRenderServiceImpl:@e0ebcca}
+      - ConnectionRecord{8448831 u0 CR !FG IMPB !VIS com.microsoft.windows.userapp/com.microsoft.windows.input.MicrosoftInputMethod:@1ef5cd8}
+      - ConnectionRecord{9ddf1c6 u0 CR FGS android.ext.services/.notification.Assistant:@a0ecba1}
+      - ConnectionRecord{a30df11 u0 CR !FG !VIS com.google.android.gms/com.google.android.location.fused.FusedLocationService:@fcd4338}
+      - ConnectionRecord{a90541b u0 CR FGS CAPS android.ext.services/.autofill.InlineSuggestionRenderServiceImpl:@6209e2a}
+      - ConnectionRecord{aaf5ae4 u0 CR !FG !VIS com.google.android.gms/.location.geocode.GeocodeService:@2d9ce77}
+      - ConnectionRecord{af6ad45 u0 CR FGSA CAPS com.microsoft.windows.userapp/com.microsoft.windows.input.InputAccessibilityService:@db559bc}
+      - ConnectionRecord{d12db13 u0 CR !FG !VIS com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService:@ebd8602}
+      - ConnectionRecord{e42cffa u0 CR !FG !VIS com.google.android.gms/com.google.android.location.network.NetworkLocationService:@9683225}
+      - ConnectionRecord{f3433ea u0 CR com.android.systemui/.keyguard.KeyguardService:@7d1efd5}
+      - ConnectionRecord{fda5632 u0 CR IMP com.android.providers.media.module/com.android.providers.media.fuse.ExternalStorageServiceImpl:@dd8e3d}
+    Published Providers:
+      - com.android.providers.settings.SettingsProvider
+        -> ContentProviderRecord{a31d6af u0 com.android.providers.settings/.SettingsProvider}
+      - com.android.server.textclassifier.IconsContentProvider
+        -> ContentProviderRecord{a2d59d8 u0 android/com.android.server.textclassifier.IconsContentProvider}
+    mReceivers:
+      - ReceiverList{7cdc0 425 system/1000/u0 local:92b1343}
+      - ReceiverList{a24c8 425 system/1000/u0 local:4c3c16b}
+      - ReceiverList{1af448 425 system/1000/u0 local:d601eeb}
+      - ReceiverList{1b13e1 425 system/1000/u-1 local:dff0948}
+      - ReceiverList{219029 425 system/1000/u0 local:4ac29b0}
+      - ReceiverList{275333 425 system/1000/u-1 local:f364aa2}
+      - ReceiverList{2d8e2b 425 system/1000/u-1 local:705367a}
+      - ReceiverList{54575d 425 system/1000/u0 local:2257d34}
+      - ReceiverList{6861e8 425 system/1000/u-1 local:82e3f0b}
+      - ReceiverList{7542e4 425 system/1000/u0 local:de65677}
+      - ReceiverList{75f94d 425 system/1000/u0 local:581b0e4}
+      - ReceiverList{76135c 425 system/1000/u0 local:44ebdcf}
+      - ReceiverList{87b9ae 425 system/1000/u-1 local:c34a229}
+      - ReceiverList{93b374 425 system/1000/u0 local:34cef47}
+      - ReceiverList{996ac4 425 system/1000/u-1 local:da4b1d7}
+      - ReceiverList{a04969 425 system/1000/u-1 local:9f8fff0}
+      - ReceiverList{a7d575 425 system/1000/u0 local:72e44ac}
+      - ReceiverList{ae8a56 425 system/1000/u0 local:6772c71}
+      - ReceiverList{c2a402 425 system/1000/u0 local:742314d}
+      - ReceiverList{d15160 425 system/1000/u-1 local:31fe163}
+      - ReceiverList{d277f4 425 system/1000/u-1 local:af1f5c7}
+      - ReceiverList{d542e8 425 system/1000/u0 local:eae040b}
+      - ReceiverList{f5a5bb 425 system/1000/u-1 local:aa7b24a}
+      - ReceiverList{1063938 425 system/1000/u-1 local:3eaa19b}
+      - ReceiverList{1361a6c 425 system/1000/u0 local:11d371f}
+      - ReceiverList{138df19 425 system/1000/u0 local:3c49e60}
+      - ReceiverList{13b022c 425 system/1000/u0 local:d89e5df}
+      - ReceiverList{1428334 425 system/1000/u0 local:2ba2607}
+      - ReceiverList{146f529 425 system/1000/u0 local:92402b0}
+      - ReceiverList{14b7725 425 system/1000/u0 local:5599f1c}
+      - ReceiverList{15a09d0 425 system/1000/u0 local:34f7593}
+      - ReceiverList{168cd81 425 system/1000/u0 local:faf2568}
+      - ReceiverList{1710741 425 system/1000/u0 local:bb12e28}
+      - ReceiverList{17bde64 425 system/1000/u-1 local:5c02ff7}
+      - ReceiverList{1a27c4a 425 system/1000/u0 local:7249db5}
+      - ReceiverList{1b941fa 425 system/1000/u0 local:3c92c25}
+      - ReceiverList{1bc9b64 425 system/1000/u0 local:1c9c0f7}
+      - ReceiverList{1c4d8c8 425 system/1000/u-1 local:aa8c56b}
+      - ReceiverList{1ce0946 425 system/1000/u-1 local:cda9121}
+      - ReceiverList{1cfa749 425 system/1000/u0 local:3b5a950}
+      - ReceiverList{1d9a148 425 system/1000/u0 local:b695feb}
+      - ReceiverList{1f397a3 425 system/1000/u0 local:c901ad2}
+      - ReceiverList{2130c1d 425 system/1000/u0 local:10f0cf4}
+      - ReceiverList{2334359 425 system/1000/u-1 local:2d4eba0}
+      - ReceiverList{23ea4bd 425 system/1000/u-1 local:2fd2414}
+      - ReceiverList{27034e8 425 system/1000/u0 local:ef57e0b}
+      - ReceiverList{2741b91 425 system/1000/u-1 local:35da1b8}
+      - ReceiverList{27640e6 425 system/1000/u0 local:ce86341}
+      - ReceiverList{287243e 425 system/1000/u0 local:edbdcf9}
+      - ReceiverList{28d4d28 425 system/1000/u0 local:5f2cf4b}
+      - ReceiverList{2b3332f 425 system/1000/u-1 local:c1dfd0e}
+      - ReceiverList{2b5dd49 425 system/1000/u0 local:81af750}
+      - ReceiverList{2bd7e1d 425 system/1000/u0 local:cf406f4}
+      - ReceiverList{2e612bc 425 system/1000/u0 local:64b9eaf}
+      - ReceiverList{2f27261 425 system/1000/u-1 local:b36d1c8}
+      - ReceiverList{34043b6 425 system/1000/u-1 local:5806f51}
+      - ReceiverList{348f999 425 system/1000/u-1 local:2f292e0}
+      - ReceiverList{34983c6 425 system/1000/u-1 local:28565a1}
+      - ReceiverList{34eb890 425 system/1000/u0 local:e02a753}
+      - ReceiverList{36c3922 425 system/1000/u0 local:42e66ed}
+      - ReceiverList{3809fe6 425 system/1000/u-1 local:234de41}
+      - ReceiverList{38c1dc8 425 system/1000/u-1 local:79dfe6b}
+      - ReceiverList{3950250 425 system/1000/u-1 local:b310013}
+      - ReceiverList{3a5d75e 425 system/1000/u-1 local:86e899}
+      - ReceiverList{3af58f6 425 system/1000/u-1 local:5159191}
+      - ReceiverList{3ba0976 425 system/1000/u-1 local:5d2b411}
+      - ReceiverList{3e32eec 425 system/1000/u0 local:1b7cd9f}
+      - ReceiverList{3f3257a 425 system/1000/u0 local:ff66da5}
+      - ReceiverList{41f74e1 425 system/1000/u0 local:1c44e48}
+      - ReceiverList{41fbf41 425 system/1000/u0 local:587c628}
+      - ReceiverList{421ef12 425 system/1000/u-1 local:4527e9d}
+      - ReceiverList{422c089 425 system/1000/u0 local:5ec5f90}
+      - ReceiverList{428096c 425 system/1000/u0 local:7f5821f}
+      - ReceiverList{42e14fe 425 system/1000/u-1 local:f7918b9}
+      - ReceiverList{431cf2b 425 system/1000/u-1 local:d5ddb7a}
+      - ReceiverList{456ec6f 425 system/1000/u-1 local:c03d34e}
+      - ReceiverList{4604423 425 system/1000/u0 local:c49a952}
+      - ReceiverList{46c706e 425 system/1000/u0 local:9f2fbe9}
+      - ReceiverList{475935f 425 system/1000/u0 local:ec9fffe}
+      - ReceiverList{4856496 425 system/1000/u0 local:cd407b1}
+      - ReceiverList{48b89f4 425 system/1000/u-1 local:87c0fc7}
+      - ReceiverList{49ff16d 425 system/1000/u0 local:ff5f584}
+      - ReceiverList{4a0764c 425 system/1000/u0 local:14a167f}
+      - ReceiverList{4a17d16 425 system/1000/u0 local:6e73231}
+      - ReceiverList{4a22124 425 system/1000/u0 local:fdec5b7}
+      - ReceiverList{4a9db1b 425 system/1000/u0 local:1fe12a}
+      - ReceiverList{4ab17db 425 system/1000/u0 local:a2118ea}
+      - ReceiverList{4b054a2 425 system/1000/u0 local:8cbc06d}
+      - ReceiverList{4be6464 425 system/1000/u0 local:6010df7}
+      - ReceiverList{4c4ad23 425 system/1000/u-1 local:14a1652}
+      - ReceiverList{4d9a1de 425 system/1000/u0 local:b594d19}
+      - ReceiverList{4eac4c5 425 system/1000/u0 local:8151f3c}
+      - ReceiverList{4ef13ef 425 system/1000/u-1 local:fcde8ce}
+      - ReceiverList{4f9271d 425 system/1000/u-1 local:3a0b3f4}
+      - ReceiverList{4fbce55 425 system/1000/u0 local:ba5150c}
+      - ReceiverList{500b09c 425 system/1000/u0 local:98880f}
+      - ReceiverList{5106176 425 system/1000/u-1 local:7ab6c11}
+      - ReceiverList{5246f30 425 system/1000/u-1 local:f989473}
+      - ReceiverList{5313d39 425 system/1000/u0 local:8492100}
+      - ReceiverList{5331aca 425 system/1000/u-1 local:b32a635}
+      - ReceiverList{5376566 425 system/1000/u0 local:1d49c1}
+      - ReceiverList{53cb04c 425 system/1000/u-1 local:22af87f}
+      - ReceiverList{543563d 425 system/1000/u0 local:847ab94}
+      - ReceiverList{54a0ea2 425 system/1000/u0 local:d30226d}
+      - ReceiverList{55cbdce 425 system/1000/u0 local:a28a2c9}
+      - ReceiverList{564619d 425 system/1000/u-1 local:3224874}
+      - ReceiverList{568d91b 425 system/1000/u0 local:ca4172a}
+      - ReceiverList{5991f60 425 system/1000/u-1 local:e0e2763}
+      - ReceiverList{5ad25f5 425 system/1000/u0 local:fac872c}
+      - ReceiverList{5b55ee0 425 system/1000/u-1 local:afdb4e3}
+      - ReceiverList{5c2ee95 425 system/1000/u0 local:30f8e4c}
+      - ReceiverList{5d01996 425 system/1000/u-1 local:7470b1}
+      - ReceiverList{5d6933c 425 system/1000/u-1 local:1a3d12f}
+      - ReceiverList{5db532d 425 system/1000/u0 local:2dec644}
+      - ReceiverList{5e01da1 425 system/1000/u0 local:6f2208}
+      - ReceiverList{5e80e7d 425 system/1000/u0 local:4a71cd4}
+      - ReceiverList{6061819 425 system/1000/u-1 local:d0f1b60}
+      - ReceiverList{608e8a7 425 system/1000/u0 local:e3bbd66}
+      - ReceiverList{6177903 425 system/1000/u-1 local:cfb25b2}
+      - ReceiverList{61e9ea0 425 system/1000/u0 local:3c91ba3}
+      - ReceiverList{6264586 425 system/1000/u0 local:d391661}
+      - ReceiverList{626ce50 425 system/1000/u0 local:fa7c13}
+      - ReceiverList{6358944 425 system/1000/u-1 local:ebc3a57}
+      - ReceiverList{63fb310 425 system/1000/u0 local:388fbd3}
+      - ReceiverList{65281f1 425 system/1000/u0 local:d762598}
+      - ReceiverList{66b2531 425 system/1000/u-1 local:e4a4dd8}
+      - ReceiverList{66c1518 425 system/1000/u0 local:ad100fb}
+      - ReceiverList{675f2f0 425 system/1000/u0 local:e72cf33}
+      - ReceiverList{6788a0a 425 system/1000/u-1 local:df74a75}
+      - ReceiverList{6ab242a 425 system/1000/u0 local:6897915}
+      - ReceiverList{6b23e2d 425 system/1000/u0 local:4627d44}
+      - ReceiverList{6b65053 425 system/1000/u-1 local:41c8842}
+      - ReceiverList{6bafe4e 425 system/1000/u0 local:60d9549}
+      - ReceiverList{6ccb15a 425 system/1000/u0 local:8113d05}
+      - ReceiverList{6d40dd4 425 system/1000/u-1 local:d06b727}
+      - ReceiverList{700f744 425 system/1000/u-1 local:af8a057}
+      - ReceiverList{70f3980 425 system/1000/u-1 local:cc1d603}
+      - ReceiverList{714c95d 425 system/1000/u0 local:6b87734}
+      - ReceiverList{7190d42 425 system/1000/u-1 local:937778d}
+      - ReceiverList{726524e 425 system/1000/u0 local:a81b949}
+      - ReceiverList{72fcb74 425 system/1000/u-1 local:ea6747}
+      - ReceiverList{732d6df 425 system/1000/u-1 local:7ec217e}
+      - ReceiverList{7420b01 425 system/1000/u0 local:b58e8e8}
+      - ReceiverList{751c7af 425 system/1000/u-1 local:180138e}
+      - ReceiverList{75956ad 425 system/1000/u-1 local:e4ca7c4}
+      - ReceiverList{75ff437 425 system/1000/u-1 local:8407d36}
+      - ReceiverList{792102b 425 system/1000/u0 local:702807a}
+      - ReceiverList{7b86f7a 425 system/1000/u0 local:1ba9fa5}
+      - ReceiverList{7d95f77 425 system/1000/u0 local:edb8d76}
+      - ReceiverList{817a728 425 system/1000/u-1 local:26514b}
+      - ReceiverList{822c577 425 system/1000/u-1 local:272cb76}
+      - ReceiverList{826ce96 425 system/1000/u0 local:1d0d9b1}
+      - ReceiverList{8294e74 425 system/1000/u-1 local:99c1647}
+      - ReceiverList{82b8700 425 system/1000/u0 local:990e983}
+      - ReceiverList{83533ac 425 system/1000/u0 local:f2fed5f}
+      - ReceiverList{8519bc4 425 system/1000/u0 local:74b06d7}
+      - ReceiverList{870dc82 425 system/1000/u0 local:15bfbcd}
+      - ReceiverList{879ef8f 425 system/1000/u-1 local:3d26eee}
+      - ReceiverList{88dc4fc 425 system/1000/u0 local:255b1ef}
+      - ReceiverList{894f7c1 425 system/1000/u0 local:72490a8}
+      - ReceiverList{89f91e7 425 system/1000/u-1 local:4a43a6}
+      - ReceiverList{8bff2dd 425 system/1000/u0 local:bd856b4}
+      - ReceiverList{8c4b0ff 425 system/1000/u0 local:ad2901e}
+      - ReceiverList{8d221db 425 system/1000/u-1 local:db60aea}
+      - ReceiverList{8fe7e29 425 system/1000/u0 local:500fb0}
+      - ReceiverList{95f288d 425 system/1000/u0 local:d211524}
+      - ReceiverList{96b85f2 425 system/1000/u0 local:fbaa4fd}
+      - ReceiverList{96c6fe1 425 system/1000/u-1 local:68c5548}
+      - ReceiverList{9911a6e 425 system/1000/u0 local:3780de9}
+      - ReceiverList{993ccaa 425 system/1000/u-1 local:3817395}
+      - ReceiverList{9b2f7f1 425 system/1000/u-1 local:4d6b398}
+      - ReceiverList{9cd464a 425 system/1000/u0 local:1744fb5}
+      - ReceiverList{9d132bd 425 system/1000/u-1 local:6292a14}
+      - ReceiverList{9da5867 425 system/1000/u0 local:3321426}
+      - ReceiverList{9f1c4ee 425 system/1000/u0 local:c9ed269}
+      - ReceiverList{9fe13d4 425 system/1000/u0 local:61d1527}
+      - ReceiverList{a0639b2 425 system/1000/u-1 local:584cfbd}
+      - ReceiverList{a148926 425 system/1000/u-1 local:eda481}
+      - ReceiverList{a21ef42 425 system/1000/u0 local:52ea18d}
+      - ReceiverList{a22b6a4 425 system/1000/u0 local:e564137}
+      - ReceiverList{a544b7e 425 system/1000/u-1 local:3141939}
+      - ReceiverList{a5bd0ac 425 system/1000/u-1 local:f8ade5f}
+      - ReceiverList{a6f53d5 425 system/1000/u0 local:745408c}
+      - ReceiverList{a7c66ae 425 system/1000/u-1 local:98be329}
+      - ReceiverList{a849972 425 system/1000/u0 local:b05d67d}
+      - ReceiverList{a8b1120 425 system/1000/u-1 local:e2dc823}
+      - ReceiverList{aab56e6 425 system/1000/u0 local:b0c1141}
+      - ReceiverList{ad83126 425 system/1000/u-1 local:156ec81}
+      - ReceiverList{af60505 425 system/1000/u0 local:cc0387c}
+      - ReceiverList{b129940 425 system/1000/u0 local:cbbdcc3}
+      - ReceiverList{b134af2 425 system/1000/u0 local:5c25dfd}
+      - ReceiverList{b18acf2 425 system/1000/u0 local:ad807fd}
+      - ReceiverList{b2d53f1 425 system/1000/u0 local:890ff98}
+      - ReceiverList{b3cbc7f 425 system/1000/u0 local:63d999e}
+      - ReceiverList{b3f6ecb 425 system/1000/u-1 local:1e5b59a}
+      - ReceiverList{b572b5c 425 system/1000/u-1 local:82535cf}
+      - ReceiverList{b6ddc45 425 system/1000/u0 local:bdfe4bc}
+      - ReceiverList{b7103d9 425 system/1000/u-1 local:4675e20}
+      - ReceiverList{b71fe7b 425 system/1000/u0 local:5eef60a}
+      - ReceiverList{b82d39d 425 system/1000/u-1 local:1cb4274}
+      - ReceiverList{ba30f67 425 system/1000/u-1 local:65f4726}
+      - ReceiverList{bb84efd 425 system/1000/u0 local:7860f54}
+      - ReceiverList{bd2830a 425 system/1000/u-1 local:3098775}
+      - ReceiverList{bf00e82 425 system/1000/u-1 local:770b5cd}
+      - ReceiverList{bfdbac6 425 system/1000/u-1 local:f1c18a1}
+      - ReceiverList{c05e42e 425 system/1000/u0 local:c7ee6a9}
+      - ReceiverList{c10153a 425 system/1000/u-1 local:5364465}
+      - ReceiverList{c11b06f 425 system/1000/u-1 local:e9f274e}
+      - ReceiverList{c194e5c 425 system/1000/u0 local:5de04cf}
+      - ReceiverList{c284836 425 system/1000/u0 local:5abb5d1}
+      - ReceiverList{c34cac8 425 system/1000/u0 local:df93f6b}
+      - ReceiverList{c354b3f 425 system/1000/u-1 local:c182b5e}
+      - ReceiverList{c3b9676 425 system/1000/u0 local:25e5511}
+      - ReceiverList{c40b8bf 425 system/1000/u-1 local:f9edede}
+      - ReceiverList{c417e7c 425 system/1000/u-1 local:106616f}
+      - ReceiverList{c419e99 425 system/1000/u0 local:982abe0}
+      - ReceiverList{c540d1d 425 system/1000/u-1 local:19f71f4}
+      - ReceiverList{c5e9f85 425 system/1000/u0 local:758acfc}
+      - ReceiverList{c8a067b 425 system/1000/u0 local:bc21e0a}
+      - ReceiverList{c8e2d70 425 system/1000/u0 local:a3563b3}
+      - ReceiverList{cad2c20 425 system/1000/u-1 local:76b6f23}
+      - ReceiverList{cb011b2 425 system/1000/u0 local:3cf07bd}
+      - ReceiverList{cbfddf9 425 system/1000/u0 local:bdeccc0}
+      - ReceiverList{cc5e992 425 system/1000/u0 local:a77d31d}
+      - ReceiverList{cccacea 425 system/1000/u0 local:d0cacd5}
+      - ReceiverList{cd8e41e 425 system/1000/u-1 local:51f3059}
+      - ReceiverList{cdd0482 425 system/1000/u0 local:bfc3cd}
+      - ReceiverList{cdf585b 425 system/1000/u-1 local:a740b6a}
+      - ReceiverList{cebc84c 425 system/1000/u0 local:d47707f}
+      - ReceiverList{ceeaf01 425 system/1000/u-1 local:7019ce8}
+      - ReceiverList{cf08eb8 425 system/1000/u0 local:d5add1b}
+      - ReceiverList{cf93e22 425 system/1000/u0 local:9685fed}
+      - ReceiverList{cfdce51 425 system/1000/u-1 local:f876778}
+      - ReceiverList{cfe2569 425 system/1000/u0 local:ff4cbf0}
+      - ReceiverList{d081265 425 system/1000/u-1 local:a869f5c}
+      - ReceiverList{d199025 425 system/1000/u-1 local:f9c7c1c}
+      - ReceiverList{d1f431c 425 system/1000/u0 local:3a3d48f}
+      - ReceiverList{d2659a3 425 system/1000/u-1 local:1aca4d2}
+      - ReceiverList{d4b6d67 425 system/1000/u-1 local:a165d26}
+      - ReceiverList{d84ab38 425 system/1000/u0 local:6739b9b}
+      - ReceiverList{d91e14a 425 system/1000/u0 local:b4e76b5}
+      - ReceiverList{d96fa0d 425 system/1000/u-1 local:9f73ca4}
+      - ReceiverList{da80f3e 425 system/1000/u0 local:d9193f9}
+      - ReceiverList{daeb71a 425 system/1000/u-1 local:244c1c5}
+      - ReceiverList{ddc9ebc 425 system/1000/u0 local:814daaf}
+      - ReceiverList{de01f4c 425 system/1000/u0 local:88ac37f}
+      - ReceiverList{def2cad 425 system/1000/u0 local:8dc15c4}
+      - ReceiverList{e005a71 425 system/1000/u0 local:f4a1018}
+      - ReceiverList{e142957 425 system/1000/u-1 local:e3dd2d6}
+      - ReceiverList{e1e66c0 425 system/1000/u0 local:7887043}
+      - ReceiverList{e1f46f6 425 system/1000/u0 local:b87791}
+      - ReceiverList{e2a5b87 425 system/1000/u-1 local:bc1afc6}
+      - ReceiverList{e7be953 425 system/1000/u0 local:984e542}
+      - ReceiverList{eae4c24 425 system/1000/u-1 local:524bcb7}
+      - ReceiverList{eb63a88 425 system/1000/u0 local:e5f962b}
+      - ReceiverList{ec3000b 425 system/1000/u-1 local:263c3da}
+      - ReceiverList{ef66fab 425 system/1000/u-1 local:8c6adfa}
+      - ReceiverList{f22c1b4 425 system/1000/u-1 local:124e87}
+      - ReceiverList{f2689aa 425 system/1000/u-1 local:ee50495}
+      - ReceiverList{f323444 425 system/1000/u-1 local:e64b157}
+      - ReceiverList{f3bfc2a 425 system/1000/u0 local:5f6b115}
+      - ReceiverList{f5e5851 425 system/1000/u0 local:84bd978}
+      - ReceiverList{f6a53dc 425 system/1000/u-1 local:e61b04f}
+      - ReceiverList{f7721c4 425 system/1000/u0 local:11ae4d7}
+      - ReceiverList{f94c816 425 system/1000/u-1 local:1bcc931}
+      - ReceiverList{fab3422 425 system/1000/u0 local:c706ded}
+      - ReceiverList{fb956b7 425 system/1000/u0 local:f6fd9b6}
+      - ReceiverList{fd20eb6 425 system/1000/u0 local:35e8651}
+      - ReceiverList{fe6efd0 425 system/1000/u0 local:e083393}
+      - ReceiverList{fee62f8 425 system/1000/u0 local:f965a5b}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.50 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.50 fontWeightAdjustment=0}
+  *PERS* UID 1073 ProcessRecord{e0aa0d7 653:com.android.networkstack.process/1073}
+    user #0 uid=1073 gids={3002, 3003, 3007, 3006, 3005, 3004, 1073, 9997}
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    dir=/system/priv-app/NetworkStackNext/NetworkStackNext.apk publicDir=/system/priv-app/NetworkStackNext/NetworkStackNext.apk data=/data/user_de/0/com.android.networkstack
+    packageList={com.android.networkstack, com.android.networkstack.tethering}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@bbf4131
+    pid=653
+    lastActivityTime=-23m34s66ms    startUptimeTime=-23m34s279ms    startElapsedTime=-23m34s279ms
+    persistent=true removed=false
+    startSeq=3
+    mountMode=DEFAULT
+    lastPssTime=-20s992ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s897ms
+    lastPss=19MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=107MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-10s756ms lastLowMemory=-21s124ms reportLowMemory=false
+    currentHostingComponentTypes=0x202 historicalHostingComponentTypes=0x202
+    reportedInteraction=true time=-3m3s425ms
+    adjSeq=5490 lruSeq=8
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m34s67ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=false
+    Services:
+      - ServiceRecord{afa7c08 u0 com.android.networkstack.tethering/.TetheringService}
+      - ServiceRecord{efbda1c u0 com.android.networkstack/com.android.server.NetworkStackService}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->653:com.android.networkstack.process/1073 s1/1 u0/0 +23m34s26ms
+    mReceivers:
+      - ReceiverList{23ceb53 653 com.android.networkstack.process/1073/u0 remote:380af42}
+      - ReceiverList{49ebd6b 653 com.android.networkstack.process/1073/u0 remote:34c9aba}
+      - ReceiverList{6f36ee3 653 com.android.networkstack.process/1073/u0 remote:d57c712}
+      - ReceiverList{b67425e 653 com.android.networkstack.process/1073/u0 remote:f1f99}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.8 fontWeightAdjustment=0}
+  *PERS* UID 1068 ProcessRecord{437e841 730:com.android.se/1068}
+    user #0 uid=1068 gids={1068, 9997}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.android.se.SEApplication
+    dir=/system/app/SecureElement/SecureElement.apk publicDir=/system/app/SecureElement/SecureElement.apk data=/data/user/0/com.android.se
+    packageList={com.android.se}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@331e016
+    pid=730
+    lastActivityTime=-23m33s719ms    startUptimeTime=-23m33s800ms    startElapsedTime=-23m33s800ms
+    persistent=true removed=false
+    startSeq=5
+    mountMode=DEFAULT
+    lastPssTime=-20s995ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s897ms
+    lastPss=9,6MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=88MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s124ms reportLowMemory=true
+    currentHostingComponentTypes=0x2 historicalHostingComponentTypes=0x2
+    reportedInteraction=true time=-3m3s425ms
+    adjSeq=5472 lruSeq=14
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m33s750ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=false
+    Services:
+      - ServiceRecord{efab1f0 u0 com.android.se/.SecureElementService}
+    mReceivers:
+      - ReceiverList{b8f0623 730 com.android.se/1068/u0 remote:fd23352}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.48 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.48 fontWeightAdjustment=0}
+  *PERS* UID 10061 ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+    user #0 uid=10061 gids={50061, 20061, 9997}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.microsoft.windows.homeapp.HomeApp
+    dir=/product/app/HomeApp/HomeApp.apk publicDir=/product/app/HomeApp/HomeApp.apk data=/data/user/0/com.microsoft.windows.homeapp
+    packageList={com.microsoft.windows.homeapp}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@5874d97
+    pid=744
+    lastActivityTime=-21s99ms    startUptimeTime=-23m33s800ms    startElapsedTime=-23m33s800ms
+    persistent=true removed=false
+    startSeq=6
+    mountMode=DEFAULT
+    lastPssTime=-13m21s300ms pssProcState=5 pssStatType=0 nextPssTime=+14m53s894ms
+    lastPss=13MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=113MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 1.5x, 2=0 1.0x) / pending state=0 highest=0 2.25x
+    lastRequestedGc=-- lastLowMemory=-21s124ms reportLowMemory=true
+    currentHostingComponentTypes=0x2 historicalHostingComponentTypes=0x2
+    reportedInteraction=true time=-3m3s425ms
+    adjSeq=5472 lruSeq=15
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-6s106ms
+    curCapability=LCMN setCapability=LCMN
+
+    hasShownUi=true pendingUiClean=false
+    cached=false empty=false
+    lastTopTime=-6s111ms
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->744:com.microsoft.windows.homeapp/u0a61 s1/1 u0/0 +23m33s691ms
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    Activities:
+      - ActivityRecord{903ae06 u0 com.microsoft.windows.homeapp/com.microsoft.windows.home.Home} t2}
+      - ActivityRecord{84d3d74 u0 com.microsoft.windows.homeapp/com.microsoft.windows.placeholder.PlaceholderActivity} t5}
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw720dp w1280dp h720dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(440, 262 - 1720, 982) mAppBounds=Rect(440, 262 - 1720, 982) mMaxBounds=Rect(440, 262 - 1720, 982) mDisplayRotation=ROTATION_0 mWindowingMode=freeform mDisplayWindowingMode=freeform mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw720dp w1280dp h720dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(440, 262 - 1720, 982) mAppBounds=Rect(440, 262 - 1720, 982) mMaxBounds=Rect(440, 262 - 1720, 982) mDisplayRotation=ROTATION_0 mWindowingMode=freeform mDisplayWindowingMode=freeform mActivityType=standard mAlwaysOnTop=undefined mRotation=ROTATION_0} s.195 fontWeightAdjustment=0}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw720dp w1280dp h720dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(440, 262 - 1720, 982) mAppBounds=Rect(440, 262 - 1720, 982) mMaxBounds=Rect(440, 262 - 1720, 982) mDisplayRotation=ROTATION_0 mWindowingMode=freeform mDisplayWindowingMode=freeform mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.51 fontWeightAdjustment=0}
+     mActivityStateFlags=
+  *APP* UID 10054 ProcessRecord{10754f9 1809:com.google.process.gservices/u0a54}
+    user #0 uid=10054 gids={2001, 1005, 3002, 3003, 3001, 3007, 1007, 3006, 50054, 20054, 9997}
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    dir=/system_ext/priv-app/GoogleServicesFramework.apk publicDir=/system_ext/priv-app/GoogleServicesFramework.apk data=/data/user/0/com.google.android.gsf
+    packageList={com.google.android.gsf}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@e0a3b84
+    pid=1809
+    lastActivityTime=-20s543ms    startUptimeTime=-20s966ms    startElapsedTime=-20s966ms
+    startSeq=86
+    mountMode=DEFAULT
+    lastCpuTime=0
+    lastPssTime=-20s966ms pssProcState=20 pssStatType=0 nextPssTime=+5s496ms
+    lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=0,00
+    trimMemoryLevel=0
+    procStateMemTracker: best=4 () / pending state=4 highest=4 1.0x
+    lastRequestedGc=-20s891ms lastLowMemory=-20s891ms reportLowMemory=false
+    currentHostingComponentTypes=0x0 historicalHostingComponentTypes=0x40
+    adjSeq=5485 lruSeq=2238
+    oom adj: max=1001 curRaw=700 setRaw=700 cur=700 set=700
+    mCurSchedGroup=0 setSchedGroup=0 systemNoUi=false
+    curProcState=15 mRepProcState=15 setProcState=15 lastStateTime=-14s504ms
+    curCapability=---- setCapability=----
+
+    cached=false empty=true
+    whenUnimportant=-23m45s340ms
+    lastProviderTime=-14s504ms
+    Published Providers:
+      - com.google.android.gsf.gservices.GservicesProvider
+        -> ContentProviderRecord{495bf6d u0 com.google.android.gsf/.gservices.GservicesProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->1809:com.google.process.gservices/u0a54 s1/1 u0/0 +20s786ms
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+  *APP* UID 10054 ProcessRecord{de7cfc7 1767:com.google.android.gms/u0a54}
+    user #0 uid=10054 gids={2001, 1005, 3002, 3003, 3001, 3007, 1007, 3006, 50054, 20054, 9997}
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    class=co.g.App
+    manageSpaceActivityName=co.g.Space
+    dir=/product/priv-app/GmsCore/GmsCore.apk publicDir=/product/priv-app/GmsCore/GmsCore.apk data=/data/user/0/com.google.android.gms
+    packageList={com.google.android.gms}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@f63e7a2
+    pid=1767
+    lastActivityTime=-5s469ms    startUptimeTime=-21s77ms    startElapsedTime=-21s77ms
+    startSeq=84
+    mountMode=DEFAULT
+    lastCpuTime=0
+    lastPssTime=-21s77ms pssProcState=20 pssStatType=0 nextPssTime=+54s531ms
+    lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=0,00
+    trimMemoryLevel=0
+    procStateMemTracker: best=4 () / pending state=4 highest=4 1.0x
+    lastRequestedGc=-21s47ms lastLowMemory=-21s47ms reportLowMemory=false
+    currentHostingComponentTypes=0x0 historicalHostingComponentTypes=0x280
+    adjSeq=5488 lruSeq=2258
+    oom adj: max=1001 curRaw=905 setRaw=905 cur=905 set=905
+    mCurSchedGroup=0 setSchedGroup=0 systemNoUi=false
+    curProcState=19 mRepProcState=19 setProcState=19 lastStateTime=-5s469ms
+    curCapability=---- setCapability=----
+
+    cached=true empty=true
+    whenUnimportant=-23m45s340ms
+    Published Providers:
+      - com.google.android.gms.thunderbird.config.EmergencyConfigContentProvider
+        -> ContentProviderRecord{7692c33 u0 com.google.android.gms/.thunderbird.config.EmergencyConfigContentProvider}
+      - com.google.android.gms.chromesync.sync.SyncContentProvider
+        -> ContentProviderRecord{5b18bf0 u0 com.google.android.gms/.chromesync.sync.SyncContentProvider}
+      - com.google.android.gms.update.OtaSuggestionSummaryProvider
+        -> ContentProviderRecord{dbe569 u0 com.google.android.gms/.update.OtaSuggestionSummaryProvider}
+      - com.google.android.gms.games.provider.NotificationStubContentProvider
+        -> ContentProviderRecord{5bcdbee u0 com.google.android.gms/.games.provider.NotificationStubContentProvider}
+      - com.google.android.gms.auth.proximity.multidevice.SettingsContentProvider
+        -> ContentProviderRecord{480588f u0 com.google.android.gms/.auth.proximity.multidevice.SettingsContentProvider}
+      - com.google.android.gms.common.app.GmsFileProvider
+        -> ContentProviderRecord{33b771c u0 com.google.android.gms/.common.app.GmsFileProvider}
+      - com.google.android.gms.icing.proxy.AppsContentProvider
+        -> ContentProviderRecord{a446f25 u0 com.google.android.gms/.icing.proxy.AppsContentProvider}
+      - com.google.android.gms.reminders.provider.RemindersProvider
+        -> ContentProviderRecord{49ec8fa u0 com.google.android.gms/.reminders.provider.RemindersProvider}
+      - com.google.android.gms.people.service.PeopleContentProvider
+        -> ContentProviderRecord{433eeab u0 com.google.android.gms/.people.service.PeopleContentProvider}
+      - com.google.android.gms.icing.indexapi.IndexApiContentProvider
+        -> ContentProviderRecord{16e908 u0 com.google.android.gms/.icing.indexapi.IndexApiContentProvider}
+      - androidx.lifecycle.ProcessLifecycleOwnerInitializer
+        -> ContentProviderRecord{8f1d8a1 u0 com.google.android.gms/androidx.lifecycle.ProcessLifecycleOwnerInitializer}
+      - com.google.android.gms.people.service.galprovider.PeopleGalProvider
+        -> ContentProviderRecord{c807ac6 u0 com.google.android.gms/.people.service.galprovider.PeopleGalProvider}
+      - com.google.android.gms.plus.provider.PlusProvider
+        -> ContentProviderRecord{340ca87 u0 com.google.android.gms/.plus.provider.PlusProvider}
+      - com.google.android.gms.drive.metadata.sync.syncadapter.StubContentProvider
+        -> ContentProviderRecord{bb58db4 u0 com.google.android.gms/.drive.metadata.sync.syncadapter.StubContentProvider}
+      - com.google.android.gms.nearby.discovery.fastpair.slice.FastPairSliceProvider
+        -> ContentProviderRecord{ab25ddd u0 com.google.android.gms/.nearby.discovery.fastpair.slice.FastPairSliceProvider}
+      - com.google.android.gms.common.download.provider.DownloadsProvider
+        -> ContentProviderRecord{c797d52 u0 com.google.android.gms/.common.download.provider.DownloadsProvider}
+      - com.google.android.gms.chimera.container.SharedModuleProvider
+        -> ContentProviderRecord{3558823 u0 com.google.android.gms/.chimera.container.SharedModuleProvider}
+      - com.google.android.gms.subscribedfeeds.GmsSubscribedFeedsProvider
+        -> ContentProviderRecord{8f7d120 u0 com.google.android.gms/.subscribedfeeds.GmsSubscribedFeedsProvider}
+      - com.google.android.gms.nearby.discovery.fastpair.slice.FastPairContextualCardProvider
+        -> ContentProviderRecord{1fbfad9 u0 com.google.android.gms/.nearby.discovery.fastpair.slice.FastPairContextualCardProvider}
+      - com.google.android.gms.wallet.setupwizard.PaymentsSetupWizardSuggestionStateProvider
+        -> ContentProviderRecord{b8e1c9e u0 com.google.android.gms/.wallet.setupwizard.PaymentsSetupWizardSuggestionStateProvider}
+      - com.google.android.gms.icing.proxy.InternalIcingCorporaProvider
+        -> ContentProviderRecord{86e837f u0 com.google.android.gms/.icing.proxy.InternalIcingCorporaProvider}
+      - com.google.android.gms.common.stats.net.contentprovider.NetworkUsageContentProvider
+        -> ContentProviderRecord{658df4c u0 com.google.android.gms/.common.stats.net.contentprovider.NetworkUsageContentProvider}
+      - com.google.android.gms.games.chimera.GamesContentProviderProxy
+        -> ContentProviderRecord{8a86b95 u0 com.google.android.gms/.games.chimera.GamesContentProviderProxy}
+    mReceivers:
+      - ReceiverList{3c0c96c 1767 com.google.android.gms/10054/u0 remote:779421f}
+      - ReceiverList{8cbea22 1767 com.google.android.gms/10054/u0 remote:36a3bed}
+      - ReceiverList{a1b5617 1767 com.google.android.gms/10054/u0 remote:9e6ba96}
+      - ReceiverList{aa71058 1767 com.google.android.gms/10054/u0 remote:bf9e13b}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+  *APP* UID 10075 ProcessRecord{f0ab4af 776:android.ext.services/u0a75}
+    user #0 uid=10075 gids={50075, 20075, 9997}
+    processInfo:
+      deny: android.permission.INTERNET
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    class=android.ext.services.ExtServicesApplication
+    dir=/apex/com.android.extservices/priv-app/ExtServices@TQ3A.230901.001/ExtServices.apk publicDir=/apex/com.android.extservices/priv-app/ExtServices@TQ3A.230901.001/ExtServices.apk data=/data/user/0/android.ext.services
+    packageList={android.ext.services}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@abb64aa
+    pid=776
+    lastActivityTime=-20m50s836ms    startUptimeTime=-23m33s727ms    startElapsedTime=-23m33s727ms
+    startSeq=8
+    mountMode=DEFAULT
+    lastPssTime=-21s30ms pssProcState=5 pssStatType=1 nextPssTime=+22m8s897ms
+    lastPss=24MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=107MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=2 (2=2 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s124ms reportLowMemory=true
+    currentHostingComponentTypes=0x200 historicalHostingComponentTypes=0x200
+    reportedInteraction=true time=-3m3s425ms
+    adjSeq=5490 lruSeq=1404
+    oom adj: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+    mCurSchedGroup=1 setSchedGroup=1 systemNoUi=false
+    curProcState=5 mRepProcState=5 setProcState=5 lastStateTime=-23m33s702ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=true
+    allowlistManager=true
+    Services:
+      - ServiceRecord{35ca8d9 u0 android.ext.services/.autofill.InlineSuggestionRenderServiceImpl}
+      - ServiceRecord{84e7587 u0 android.ext.services/.notification.Assistant}
+      - ServiceRecord{f951bc9 u0 android.ext.services/com.android.textclassifier.DefaultTextClassifierService}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->776:android.ext.services/u0a75 s1/1 u0/0 +23m33s642ms
+    mReceivers:
+      - ReceiverList{519020 776 android.ext.services/10075/u0 remote:312e323}
+      - ReceiverList{60f7b01 776 android.ext.services/10075/u0 remote:83618e8}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.46 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.46 fontWeightAdjustment=0}
+  *APP* UID 1000 ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+    user #0 uid=1000 gids={2001, 1065, 3003, 3007, 1007, 1000, 9997, 1079, 1077}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.android.settings.SettingsApplication
+    dir=/system_ext/priv-app/Settings/Settings.apk publicDir=/system_ext/priv-app/Settings/Settings.apk data=/data/user_de/0/com.android.settings
+    packageList={com.android.settings}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@ff1d89b
+    pid=2808
+    lastActivityTime=-21s101ms    startUptimeTime=-23m26s525ms    startElapsedTime=-23m26s525ms
+    startSeq=44
+    mountMode=INSTALLER
+    lastCpuTime=0
+    lastPssTime=-21s111ms pssProcState=12 pssStatType=0 nextPssTime=+3m1s375ms
+    lastPss=65MB lastSwapPss=0,00 lastCachedPss=50MB lastCachedSwapPss=0,00 lastRss=186MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=1 (1=1 5.0625x, 4=1 1.5x)
+    lastRequestedGc=-- lastLowMemory=-21s125ms reportLowMemory=true
+    currentHostingComponentTypes=0x10 historicalHostingComponentTypes=0x70
+    adjSeq=5472 lruSeq=1722
+    oom adj: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+    mCurSchedGroup=0 setSchedGroup=0 systemNoUi=false
+    curProcState=12 mRepProcState=12 setProcState=12 lastStateTime=-7m41s440ms
+    curCapability=---- setCapability=----
+
+    hasShownUi=true pendingUiClean=false
+    cached=false empty=false
+    foregroundActivities=true (rep=true)
+    whenUnimportant=-6s110ms
+    lastTopTime=-6s110ms
+    lastInvisibleTime=2026-09-29 23:34:33.513 (-6s110ms)
+    lastProviderTime=-16m25s68ms
+    Published Providers:
+      - androidx.startup.InitializationProvider
+        -> ContentProviderRecord{cdaa438 u0 com.android.settings/androidx.startup.InitializationProvider}
+      - com.android.settings.search.SettingsSearchIndexablesProvider
+        -> ContentProviderRecord{2712c11 u0 com.android.settings/.search.SettingsSearchIndexablesProvider}
+      - androidx.core.content.FileProvider
+        -> ContentProviderRecord{bc32176 u0 com.android.settings/androidx.core.content.FileProvider}
+      - com.android.settings.homepage.contextualcards.CardContentProvider
+        -> ContentProviderRecord{d8b6377 u0 com.android.settings/.homepage.contextualcards.CardContentProvider}
+      - com.android.settings.homepage.contextualcards.SettingsContextualCardProvider
+        -> ContentProviderRecord{1b1cbe4 u0 com.android.settings/.homepage.contextualcards.SettingsContextualCardProvider}
+      - com.android.settings.emergency.EmergencyActionContentProvider
+        -> ContentProviderRecord{b2b784d u0 com.android.settings/.emergency.EmergencyActionContentProvider}
+      - com.android.settings.dashboard.SummaryProvider
+        -> ContentProviderRecord{8b7df02 u0 com.android.settings/.dashboard.SummaryProvider}
+      - com.android.settings.slices.SettingsSliceProvider
+        -> ContentProviderRecord{9c8c013 u0 com.android.settings/.slices.SettingsSliceProvider}
+      - com.android.settings.dashboard.suggestions.SuggestionStateProvider
+        -> ContentProviderRecord{6b1c250 u0 com.android.settings/.dashboard.suggestions.SuggestionStateProvider}
+      - com.android.settings.deviceinfo.legal.ModuleLicenseProvider
+        -> ContentProviderRecord{cc44c49 u0 com.android.settings/.deviceinfo.legal.ModuleLicenseProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->2808:com.android.settings/1000 s1/1 u0/0 +23m26s362ms
+    mReceivers:
+      - ReceiverList{2763469 2808 com.android.settings/1000/u0 remote:517b6f0}
+      - ReceiverList{3cad2ba 2808 com.android.settings/1000/u0 remote:f5787e5}
+      - ReceiverList{6a6aa7f 2808 com.android.settings/1000/u0 remote:2827f9e}
+      - ReceiverList{715e5ac 2808 com.android.settings/1000/u0 remote:33c275f}
+      - ReceiverList{8055aa2 2808 com.android.settings/1000/u0 remote:bd91e6d}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=true isPendingFreeze=false isFrozen=false
+    Activities:
+      - ActivityRecord{2c6ca2d u0 com.android.settings/.Settings} t4}
+    Recent Tasks:
+      - Task{15b2a57 #4 type=standard A=1000:com.android.settings.root}
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     mActivityStateFlags=
+  *APP* UID 10074 ProcessRecord{86130df 912:com.android.providers.media.module/u0a74}
+    user #0 uid=10074 gids={1065, 3007, 50074, 20074, 9997, 1015, 1078, 1079, 1023, 1077}
+    mRequiredAbi=x86_64 instructionSet=x86_64
+    class=com.android.providers.media.MediaApplication
+    dir=/apex/com.android.mediaprovider/priv-app/MediaProvider@TQ3A.230901.001/MediaProvider.apk publicDir=/apex/com.android.mediaprovider/priv-app/MediaProvider@TQ3A.230901.001/MediaProvider.apk data=/data/user/0/com.android.providers.media.module
+    packageList={com.android.providers.media.module}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@848e94e
+    pid=912
+    lastActivityTime=-23m22s607ms    startUptimeTime=-23m32s940ms    startElapsedTime=-23m32s940ms
+    startSeq=10
+    mountMode=PASS_THROUGH
+    lastPssTime=-21s39ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s896ms
+    lastPss=21MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=108MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s125ms reportLowMemory=true
+    currentHostingComponentTypes=0x200 historicalHostingComponentTypes=0x260
+    reportedInteraction=true time=-3m3s426ms
+    adjSeq=5490 lruSeq=631
+    oom adj: max=1001 curRaw=-700 setRaw=-700 cur=-700 set=-700
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=false
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m32s812ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=true
+    Services:
+      - ServiceRecord{5b05ac9 u0 com.android.providers.media.module/com.android.providers.media.fuse.ExternalStorageServiceImpl}
+    lastProviderTime=-23m19s400ms
+    Published Providers:
+      - com.android.providers.media.photopicker.PhotoPickerProvider
+        -> ContentProviderRecord{e754a6f u0 com.android.providers.media.module/com.android.providers.media.photopicker.PhotoPickerProvider}
+      - com.android.providers.media.MediaDocumentsProvider
+        -> ContentProviderRecord{578b37c u0 com.android.providers.media.module/com.android.providers.media.MediaDocumentsProvider}
+      - androidx.startup.InitializationProvider
+        -> ContentProviderRecord{8fc6405 u0 com.android.providers.media.module/androidx.startup.InitializationProvider}
+      - com.android.providers.media.MediaProvider
+        -> ContentProviderRecord{ace4c5a u0 com.android.providers.media.module/com.android.providers.media.MediaProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->912:com.android.providers.media.module/u0a74 s1/1 u0/0 +23m32s713ms
+    mReceivers:
+      - ReceiverList{17f95f5 912 com.android.providers.media.module/10074/u0 remote:682b72c}
+      - ReceiverList{c2b797e 912 com.android.providers.media.module/10074/u0 remote:2333f39}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.44 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.44 fontWeightAdjustment=0}
+  *PERS* UID 10067 ProcessRecord{3f8917a 746:com.android.systemui/u0a67}
+    user #0 uid=10067 gids={1065, 3002, 3001, 3006, 50067, 20067, 9997, 1077}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.android.systemui.SystemUIApplication
+    dir=/system_ext/priv-app/SystemUIApp/SystemUIApp.apk publicDir=/system_ext/priv-app/SystemUIApp/SystemUIApp.apk data=/data/user_de/0/com.android.systemui
+    packageList={com.android.systemui}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@cb61e8b
+    pid=746
+    lastActivityTime=-16m31s167ms    startUptimeTime=-23m33s800ms    startElapsedTime=-23m33s800ms
+    persistent=true removed=false
+    startSeq=7
+    mountMode=DEFAULT
+    lastPssTime=-21s10ms pssProcState=0 pssStatType=1 nextPssTime=+22m8s896ms
+    lastPss=87MB lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=208MB
+    trimMemoryLevel=0
+    procStateMemTracker: best=0 (0=0 3.375x)
+    lastRequestedGc=-- lastLowMemory=-21s125ms reportLowMemory=true
+    currentHostingComponentTypes=0x202 historicalHostingComponentTypes=0x242
+    reportedInteraction=true time=-3m3s426ms
+    adjSeq=5490 lruSeq=18
+    oom adj: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+    mCurSchedGroup=2 setSchedGroup=2 systemNoUi=true
+    curProcState=0 mRepProcState=0 setProcState=0 lastStateTime=-23m33s716ms
+    curCapability=LCMN setCapability=LCMN
+
+    cached=false empty=false
+    Services:
+      - ServiceRecord{20f4dde u0 com.android.systemui/.dump.SystemUIAuxiliaryDumpService}
+      - ServiceRecord{7f3acab u0 com.android.systemui/.keyguard.KeyguardService}
+      - ServiceRecord{9627d25 u0 com.android.systemui/.SystemUIService}
+    lastProviderTime=-16m25s159ms
+    Published Providers:
+      - androidx.startup.InitializationProvider
+        -> ContentProviderRecord{15b8b68 u0 com.android.systemui/androidx.startup.InitializationProvider}
+      - androidx.core.content.FileProvider
+        -> ContentProviderRecord{2e43b81 u0 com.android.systemui/androidx.core.content.FileProvider}
+      - com.android.systemui.people.PeopleProvider
+        -> ContentProviderRecord{c14d426 u0 com.android.systemui/.people.PeopleProvider}
+      - com.android.systemui.keyguard.KeyguardSliceProvider
+        -> ContentProviderRecord{8e61867 u0 com.android.systemui/.keyguard.KeyguardSliceProvider}
+      - com.android.systemui.keyguard.CustomizationProvider
+        -> ContentProviderRecord{c11f614 u0 com.android.systemui/.keyguard.CustomizationProvider}
+    Connected Providers:
+      - a31d6af/com.android.providers.settings/.SettingsProvider->746:com.android.systemui/u0a67 s1/1 u0/0 +23m33s549ms
+    mReceivers:
+      - ReceiverList{1cfb59 746 com.android.systemui/10067/u-1 remote:3f283a0}
+      - ReceiverList{37bfce 746 com.android.systemui/10067/u0 remote:f666cc9}
+      - ReceiverList{4ce567 746 com.android.systemui/10067/u0 remote:ad2b526}
+      - ReceiverList{b071cf 746 com.android.systemui/10067/u0 remote:b24922e}
+      - ReceiverList{1354829 746 com.android.systemui/10067/u0 remote:35bc1b0}
+      - ReceiverList{13c832a 746 com.android.systemui/10067/u-1 remote:b18f415}
+      - ReceiverList{18dc459 746 com.android.systemui/10067/u0 remote:ef4d0a0}
+      - ReceiverList{1bc1d60 746 com.android.systemui/10067/u0 remote:5065d63}
+      - ReceiverList{27ed55b 746 com.android.systemui/10067/u0 remote:f1f5c6a}
+      - ReceiverList{294058f 746 com.android.systemui/10067/u-1 remote:84f1cee}
+      - ReceiverList{2f43762 746 com.android.systemui/10067/u0 remote:77a762d}
+      - ReceiverList{3493880 746 com.android.systemui/10067/u-1 remote:3b87103}
+      - ReceiverList{3671a39 746 com.android.systemui/10067/u0 remote:a685200}
+      - ReceiverList{4008e2c 746 com.android.systemui/10067/u0 remote:8fe21df}
+      - ReceiverList{4035217 746 com.android.systemui/10067/u-1 remote:2c12696}
+      - ReceiverList{4060f09 746 com.android.systemui/10067/u0 remote:e29d810}
+      - ReceiverList{4331d38 746 com.android.systemui/10067/u0 remote:dec959b}
+      - ReceiverList{437ec7a 746 com.android.systemui/10067/u-1 remote:cc5f0a5}
+      - ReceiverList{454f7e6 746 com.android.systemui/10067/u0 remote:ac39641}
+      - ReceiverList{45518f4 746 com.android.systemui/10067/u0 remote:467ac7}
+      - ReceiverList{48a910a 746 com.android.systemui/10067/u0 remote:6810d75}
+      - ReceiverList{497fc0b 746 com.android.systemui/10067/u0 remote:ebf2fda}
+      - ReceiverList{4d940cf 746 com.android.systemui/10067/u0 remote:c433d2e}
+      - ReceiverList{4f06fa6 746 com.android.systemui/10067/u0 remote:8c71501}
+      - ReceiverList{4f96553 746 com.android.systemui/10067/u-1 remote:5dad142}
+      - ReceiverList{549fe3a 746 com.android.systemui/10067/u0 remote:2f23165}
+      - ReceiverList{5c71a5f 746 com.android.systemui/10067/u0 remote:9e142fe}
+      - ReceiverList{63ed905 746 com.android.systemui/10067/u0 remote:f17dc7c}
+      - ReceiverList{642a591 746 com.android.systemui/10067/u-1 remote:68813b8}
+      - ReceiverList{675df45 746 com.android.systemui/10067/u-1 remote:bca13bc}
+      - ReceiverList{6ae79ad 746 com.android.systemui/10067/u-1 remote:d0476c4}
+      - ReceiverList{6e00c85 746 com.android.systemui/10067/u0 remote:77adfc}
+      - ReceiverList{71b75c9 746 com.android.systemui/10067/u-1 remote:bada1d0}
+      - ReceiverList{7321834 746 com.android.systemui/10067/u0 remote:506ef07}
+      - ReceiverList{7987ce7 746 com.android.systemui/10067/u0 remote:b37faa6}
+      - ReceiverList{7f1b9a7 746 com.android.systemui/10067/u-1 remote:ff13266}
+      - ReceiverList{872557d 746 com.android.systemui/10067/u0 remote:3621fd4}
+      - ReceiverList{8b43b6b 746 com.android.systemui/10067/u0 remote:87150ba}
+      - ReceiverList{8cb319c 746 com.android.systemui/10067/u0 remote:ce86d0f}
+      - ReceiverList{92005a4 746 com.android.systemui/10067/u0 remote:6cb6c37}
+      - ReceiverList{963a7f7 746 com.android.systemui/10067/u0 remote:f77a7f6}
+      - ReceiverList{96ba33a 746 com.android.systemui/10067/u0 remote:3af4a65}
+      - ReceiverList{98fade8 746 com.android.systemui/10067/u0 remote:3733b0b}
+      - ReceiverList{9bc653c 746 com.android.systemui/10067/u0 remote:515ab2f}
+      - ReceiverList{a92449d 746 com.android.systemui/10067/u-1 remote:89dd774}
+      - ReceiverList{aae4830 746 com.android.systemui/10067/u0 remote:a2e3173}
+      - ReceiverList{abe1d13 746 com.android.systemui/10067/u0 remote:ae49002}
+      - ReceiverList{b130afc 746 com.android.systemui/10067/u0 remote:e2c4fef}
+      - ReceiverList{b343b30 746 com.android.systemui/10067/u0 remote:181073}
+      - ReceiverList{b48bf8e 746 com.android.systemui/10067/u-1 remote:9a09389}
+      - ReceiverList{b60cb51 746 com.android.systemui/10067/u0 remote:fd43878}
+      - ReceiverList{bc04ee9 746 com.android.systemui/10067/u-1 remote:c27ab70}
+      - ReceiverList{cb5611d 746 com.android.systemui/10067/u0 remote:42195f4}
+      - ReceiverList{cf4f077 746 com.android.systemui/10067/u-1 remote:9d6c276}
+      - ReceiverList{d02afa8 746 com.android.systemui/10067/u-1 remote:62e2bcb}
+      - ReceiverList{d597ee1 746 com.android.systemui/10067/u0 remote:6d84048}
+      - ReceiverList{d6e4d82 746 com.android.systemui/10067/u0 remote:91490cd}
+      - ReceiverList{dcc1b6d 746 com.android.systemui/10067/u0 remote:2f08784}
+      - ReceiverList{e506424 746 com.android.systemui/10067/u-1 remote:42034b7}
+      - ReceiverList{e591b32 746 com.android.systemui/10067/u0 remote:4b8473d}
+      - ReceiverList{e6b3dd5 746 com.android.systemui/10067/u-1 remote:376928c}
+      - ReceiverList{e776cbf 746 com.android.systemui/10067/u0 remote:a6fe2de}
+      - ReceiverList{e934eea 746 com.android.systemui/10067/u0 remote:92096d5}
+      - ReceiverList{ead2b2c 746 com.android.systemui/10067/u0 remote:83712df}
+      - ReceiverList{eb348dc 746 com.android.systemui/10067/u0 remote:c11594f}
+      - ReceiverList{f4cfcfb 746 com.android.systemui/10067/u-1 remote:d74de8a}
+      - ReceiverList{f4f27e1 746 com.android.systemui/10067/u0 remote:fe6ed48}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+    BoundClientUids:[1000]
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.47 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.47 fontWeightAdjustment=0}
+  *APP* UID 10079 ProcessRecord{39e38b7 1783:com.android.permissioncontroller/u0a79}
+    user #0 uid=10079 gids={50079, 20079, 9997}
+    mRequiredAbi=x86_64 instructionSet=null
+    class=com.android.permissioncontroller.PermissionControllerApplication
+    dir=/apex/com.android.permission/priv-app/PermissionController@TQ3A.230901.001/PermissionController.apk publicDir=/apex/com.android.permission/priv-app/PermissionController@TQ3A.230901.001/PermissionController.apk data=/data/user_de/0/com.android.permissioncontroller
+    packageList={com.android.permissioncontroller}
+    compat={160dpi always-compat}
+    thread=android.app.IApplicationThread$Stub$Proxy@4180ebd
+    pid=1783
+    lastActivityTime=-10s773ms    startUptimeTime=-21s67ms    startElapsedTime=-21s67ms
+    startSeq=85
+    mountMode=DEFAULT
+    lastCpuTime=0
+    lastPssTime=-21s67ms pssProcState=20 pssStatType=0 nextPssTime=+9s231ms
+    lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00 lastCachedSwapPss=0,00 lastRss=0,00
+    trimMemoryLevel=0
+    procStateMemTracker: best=4 () / pending state=4 highest=4 1.0x
+    lastRequestedGc=-21s30ms lastLowMemory=-21s30ms reportLowMemory=false
+    currentHostingComponentTypes=0x0 historicalHostingComponentTypes=0x200
+    adjSeq=5472 lruSeq=2249
+    oom adj: max=1001 curRaw=905 setRaw=905 cur=905 set=905
+    mCurSchedGroup=0 setSchedGroup=0 systemNoUi=false
+    curProcState=19 mRepProcState=19 setProcState=19 lastStateTime=-10s769ms
+    curCapability=---- setCapability=----
+
+    cached=true empty=true
+    whenUnimportant=-10s773ms
+    Published Providers:
+      - androidx.startup.InitializationProvider
+        -> ContentProviderRecord{5ea0cb2 u0 com.android.permissioncontroller/androidx.startup.InitializationProvider}
+      - com.android.car.ui.core.SearchResultsProvider
+        -> ContentProviderRecord{831d403 u0 com.android.permissioncontroller/com.android.car.ui.core.SearchResultsProvider}
+      - com.android.car.ui.core.CarUiInstaller
+        -> ContentProviderRecord{9225f80 u0 com.android.permissioncontroller/com.android.car.ui.core.CarUiInstaller}
+      - com.android.permissioncontroller.role.service.RoleSearchIndexablesProvider
+        -> ContentProviderRecord{9bbd9b9 u0 com.android.permissioncontroller/.role.service.RoleSearchIndexablesProvider}
+      - com.android.permissioncontroller.permission.service.PermissionSearchIndexablesProvider
+        -> ContentProviderRecord{f6841fe u0 com.android.permissioncontroller/.permission.service.PermissionSearchIndexablesProvider}
+    lastCompactTime=0 lastCompactAction=0
+    hasPendingCompaction=false    isFreezeExempt=false isPendingFreeze=false isFrozen=false
+     Configuration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+     OverrideConfiguration={0.0 ?mcc?mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+     mLastReportedConfiguration={1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+
+  OOM levels:
+    -900: SYSTEM_ADJ (   73,728K)
+    -800: PERSISTENT_PROC_ADJ (   73,728K)
+    -700: PERSISTENT_SERVICE_ADJ (   73,728K)
+      0: FOREGROUND_APP_ADJ (   73,728K)
+     100: VISIBLE_APP_ADJ (   92,160K)
+     200: PERCEPTIBLE_APP_ADJ (  110,592K)
+     225: PERCEPTIBLE_MEDIUM_APP_ADJ (  129,024K)
+     250: PERCEPTIBLE_LOW_APP_ADJ (  129,024K)
+     300: BACKUP_APP_ADJ (  221,184K)
+     400: HEAVY_WEIGHT_APP_ADJ (  221,184K)
+     500: SERVICE_ADJ (  221,184K)
+     600: HOME_APP_ADJ (  221,184K)
+     700: PREVIOUS_APP_ADJ (  221,184K)
+     800: SERVICE_B_ADJ (  221,184K)
+     900: CACHED_APP_MIN_ADJ (  221,184K)
+     999: CACHED_APP_MAX_ADJ (  322,560K)
+
+  Process OOM control (14 total, non-act at 1, non-svc at 1):
+    PERS #13: sys    F/ /PER  LCMN  t: 0 425:system/1000 (fixed)
+        oom: max=-900 curRaw=-900 setRaw=-900 cur=-900 set=-900
+        state: cur=PER  set=PER  lastPss=221MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS #12: pers   F/ /PER  LCMN  t: 0 653:com.android.networkstack.process/1073 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=19MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS #11: pers   F/ /PER  LCMN  t: 0 730:com.android.se/1068 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=9,6MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS #10: pers   F/ /PER  LCMN  t: 0 744:com.microsoft.windows.homeapp/u0a61 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=13MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS # 9: pers   F/ /PER  LCMN  t: 0 746:com.android.systemui/u0a67 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=87MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS # 8: pers   F/ /PER  LCMN  t: 0 915:com.microsoft.windows.systemapp/1000 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=18MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    PERS # 7: pers   F/ /PER  LCMN  t: 0 916:com.microsoft.windows.userapp/u0a66 (fixed)
+        oom: max=-800 curRaw=-800 setRaw=-800 cur=-800 set=-800
+        state: cur=PER  set=PER  lastPss=28MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=false hasAboveClient=false
+    Proc # 5: psvc   F/ /PER  LCMN  t: 0 912:com.android.providers.media.module/u0a74 (service)
+        com.android.providers.media.module/com.android.providers.media.fuse.ExternalStorageServiceImpl<=Proc{425:system/1000}
+        oom: max=1001 curRaw=-700 setRaw=-700 cur=-700 set=-700
+        state: cur=PER  set=PER  lastPss=21MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=true hasAboveClient=false
+    Proc # 0: fg     b/A/TPSL ----  t: 0 2808:com.android.settings/1000 (top-sleeping)
+        oom: max=1001 curRaw=0 setRaw=0 cur=0 set=0
+        state: cur=TPSL set=TPSL lastPss=65MB lastSwapPss=0,00 lastCachedPss=50MB
+        cached=false empty=false hasAboveClient=false
+    Proc # 6: vis    R/ /BFGS LCMN  t: 0 776:android.ext.services/u0a75 (service)
+        android.ext.services/com.android.textclassifier.DefaultTextClassifierService<=Proc{425:system/1000}
+        oom: max=1001 curRaw=100 setRaw=100 cur=100 set=100
+        state: cur=BFGS set=BFGS lastPss=24MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=true hasAboveClient=false
+    Proc # 2: prcp   b/ /TRNB ----  t: 0 917:com.google.android.gms.persistent/u0a54 (service)
+        com.google.android.gms/com.google.android.location.internal.GoogleLocationManagerService<=Proc{425:system/1000}
+        oom: max=1001 curRaw=200 setRaw=200 cur=200 set=200
+        state: cur=TRNB set=TRNB lastPss=110MB lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=true hasAboveClient=false
+    Proc # 4: prev   b/ /LAST ----  t: 0 1809:com.google.process.gservices/u0a54 (recent-provider)
+        oom: max=1001 curRaw=700 setRaw=700 cur=700 set=700
+        state: cur=LAST set=LAST lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00
+        cached=false empty=true hasAboveClient=false
+    Proc # 3: cch+ 5 b/ /CEM  ----  t: 0 1783:com.android.permissioncontroller/u0a79 (cch-empty)
+        oom: max=1001 curRaw=905 setRaw=905 cur=905 set=905
+        state: cur=CEM  set=CEM  lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00
+        cached=true empty=true hasAboveClient=false
+    Proc # 1: cch+ 5 b/ /CEM  ----  t: 0 1767:com.google.android.gms/u0a54 (cch-empty)
+        oom: max=1001 curRaw=905 setRaw=905 cur=905 set=905
+        state: cur=CEM  set=CEM  lastPss=0,00 lastSwapPss=0,00 lastCachedPss=0,00
+        cached=true empty=true hasAboveClient=false
+
+  Processes that are waiting to GC:
+    Process ProcessRecord{437e841 730:com.android.se/1068}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{3f8917a 746:com.android.systemui/u0a67}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{9becf06 915:com.microsoft.windows.systemapp/1000}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{e2ef1d 916:com.microsoft.windows.userapp/u0a66}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{f0ab4af 776:android.ext.services/u0a75}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{86130df 912:com.android.providers.media.module/u0a74}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{659d8c1 917:com.google.android.gms.persistent/u0a54}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+    Process ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+      lowMem=true, last gced=1425342 ms ago, last lowMem=21126 ms ago
+
+  mHomeProcess: ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+  mPreviousProcess: ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+
+  UID states:
+    UID 1000: UidRecord{bf3ad5f 1000 PER  change:procadj procs:0 seq(45838,45178)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+      proc=ProcessRecord{9becf06 915:com.microsoft.windows.systemapp/1000}
+      proc=ProcessRecord{6a2e6b1 425:system/1000}
+    UID 1068: UidRecord{c0df3ac 1068 PER  change:procadj procs:0 seq(45758,15)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{437e841 730:com.android.se/1068}
+    UID 1073: UidRecord{5375875 1073 PER  change:procadj procs:0 seq(45837,6)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{e0aa0d7 653:com.android.networkstack.process/1073}
+    UID u0a54: UidRecord{502800a u0a54 TRNB bg:+6s101ms change:procadj procs:0 seq(45836,45653)}
+      curProcState=8 curCapability=----
+      proc=ProcessRecord{de7cfc7 1767:com.google.android.gms/u0a54}
+      proc=ProcessRecord{659d8c1 917:com.google.android.gms.persistent/u0a54}
+      proc=ProcessRecord{10754f9 1809:com.google.process.gservices/u0a54}
+    UID u0a61: UidRecord{6cfc07b u0a61 PER  change:procstate procs:0 seq(45755,45116)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+    UID u0a66: UidRecord{d3c9e98 u0a66 PER  change:procadj procs:0 seq(45835,107)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{e2ef1d 916:com.microsoft.windows.userapp/u0a66}
+    UID u0a67: UidRecord{cb206f1 u0a67 PER  change:procadj procs:0 seq(45834,21)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{3f8917a 746:com.android.systemui/u0a67}
+    UID u0a74: UidRecord{55092d6 u0a74 PER  change:procadj procs:0 seq(45833,108)}
+      curProcState=0 curCapability=LCMN
+      proc=ProcessRecord{86130df 912:com.android.providers.media.module/u0a74}
+    UID u0a75: UidRecord{78fe957 u0a75 BFGS change:procadj procs:0 seq(45832,22)}
+      curProcState=5 curCapability=LCMN
+      proc=ProcessRecord{f0ab4af 776:android.ext.services/u0a75}
+    UID u0a79: UidRecord{1a90c44 u0a79 CEM  bg:+10s774ms change:procadj procs:0 seq(45750,45499)}
+      curProcState=19 curCapability=----
+      proc=ProcessRecord{39e38b7 1783:com.android.permissioncontroller/u0a79}
+
+  UID validation:
+    UID 1000: UidRecord{74f212d 1000 PER  idle procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID 1068: UidRecord{e9b0662 1068 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID 1073: UidRecord{5bfc3f3 1073 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID u0a54: UidRecord{14ca8b0 u0a54 TRNB procs:0 seq(0,0)}
+      curProcState=8 curCapability=----
+    UID u0a61: UidRecord{129a329 u0a61 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID u0a66: UidRecord{92726ae u0a66 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID u0a67: UidRecord{c08ac4f u0a67 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID u0a74: UidRecord{84b9fdc u0a74 PER  procs:0 seq(0,0)}
+      curProcState=0 curCapability=LCMN
+    UID u0a75: UidRecord{31048e5 u0a75 BFGS procs:0 seq(0,0)}
+      curProcState=5 curCapability=LCMN
+    UID u0a79: UidRecord{a42ffba u0a79 CEM  procs:0 seq(0,0)}
+      curProcState=19 curCapability=----
+
+  Raw LRU list (dumpsys activity lru):
+    Activities:
+    #13: fg     TPSL ---- 2808:com.android.settings/1000 act:activities|recents
+    Other:
+    #12: cch+ 5 CEM  ---- 1767:com.google.android.gms/u0a54
+    #11: prcp   TRNB ---- 917:com.google.android.gms.persistent/u0a54
+    #10: cch+ 5 CEM  ---- 1783:com.android.permissioncontroller/u0a79
+    # 9: prev   LAST ---- 1809:com.google.process.gservices/u0a54
+    # 8: psvc   PER  LCMN 912:com.android.providers.media.module/u0a74
+    # 7: vis    BFGS LCMN 776:android.ext.services/u0a75
+    # 6: pers   PER  LCMN 916:com.microsoft.windows.userapp/u0a66 act:treated
+    # 5: pers   PER  LCMN 915:com.microsoft.windows.systemapp/1000
+    # 4: pers   PER  LCMN 746:com.android.systemui/u0a67
+    # 3: pers   PER  LCMN 744:com.microsoft.windows.homeapp/u0a61 act:activities
+    # 2: pers   PER  LCMN 730:com.android.se/1068
+    # 1: pers   PER  LCMN 653:com.android.networkstack.process/1073
+    # 0: sys    PER  LCMN 425:system/1000
+
+  Process LRU list (sorted by oom_adj, 14 total, non-act at 1, non-svc at 1):
+    PERS #13: sys    F/ /PER  LCMN  t: 0 425:system/1000 (fixed)
+    PERS #12: pers   F/ /PER  LCMN  t: 0 653:com.android.networkstack.process/1073 (fixed)
+    PERS #11: pers   F/ /PER  LCMN  t: 0 730:com.android.se/1068 (fixed)
+    PERS #10: pers   F/ /PER  LCMN  t: 0 744:com.microsoft.windows.homeapp/u0a61 (fixed)
+    PERS # 9: pers   F/ /PER  LCMN  t: 0 746:com.android.systemui/u0a67 (fixed)
+    PERS # 8: pers   F/ /PER  LCMN  t: 0 915:com.microsoft.windows.systemapp/1000 (fixed)
+    PERS # 7: pers   F/ /PER  LCMN  t: 0 916:com.microsoft.windows.userapp/u0a66 (fixed)
+    Proc # 5: psvc   F/ /PER  LCMN  t: 0 912:com.android.providers.media.module/u0a74 (service)
+        com.android.providers.media.module/com.android.providers.media.fuse.ExternalStorageServiceImpl<=Proc{425:system/1000}
+    Proc # 0: fg     b/A/TPSL ----  t: 0 2808:com.android.settings/1000 (top-sleeping)
+    Proc # 6: vis    R/ /BFGS LCMN  t: 0 776:android.ext.services/u0a75 (service)
+        android.ext.services/com.android.textclassifier.DefaultTextClassifierService<=Proc{425:system/1000}
+    Proc # 2: prcp   b/ /TRNB ----  t: 0 917:com.google.android.gms.persistent/u0a54 (service)
+        com.google.android.gms/com.google.android.location.internal.GoogleLocationManagerService<=Proc{425:system/1000}
+    Proc # 4: prev   b/ /LAST ----  t: 0 1809:com.google.process.gservices/u0a54 (recent-provider)
+    Proc # 3: cch+ 5 b/ /CEM  ----  t: 0 1783:com.android.permissioncontroller/u0a79 (cch-empty)
+    Proc # 1: cch+ 5 b/ /CEM  ----  t: 0 1767:com.google.android.gms/u0a54 (cch-empty)
+
+  PID mappings:
+    PID #425: ProcessRecord{6a2e6b1 425:system/1000}
+    PID #653: ProcessRecord{e0aa0d7 653:com.android.networkstack.process/1073}
+    PID #730: ProcessRecord{437e841 730:com.android.se/1068}
+    PID #744: ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+    PID #746: ProcessRecord{3f8917a 746:com.android.systemui/u0a67}
+    PID #776: ProcessRecord{f0ab4af 776:android.ext.services/u0a75}
+    PID #912: ProcessRecord{86130df 912:com.android.providers.media.module/u0a74}
+    PID #915: ProcessRecord{9becf06 915:com.microsoft.windows.systemapp/1000}
+    PID #916: ProcessRecord{e2ef1d 916:com.microsoft.windows.userapp/u0a66}
+    PID #917: ProcessRecord{659d8c1 917:com.google.android.gms.persistent/u0a54}
+    PID #1767: ProcessRecord{de7cfc7 1767:com.google.android.gms/u0a54}
+    PID #1783: ProcessRecord{39e38b7 1783:com.android.permissioncontroller/u0a79}
+    PID #1809: ProcessRecord{10754f9 1809:com.google.process.gservices/u0a54}
+    PID #2808: ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+
+  Active process infos:
+    Pinfo PID #776:
+      name=android.ext.services
+      deny: android.permission.INTERNET
+
+  mHomeProcess: ProcessRecord{51d7658 744:com.microsoft.windows.homeapp/u0a61}
+  mPreviousProcess: ProcessRecord{c0bfb62 2808:com.android.settings/1000}
+  mPreviousProcessVisibleTime: +7m23s681ms
+  mGlobalConfiguration: {1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+  Display override configurations:
+    0: {1.0 ?mcc?mnc [ru_RU,en_US] ldltr sw1080dp w1920dp h1080dp 160dpi xlrg long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1920, 1080) mAppBounds=Rect(0, 0 - 1920, 1080) mMaxBounds=Rect(0, 0 - 1920, 1080) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.13 fontWeightAdjustment=0}
+  mConfigWillChange: false
+  mWakefulness=Asleep
+  mSleepTokens={1575942989={"ScreenOff", display 0, acquire at 1419229 (6114 ms ago)}}
+  mSleeping=true
+  mShuttingDown=false mTestPssMode=false
+  mVrController=[VrState=0x0,VrRenderThreadTid=0]
+  mAllowAppSwitchUids:
+    User 0: Type com.microsoft.windows.userapp/com.microsoft.windows.input.InputAccessibilityService = u0a66
+  mGoingToSleepWakeLock=WakeLock{c4dbe6b held=false, refCount=0}
+  mLaunchingActivityWakeLock=WakeLock{ee0ddc8 held=false, refCount=7}
+  mUidObservers:
+    1000 null com.android.server.job.JobSchedulerService$4: IDLE ACT GONE STATE (cut=-1)
+    1000 null com.android.server.pm.ShortcutService$4: GONE STATE (cut=-1)
+    1047 cameraserver android.app.IUidObserver$Stub$Proxy: IDLE ACT GONE STATE (cut=-1)
+    1000 null com.android.server.vibrator.VibrationSettings$UidObserver: GONE STATE (cut=-1)
+    1000 null com.android.server.PinnerService$3: ACT GONE
+    1000 android com.android.server.net.NetworkPolicyManagerService$4: GONE CAP STATE (cut=5)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 1
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 null com.android.server.usage.UsageStatsService$3: GONE STATE (cut=-1)
+    1000 android android.app.ActivityManager$UidObserver: GONE STATE (cut=4)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 null com.android.server.job.controllers.QuotaController$QcUidObserver: STATE (cut=2)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 19
+    1000 android android.app.ActivityManager$UidObserver: GONE STATE (cut=4)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 null com.android.server.job.controllers.QuotaController$QcUidObserver: STATE (cut=4)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 android com.android.server.am.AppRestrictionController$5: IDLE ACT GONE STATE (cut=4)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 null com.android.server.AppStateTrackerImpl$UidObserver: IDLE ACT GONE
+    1041 audioserver android.app.IUidObserver$Stub$Proxy: IDLE ACT GONE STATE (cut=-1)
+    1000 null com.android.server.power.hint.HintManagerService$UidObserver: GONE STATE (cut=-1)
+    1000 android android.app.ActivityManager$UidObserver: GONE STATE (cut=4)
+      Last 1068: 0
+      Last 1073: 0
+      Last u0a54: 8
+      Last u0a61: 0
+      Last u0a66: 0
+      Last u0a67: 0
+      Last u0a74: 0
+      Last u0a75: 5
+      Last u0a79: 10
+    1000 null com.android.server.app.GameManagerService$UidObserver: GONE STATE (cut=-1)
+
+  mUidChangeDispatchCount=3154
+  Slow UID dispatches:
+    com.android.server.job.JobSchedulerService$4: 0 / Max 1ms
+    com.android.server.pm.ShortcutService$4: 0 / Max 1ms
+    android.app.IUidObserver$Stub$Proxy: 0 / Max 8ms
+    com.android.server.vibrator.VibrationSettings$UidObserver: 0 / Max 0ms
+    com.android.server.PinnerService$3: 0 / Max 1ms
+    com.android.server.net.NetworkPolicyManagerService$4: 0 / Max 1ms
+    com.android.server.usage.UsageStatsService$3: 0 / Max 1ms
+    android.app.ActivityManager$UidObserver: 0 / Max 1ms
+    com.android.server.job.controllers.QuotaController$QcUidObserver: 0 / Max 0ms
+    android.app.ActivityManager$UidObserver: 0 / Max 1ms
+    com.android.server.job.controllers.QuotaController$QcUidObserver: 0 / Max 1ms
+    com.android.server.am.AppRestrictionController$5: 0 / Max 1ms
+    com.android.server.AppStateTrackerImpl$UidObserver: 0 / Max 1ms
+    android.app.IUidObserver$Stub$Proxy: 0 / Max 1ms
+    com.android.server.power.hint.HintManagerService$UidObserver: 0 / Max 2ms
+    android.app.ActivityManager$UidObserver: 0 / Max 1ms
+    com.android.server.app.GameManagerService$UidObserver: 0 / Max 1ms
+  mDeviceIdleAllowlist=[1000, 2000, 10026, 10034, 10054, 10066]
+  mDeviceIdleExceptIdleAllowlist=[1000, 2000, 10025, 10026, 10027, 10034, 10050, 10054, 10066]
+  mDeviceIdleTempAllowlist=[]
+  mFgsStartTempAllowList:
+  Total persistent processes: 7
+  mProcessesReady=true mSystemReady=true mBooted=true mFactoryTest=0
+  mBooting=false mCallFinishBooting=false mBootAnimationComplete=true
+  mLastPowerCheckUptime=+20m12s400ms
+  mAdjSeq=5490 mLruSeq=2259
+  mNumNonCachedProcs=12 (14 total) mNumCachedHiddenProcs=0 mNumServiceProcs=0 mNewNumServiceProcs=0
+  mAllowLowerMemLevel=true mLastMemoryLevel=0 mLastNumProcesses=14
+  mLastIdleTime=+23m35s860ms mLowRamSinceLastIdle=0
+
+  ServiceManager statistics:
+    Stats:
+      getService(): count=1642, total=384,5ms, avg=0,234ms, max calls/s=420 max dur/s=48,8ms max time=13,4ms
+
+  mForceBackgroundCheck=false
