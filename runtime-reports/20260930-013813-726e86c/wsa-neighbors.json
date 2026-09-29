@@ -1,0 +1,450 @@
+﻿[
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.255.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.252.57",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.248.58",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.246.209",
+        "LinkLayerAddress":  "00-15-5D-32-72-A7",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.242.48",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  67,
+        "IPAddress":  "172.28.240.59",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  8,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  8,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  8,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.22.159.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSL)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.22.152.95",
+        "LinkLayerAddress":  "00-15-5D-EC-46-B0",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "255.255.255.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.127.255.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.117.0.1",
+        "LinkLayerAddress":  "4A-AF-5A-94-CA-2C",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.114.64.1",
+        "LinkLayerAddress":  "12-B1-EE-C4-7F-89",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.71.148.193",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.71.128.1",
+        "LinkLayerAddress":  "1E-91-82-81-2D-DA",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  14,
+        "IPAddress":  "10.64.0.0",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  13,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  13,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  13,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 2",
+        "InterfaceIndex":  5,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 2",
+        "InterfaceIndex":  5,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  16,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  16,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "255.255.255.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "239.255.102.18",
+        "LinkLayerAddress":  "01-00-5E-7F-66-12",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.146",
+        "LinkLayerAddress":  "9E-A6-3C-E3-68-49",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.126",
+        "LinkLayerAddress":  "3C-0B-4F-10-FE-E5",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.123",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.107",
+        "LinkLayerAddress":  "AC-BA-C0-F1-9B-02",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  28,
+        "IPAddress":  "192.168.1.1",
+        "LinkLayerAddress":  "50-FF-20-6B-ED-B7",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "",
+        "State":  6
+    }
+]
