@@ -318,20 +318,20 @@ function Update-Repository {
     & git config --global --add safe.directory $safePath | Out-Null
 
     Write-SetupLog "Updating repository branch $Branch."
-    & git -C $RepoRoot fetch origin $Branch
+    & git -C $RepoRoot fetch origin $Branch 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "git fetch failed." }
 
     $dirty = (& git -C $RepoRoot status --porcelain | Out-String).Trim()
     if ($dirty) {
         $stashName = "TUGARIN_BOTS_DEDICATED_USER_BACKUP_" + (Get-Date -Format "yyyyMMdd-HHmmss")
-        & git -C $RepoRoot stash push -u -m $stashName
+        & git -C $RepoRoot stash push -u -m $stashName 2>&1 | ForEach-Object { Write-Host $_ }
         if ($LASTEXITCODE -ne 0) { throw "Could not preserve dirty repository state." }
         Write-SetupLog "Preserved local repository changes in stash $stashName."
     }
 
-    & git -C $RepoRoot checkout $Branch
+    & git -C $RepoRoot checkout $Branch 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "git checkout failed." }
-    & git -C $RepoRoot pull --ff-only origin $Branch
+    & git -C $RepoRoot pull --ff-only origin $Branch 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "git pull failed." }
 
     $head = (& git -C $RepoRoot rev-parse HEAD | Out-String).Trim()
@@ -345,14 +345,19 @@ function Ensure-PythonEnvironment {
     if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
         $systemPython = (Get-Command python.exe -ErrorAction Stop).Source
         Write-SetupLog "Creating dedicated Python venv at $venvRoot."
-        & $systemPython -m venv $venvRoot
+        & $systemPython -m venv $venvRoot 2>&1 | ForEach-Object { Write-Host $_ }
         if ($LASTEXITCODE -ne 0) { throw "python -m venv failed." }
     }
 
     Write-SetupLog "Installing TUGARIN BOTS Python requirements into dedicated venv."
-    & $venvPython -m pip install --disable-pip-version-check -r (Join-Path $RepoRoot "requirements.txt")
+    & $venvPython -m pip install --disable-pip-version-check -r (Join-Path $RepoRoot "requirements.txt") 2>&1 |
+        ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "pip install failed." }
-    return $venvPython
+
+    if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
+        throw "Dedicated venv Python disappeared after dependency installation: $venvPython"
+    }
+    return [string]$venvPython
 }
 
 function Create-GuiShortcut {
@@ -412,8 +417,8 @@ function Invoke-Continue {
         exit $code
     }
 
-    $head = Update-Repository
-    $venvPython = Ensure-PythonEnvironment
+    [string]$head = Update-Repository
+    [string]$venvPython = Ensure-PythonEnvironment
     $venvScripts = Split-Path -Parent $venvPython
     $env:PATH = "$venvScripts;$env:PATH"
     $env:PYTHONIOENCODING = "utf-8"
