@@ -945,12 +945,59 @@ if ($RuntimeOnly) {
     Write-Log "Starting WSA runtime verification in the normal interactive user session."
 }
 
-Write-Log "Launching Android subsystem settings and waking the Android environment."
+$packagePreflight = [ordered]@{
+    install_location = $installed.InstallLocation
+    install_path_length = if ($installed.InstallLocation) { $installed.InstallLocation.Length } else { 0 }
+    filesystem = ""
+    path_short_enough = $true
+}
 try {
-    Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+    if ($installed.InstallLocation) {
+        $rootPath = [System.IO.Path]::GetPathRoot($installed.InstallLocation)
+        if ($rootPath -match "^([A-Za-z]):") {
+            $driveLetter = $matches[1]
+            $volume = Get-Volume -DriveLetter $driveLetter -ErrorAction Stop
+            $packagePreflight.filesystem = [string]$volume.FileSystem
+            if ($volume.FileSystem -ne "NTFS") {
+                Finish-Report -State "WSA_INSTALL_VOLUME_UNSUPPORTED" -ExitCode 18 -Extra @{
+                    filesystem = $volume.FileSystem
+                    install_location = $installed.InstallLocation
+                }
+                throw "WSA unpackaged registration requires an NTFS installation volume."
+            }
+        }
+        if ($installed.InstallLocation.Length -gt 120) {
+            $packagePreflight.path_short_enough = $false
+            Write-Log "WARNING: WSA install path is unusually long; WSABuilds documents long extracted paths as a cause of Settings/app startup crashes."
+        }
+    }
 }
 catch {
-    Write-Log "Could not launch subsystem Settings automatically: $($_.Exception.Message)"
+    if ($_.Exception.Message -match "requires an NTFS") { throw }
+    Write-Log "Could not fully inspect WSA install-volume preflight: $($_.Exception.Message)"
+}
+$packagePreflight | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-preflight.json")
+
+$portReservationOk = Ensure-WsaAdbPortReservation -ReportStage $stage
+$loopbackExemptionOk = Ensure-WsaLoopbackExemption -ReportStage $stage
+
+Write-Log "Launching WSA using the upstream WSABuilds app URI first."
+$upstreamLaunchRequested = $false
+$upstreamLaunchAt = Get-Date
+try {
+    Start-Process "wsa://com.android.settings" -ErrorAction Stop | Out-Null
+    $upstreamLaunchRequested = $true
+    Write-Log "Upstream wsa://com.android.settings activation requested."
+}
+catch {
+    Write-Log "Upstream WSA URI activation failed: $($_.Exception.Message)"
+}
+
+try {
+    Start-Process explorer.exe "shell:AppsFolder\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp" -ErrorAction SilentlyContinue | Out-Null
+}
+catch {
+    Write-Log "Could not open the WSA Settings app: $($_.Exception.Message)"
 }
 
 $adb = "C:\Android\Sdk\platform-tools\adb.exe"
@@ -963,6 +1010,7 @@ $client = $null
 $clientWorkDir = $null
 $directClientAttempted = $false
 $directClientStartedAt = $null
+$developerDeepLinkAttempted = $false
 if ($installed.InstallLocation) {
     $candidateClient = Join-Path $installed.InstallLocation "WsaClient\WsaClient.exe"
     if (Test-Path -LiteralPath $candidateClient -PathType Leaf) {
@@ -971,28 +1019,6 @@ if ($installed.InstallLocation) {
     }
 }
 
-if ($client -and $clientWorkDir) {
-    $directClientAttempted = $true
-    $directClientStartedAt = Get-Date
-    Write-Log "Starting the proven WsaClient wake sequence in the registered/elevated package context."
-    $oldPath = $env:PATH
-    try {
-        $env:PATH = "$clientWorkDir;$oldPath"
-        Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/launch", "wsa://com.android.settings" -ErrorAction Stop | Out-Null
-        Start-Sleep -Seconds 2
-        Start-Process -FilePath $client -WorkingDirectory $clientWorkDir -ArgumentList "/deeplink", "wsa-client://developer-settings" -ErrorAction Stop | Out-Null
-        Write-Log "WsaClient /launch + /deeplink wake sequence requested; allowing at least 90s before any recycle."
-    }
-    catch {
-        Write-Log "Initial WsaClient wake sequence could not be started: $($_.Exception.Message)"
-    }
-    finally {
-        $env:PATH = $oldPath
-    }
-}
-else {
-    Write-Log "WsaClient executable was not found; SettingsApp wake remains the only startup path."
-}
 Write-Host ""
 Write-Host "P0 control-channel gate: if Developer mode is OFF in the opened subsystem settings, turn it ON now."
 Write-Host "The verifier will keep retrying automatically while the settings window is open."
