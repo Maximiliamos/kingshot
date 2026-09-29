@@ -585,9 +585,70 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
 $installed = Get-AppxPackage | Where-Object {
     $_.Name -like "*WindowsSubsystemForAndroid*"
 } | Select-Object -First 1
+
+if ($RuntimeOnly -and -not $installed) {
+    Write-Log "WSA is not registered for the current interactive user; registering the already extracted package in this user context."
+    $runtimeManifest = Get-ChildItem -Path $InstallRoot -Filter AppxManifest.xml -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $runtimeManifest) {
+        Finish-Report -State "WSA_CURRENT_USER_PACKAGE_MISSING" -ExitCode 18 -Extra @{
+            install_root = $InstallRoot
+        }
+        exit 18
+    }
+
+    $runtimePackageDir = $runtimeManifest.Directory.FullName
+    try {
+        Push-Location $runtimePackageDir
+        [xml]$runtimeManifestXml = Get-Content -LiteralPath ".\AppxManifest.xml"
+        $runtimeArchitecture = [string]$runtimeManifestXml.Package.Identity.ProcessorArchitecture
+        $runtimeDependencies = @($runtimeManifestXml.Package.Dependencies.PackageDependency)
+
+        foreach ($dep in $runtimeDependencies) {
+            if ($null -eq $dep) { continue }
+            $depName = [string]$dep.Name
+            $minVersion = [version]([string]$dep.MinVersion)
+            $installedDep = Get-AppxPackage -Name $depName | Where-Object {
+                $_.Architecture.ToString() -eq $runtimeArchitecture
+            } | Sort-Object Version | Select-Object -Last 1
+
+            $needDep = ($null -eq $installedDep)
+            if (-not $needDep) {
+                $needDep = ([version]$installedDep.Version -lt $minVersion)
+            }
+
+            if ($needDep) {
+                $depPath = Join-Path $runtimePackageDir ("{0}_{1}.appx" -f $depName, $runtimeArchitecture)
+                if (-not (Test-Path -LiteralPath $depPath -PathType Leaf)) {
+                    throw "Required current-user WSA dependency is missing: $depPath"
+                }
+                Write-Log "Installing current-user dependency $depName $runtimeArchitecture (minimum $minVersion)."
+                Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Path $depPath -ErrorAction Stop
+            }
+        }
+
+        Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register ".\AppxManifest.xml" -ErrorAction Stop
+        Write-Log "WSA registered successfully for the current interactive user."
+    }
+    catch {
+        ($_ | Out-String) | Set-Content -Encoding UTF8 (Join-Path $stage "current-user-registration-error.txt")
+        Finish-Report -State "WSA_CURRENT_USER_REGISTRATION_FAILED" -ExitCode 18 -Extra @{
+            install_location = $runtimePackageDir
+            registration_error = $_.Exception.Message
+        }
+        exit 18
+    }
+    finally {
+        Pop-Location
+    }
+
+    $installed = Get-AppxPackage | Where-Object {
+        $_.Name -like "*WindowsSubsystemForAndroid*"
+    } | Select-Object -First 1
+}
+
 if (-not $installed) {
     Finish-Report -State "WSA_NOT_REGISTERED" -ExitCode 18
-    throw "WSA package is still not registered after installation."
+    exit 18
 }
 $installed | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "installed-wsa.txt")
 
