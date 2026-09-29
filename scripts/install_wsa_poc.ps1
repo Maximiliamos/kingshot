@@ -950,6 +950,13 @@ $packagePreflight = [ordered]@{
     install_path_length = if ($installed.InstallLocation) { $installed.InstallLocation.Length } else { 0 }
     filesystem = ""
     path_short_enough = $true
+    appx_manifest = ""
+    manifest_min_version = ""
+    manifest_has_custom_install = $false
+    win10_patch_required = ($build -eq 19045)
+    wsapatch_dll_present = $null
+    patched_icu_present = $null
+    gfxstream_paths = @()
 }
 try {
     if ($installed.InstallLocation) {
@@ -966,17 +973,66 @@ try {
                 throw "WSA unpackaged registration requires an NTFS installation volume."
             }
         }
+
         if ($installed.InstallLocation.Length -gt 120) {
             $packagePreflight.path_short_enough = $false
             Write-Log "WARNING: WSA install path is unusually long; WSABuilds documents long extracted paths as a cause of Settings/app startup crashes."
         }
+
+        $manifestPath = Join-Path $installed.InstallLocation "AppxManifest.xml"
+        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+            $manifestPath = (Get-ChildItem -LiteralPath $installed.InstallLocation -Filter AppxManifest.xml -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+        }
+        if ($manifestPath) {
+            $packagePreflight.appx_manifest = $manifestPath
+            [xml]$preflightManifest = Get-Content -LiteralPath $manifestPath
+            $targetFamilies = @($preflightManifest.Package.Dependencies.TargetDeviceFamily)
+            $desktopTarget = $targetFamilies | Where-Object { $_.Name -eq "Windows.Desktop" } | Select-Object -First 1
+            if ($desktopTarget) {
+                $packagePreflight.manifest_min_version = [string]$desktopTarget.MinVersion
+            }
+            $manifestText = Get-Content -LiteralPath $manifestPath -Raw
+            $packagePreflight.manifest_has_custom_install = [bool]($manifestText -match "(?i)windows\.customInstall|customInstallActions")
+        }
+
+        $wsaClientDir = Join-Path $installed.InstallLocation "WsaClient"
+        $packagePreflight.wsapatch_dll_present = Test-Path -LiteralPath (Join-Path $wsaClientDir "WsaPatch.dll") -PathType Leaf
+        $packagePreflight.patched_icu_present = Test-Path -LiteralPath (Join-Path $wsaClientDir "icu.dll") -PathType Leaf
+        $packagePreflight.gfxstream_paths = @(
+            Get-ChildItem -LiteralPath $installed.InstallLocation -Filter "gfxstream_backend.dll" -File -Recurse -ErrorAction SilentlyContinue |
+                Select-Object -ExpandProperty FullName
+        )
+
+        if ($build -eq 19045) {
+            $manifestCompatible = $true
+            if ($packagePreflight.manifest_min_version) {
+                try {
+                    $manifestCompatible = ([version]$packagePreflight.manifest_min_version -le [version]$fullBuild)
+                }
+                catch {}
+            }
+
+            if (-not $packagePreflight.wsapatch_dll_present -or
+                -not $packagePreflight.patched_icu_present -or
+                -not $manifestCompatible -or
+                $packagePreflight.manifest_has_custom_install) {
+                $packagePreflight | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-preflight.json")
+                Finish-Report -State "WSA_WIN10_PATCH_INVALID" -ExitCode 18 -Extra @{
+                    wsapatch_dll_present = $packagePreflight.wsapatch_dll_present
+                    patched_icu_present = $packagePreflight.patched_icu_present
+                    manifest_min_version = $packagePreflight.manifest_min_version
+                    manifest_has_custom_install = $packagePreflight.manifest_has_custom_install
+                }
+                throw "The installed WSA package does not satisfy the Windows 10 WSAPatch prerequisites."
+            }
+        }
     }
 }
 catch {
-    if ($_.Exception.Message -match "requires an NTFS") { throw }
-    Write-Log "Could not fully inspect WSA install-volume preflight: $($_.Exception.Message)"
+    if ($_.Exception.Message -match "requires an NTFS|WSAPatch prerequisites") { throw }
+    Write-Log "Could not fully inspect WSA package preflight: $($_.Exception.Message)"
 }
-$packagePreflight | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-preflight.json")
+$packagePreflight | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-package-preflight.json")
 
 $portReservationOk = Ensure-WsaAdbPortReservation -ReportStage $stage
 $loopbackExemptionOk = Ensure-WsaLoopbackExemption -ReportStage $stage
