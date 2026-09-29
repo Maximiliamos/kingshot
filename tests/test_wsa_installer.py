@@ -39,6 +39,16 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("continuing to authoritative WSA registration check", self.source)
         self.assertNotIn('throw "Failed to enable Windows developer package registration."', self.source)
 
+    def test_prepare_phase_unhooks_managed_wsa_from_elevated_account(self):
+        self.assertIn("Removing the managed WSA registration from the elevated setup account", self.source)
+        self.assertIn("Remove-AppxPackage -Package $installed.PackageFullName", self.source)
+        self.assertIn("WSA_PREPARE_UNREGISTER_FAILED", self.source)
+        self.assertIn("elevated_registration_removed = $true", self.source)
+
+    def test_report_git_metadata_is_rooted_and_null_safe(self):
+        self.assertIn("git -C $Root rev-parse HEAD", self.source)
+        self.assertIn('if (-not $commitText) { $commitText = "unknown" }', self.source)
+
     def test_runtime_phase_can_register_wsa_for_interactive_user(self):
         self.assertIn("WSA is not registered for the current interactive user", self.source)
         self.assertIn("WSA registered successfully for the current interactive user.", self.source)
