@@ -1,0 +1,7 @@
+﻿[2026-09-29T16:37:37.3752793+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-29T16:37:38.8133381+03:00] Selected WSABuilds LTS 8 package for Windows 10 22H2 (19045.6456).
+[2026-09-29T16:37:38.8439637+03:00] Windows developer package registration is enabled.
+[2026-09-29T16:37:39.8429021+03:00] TUGARIN BOTS NoGApps WSA package is already registered; keeping it.
+[2026-09-29T16:37:39.9111454+03:00] Removing the managed WSA registration from the elevated setup account so the interactive user can own the unpackaged app registration.
+[2026-09-29T16:37:43.8676713+03:00] Elevated-account WSA registration removed; extracted package files are preserved.
+[2026-09-29T16:37:43.8710908+03:00] WSA setup prerequisites are ready. Returning to the normal interactive user session for current-user registration and runtime startup.
