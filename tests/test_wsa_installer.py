@@ -78,7 +78,7 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("ANDROID_AUTHORIZATION_REQUIRED", self.source)
         self.assertIn("authorization_required = $true", self.source)
         self.assertIn("failed to authenticate", self.source)
-        self.assertIn("Always allow from this computer", self.source)
+        self.assertIn("Approve the debugging prompt", self.source)
 
     def test_p0_developer_fallback_is_pinned_reversible_and_opt_out(self):
         self.assertIn('[switch]$NoAutoDeveloperModePatch', self.source)
