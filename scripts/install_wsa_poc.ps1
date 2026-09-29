@@ -4,7 +4,9 @@ param(
     [string]$PairCode = "",
     [switch]$CleanGame,
     [switch]$SkipInstall,
-    [switch]$NoAutoDeveloperModePatch
+    [switch]$NoAutoDeveloperModePatch,
+    [switch]$PrepareOnly,
+    [switch]$RuntimeOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +45,8 @@ function Invoke-SelfElevated {
     if ($CleanGame) { $args += "-CleanGame" }
     if ($SkipInstall) { $args += "-SkipInstall" }
     if ($NoAutoDeveloperModePatch) { $args += "-NoAutoDeveloperModePatch" }
+    if ($PrepareOnly) { $args += "-PrepareOnly" }
+    if ($RuntimeOnly) { $args += "-RuntimeOnly" }
 
     $quoted = $args | ForEach-Object {
         if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
@@ -163,11 +167,19 @@ function Get-Sha256 {
         $stream.Dispose()
     }
 }
-if (-not (Test-IsAdmin)) {
-    Write-Host "Administrator rights are required for the Android subsystem setup."
-    Write-Host "Requesting elevation..."
+if ($PrepareOnly -and $RuntimeOnly) {
+    throw "-PrepareOnly and -RuntimeOnly cannot be used together."
+}
+
+if (-not $RuntimeOnly -and -not (Test-IsAdmin)) {
+    Write-Host "Administrator rights are required only for WSA setup/registration."
+    Write-Host "Requesting elevation for the setup phase..."
     $childExit = Invoke-SelfElevated
     exit $childExit
+}
+
+if ($RuntimeOnly -and (Test-IsAdmin)) {
+    Write-Host "WARNING: RuntimeOnly is intended for the normal interactive user session."
 }
 
 $ReportsRoot = Join-Path $WorkRoot "reports"
@@ -364,7 +376,7 @@ if ($needsReboot) {
     exit 3010
 }
 
-if (-not $SkipInstall) {
+if (-not $SkipInstall -and -not $RuntimeOnly) {
     $existing = Get-AppxPackage | Where-Object {
         $_.Name -like "*WindowsSubsystemForAndroid*"
     } | Select-Object -First 1
@@ -535,6 +547,20 @@ if (-not $installed) {
     throw "WSA package is still not registered after installation."
 }
 $installed | Select-Object Name, PackageFullName, Version, InstallLocation | Format-List | Out-String | Set-Content -Encoding UTF8 (Join-Path $stage "installed-wsa.txt")
+
+if ($PrepareOnly) {
+    Write-Log "WSA setup/registration phase completed. Returning to the normal interactive user session for runtime startup."
+    Finish-Report -State "WSA_PREPARE_PASS" -ExitCode 0 -Extra @{
+        installed_version = $installed.Version.ToString()
+        installed_location = $installed.InstallLocation
+        phase = "prepare"
+    }
+    exit 0
+}
+
+if ($RuntimeOnly) {
+    Write-Log "Starting WSA runtime verification in the normal interactive user session."
+}
 
 Write-Log "Launching Android subsystem settings and waking the Android environment."
 try {
