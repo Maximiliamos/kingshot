@@ -1836,7 +1836,7 @@ $props = @(
 $propLines = @()
 foreach ($prop in $props) {
     $probe = Invoke-AdbSafe -Arguments @("-s", $Serial, "shell", "getprop", $prop) -TimeoutSeconds 10
-    $value = $probe.Output.Trim()
+    $value = $probe.Stdout.Trim()
     $propLines += "$prop=$value"
 }
 $propLines | Set-Content -Encoding UTF8 (Join-Path $stage "wsa-properties.txt")

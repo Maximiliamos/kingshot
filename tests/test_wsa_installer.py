@@ -27,6 +27,8 @@ class WsaInstallerTests(unittest.TestCase):
     def test_all_runtime_adb_and_python_probes_are_hidden(self):
         self.assertIn('Start-Process -FilePath $adb -ArgumentList $Arguments -WindowStyle Hidden', self.source)
         self.assertNotIn('& $adb -s $Serial shell getprop', self.source)
+        self.assertIn('$value = $probe.Stdout.Trim()', self.source)
+        self.assertNotIn('$probe.Output.Trim()', self.source)
         self.assertIn('Start-Process -FilePath $pythonExe -ArgumentList $argLine -Wait -PassThru -WindowStyle Hidden', self.source)
 
     def test_packaged_aumid_activation_is_primary_and_raw_exe_is_not_used(self):
