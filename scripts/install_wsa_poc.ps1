@@ -340,76 +340,83 @@ if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
     throw "CPU virtualization is disabled in BIOS/UEFI. Enable Intel VT-x/AMD-V and rerun."
 }
 
-$developerRegistrationReady = $false
-$developerRegistrationDetail = ""
-try {
-    $regOutput = (& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" 2>&1 | Out-String).Trim()
-    $regExit = $LASTEXITCODE
-    $developerRegistrationDetail = "reg.exe exit=$regExit output=$regOutput"
-    if ($regExit -eq 0) {
-        $developerRegistrationReady = $true
-    }
-}
-catch {
-    $developerRegistrationDetail = "reg.exe failed: $($_.Exception.Message)"
-}
-
-if (-not $developerRegistrationReady) {
+if (-not $RuntimeOnly) {
+    $developerRegistrationReady = $false
+    $developerRegistrationDetail = ""
     try {
-        $devKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-        New-Item -Path $devKey -Force | Out-Null
-        New-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -PropertyType DWord -Value 1 -Force | Out-Null
-        $actual = (Get-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -ErrorAction Stop).AllowDevelopmentWithoutDevLicense
-        if ([int]$actual -eq 1) {
+        $regOutput = (& reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1" 2>&1 | Out-String).Trim()
+        $regExit = $LASTEXITCODE
+        $developerRegistrationDetail = "reg.exe exit=$regExit output=$regOutput"
+        if ($regExit -eq 0) {
             $developerRegistrationReady = $true
-            $developerRegistrationDetail += "; PowerShell registry fallback succeeded"
         }
     }
     catch {
-        $developerRegistrationDetail += "; PowerShell registry fallback failed: $($_.Exception.Message)"
+        $developerRegistrationDetail = "reg.exe failed: $($_.Exception.Message)"
     }
-}
 
-$developerRegistrationDetail | Set-Content -Encoding UTF8 (Join-Path $stage "developer-package-registration.txt")
-if ($developerRegistrationReady) {
-    Write-Log "Windows developer package registration is enabled."
-}
-else {
-    # This setting is only a prerequisite for registration attempts. An already
-    # registered WSA package does not need to be blocked by a registry-policy
-    # write failure; AppX registration below remains the authoritative gate.
-    Write-Log "WARNING: developer package registration setting could not be changed; continuing to authoritative WSA registration check."
-}
-
-$featureState = @{}
-$needsReboot = $false
-foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform")) {
-    $currentFeature = Get-WindowsOptionalFeature -Online -FeatureName $featureName -ErrorAction Stop
-    $featureState[$featureName] = $currentFeature.State.ToString()
-    if ($currentFeature.State -ne "Enabled") {
-        Write-Log "Enabling Windows feature: $featureName"
-        $featureResult = Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart
-        if ($featureResult.RestartNeeded) {
-            $needsReboot = $true
+    if (-not $developerRegistrationReady) {
+        try {
+            $devKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+            New-Item -Path $devKey -Force | Out-Null
+            New-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -PropertyType DWord -Value 1 -Force | Out-Null
+            $actual = (Get-ItemProperty -Path $devKey -Name "AllowDevelopmentWithoutDevLicense" -ErrorAction Stop).AllowDevelopmentWithoutDevLicense
+            if ([int]$actual -eq 1) {
+                $developerRegistrationReady = $true
+                $developerRegistrationDetail += "; PowerShell registry fallback succeeded"
+            }
+        }
+        catch {
+            $developerRegistrationDetail += "; PowerShell registry fallback failed: $($_.Exception.Message)"
         }
     }
-}
-$featureState | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $stage "windows-features-before.json")
 
-$bcd = (& bcdedit /enum "{current}" 2>&1 | Out-String)
-$bcd | Set-Content -Encoding UTF8 (Join-Path $stage "bcd-current.txt")
-if ($bcd -match "hypervisorlaunchtype\s+Off") {
-    Write-Log "Enabling Windows hypervisor launch at boot."
-    & bcdedit /set hypervisorlaunchtype auto | Out-Null
-    $needsReboot = $true
-}
+    $developerRegistrationDetail | Set-Content -Encoding UTF8 (Join-Path $stage "developer-package-registration.txt")
+    if ($developerRegistrationReady) {
+        Write-Log "Windows developer package registration is enabled."
+    }
+    else {
+        # This setting is only a prerequisite for registration attempts. An already
+        # registered WSA package does not need to be blocked by a registry-policy
+        # write failure; AppX registration below remains the authoritative gate.
+        Write-Log "WARNING: developer package registration setting could not be changed; continuing to authoritative WSA registration check."
+    }
 
-if ($needsReboot) {
-    Finish-Report -State "NEEDS_REBOOT" -ExitCode 3010 -Extra @{ host = $hostInfo }
-    Write-Host ""
-    Write-Host "Windows virtualization components were enabled."
-    Write-Host "Restart Windows, then run the SAME command again."
-    exit 3010
+    $featureState = @{}
+    $needsReboot = $false
+    foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform")) {
+        $currentFeature = Get-WindowsOptionalFeature -Online -FeatureName $featureName -ErrorAction Stop
+        $featureState[$featureName] = $currentFeature.State.ToString()
+        if ($currentFeature.State -ne "Enabled") {
+            Write-Log "Enabling Windows feature: $featureName"
+            $featureResult = Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart
+            if ($featureResult.RestartNeeded) {
+                $needsReboot = $true
+            }
+        }
+    }
+    $featureState | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $stage "windows-features-before.json")
+
+    $bcd = (& bcdedit /enum "{current}" 2>&1 | Out-String)
+    $bcd | Set-Content -Encoding UTF8 (Join-Path $stage "bcd-current.txt")
+    if ($bcd -match "hypervisorlaunchtype\s+Off") {
+        Write-Log "Enabling Windows hypervisor launch at boot."
+        & bcdedit /set hypervisorlaunchtype auto | Out-Null
+        $needsReboot = $true
+    }
+
+    if ($needsReboot) {
+        Finish-Report -State "NEEDS_REBOOT" -ExitCode 3010 -Extra @{ host = $hostInfo }
+        Write-Host ""
+        Write-Host "Windows virtualization components were enabled."
+        Write-Host "Restart Windows, then run the SAME command again."
+        exit 3010
+    }
+
+
+}
+else {
+    Write-Log "RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks."
 }
 
 if (-not $SkipInstall -and -not $RuntimeOnly) {
