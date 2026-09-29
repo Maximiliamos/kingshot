@@ -86,7 +86,7 @@ function Ensure-DedicatedUser {
             Name = $TargetUser
             Password = $password
             FullName = "TUGARIN BOTS Runtime"
-            Description = "Dedicated local Windows profile for TUGARIN BOTS and WSA"
+            Description = "TUGARIN BOTS WSA runtime"
             AccountNeverExpires = $true
             PasswordNeverExpires = $true
         }
