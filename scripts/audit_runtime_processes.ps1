@@ -56,12 +56,12 @@ try {
 }
 catch {}
 
-# adb.exe may intentionally keep one background server process after a diagnostic
-# command. Record it, but do not classify it as a stale GUI/console process.
+# adb.exe and the PowerShell process executing this audit may legitimately exist.
+# Record them, but fail only on stale GUI/Python/CMD/conhost processes.
 $stale = @(
     $processes | Where-Object {
         $_.name.ToLowerInvariant() -in @(
-            "python", "pythonw", "cmd", "powershell", "pwsh", "conhost"
+            "python", "pythonw", "cmd", "conhost"
         )
     }
 )
