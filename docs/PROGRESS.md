@@ -35,6 +35,7 @@ hardening HEAD.
 ### P1 application
 
 - WSA is the explicit production backend;
+- low-latency H.264 screenrecord→FFmpeg GUI transport with automatic PNG screencap fallback;
 - single continuous GUI frame worker;
 - FPS/latency transport metrics in the GUI;
 - click/swipe/hold/wheel/right-click input;
@@ -61,7 +62,7 @@ hardening HEAD.
 | Console flash/zombie-process host smoke | PENDING HOST |
 | Full State #3 -> tutorial -> rename real-game cycle | PENDING HOST |
 | Multi-cycle unattended real-game soak | PENDING HOST |
-| True compressed low-latency video transport | TRANSPORT BOUNDARY READY; HOST IMPLEMENTATION/ACCEPTANCE PENDING |
+| True compressed low-latency video transport | CODE DONE; TARGET-HOST LATENCY/STABILITY ACCEPTANCE PENDING |
 
 ## Definition of product-ready 1.0
 
