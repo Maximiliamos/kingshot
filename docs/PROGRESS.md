@@ -60,8 +60,8 @@ release acceptance.
 
 | Gate | State |
 |---|---|
-| WSA boot/game P0 on previously proven commit | PASS |
-| Latest hosted Windows CI | PASS — 179 tests, zero skips |
+| WSA boot/game P0 on real host | PASS |
+| Latest hosted Windows CI | PASS — 218 tests, zero skips |
 | Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
 | Dedicated-user stale-process audit | PASS — zero stale processes |
 | Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
