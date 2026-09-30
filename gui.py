@@ -93,12 +93,16 @@ class InteractivePreview(QLabel):
         self.setMouseTracking(True)
         self._device_width = 0
         self._device_height = 0
+        self._device_left = 0
+        self._device_top = 0
         self._press_point = None
         self._press_at = 0.0
 
-    def set_device_size(self, width, height):
+    def set_device_size(self, width, height, left=0, top=0):
         self._device_width = max(0, int(width or 0))
         self._device_height = max(0, int(height or 0))
+        self._device_left = max(0, int(left or 0))
+        self._device_top = max(0, int(top or 0))
 
     def _map_to_device(self, point):
         pixmap = self.pixmap()
@@ -119,10 +123,10 @@ class InteractivePreview(QLabel):
         if x < 0 or y < 0 or x >= pw or y >= ph:
             return None
 
-        dx = round(x * self._device_width / max(1, pw))
-        dy = round(y * self._device_height / max(1, ph))
-        dx = max(0, min(self._device_width - 1, dx))
-        dy = max(0, min(self._device_height - 1, dy))
+        dx = self._device_left + round(x * self._device_width / max(1, pw))
+        dy = self._device_top + round(y * self._device_height / max(1, ph))
+        dx = max(self._device_left, min(self._device_left + self._device_width - 1, dx))
+        dy = max(self._device_top, min(self._device_top + self._device_height - 1, dy))
         return dx, dy
 
     def mousePressEvent(self, event):
@@ -1004,7 +1008,10 @@ class WarBotWindow(QMainWindow):
             self.preview.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
         self.preview.setPixmap(pixmap)
-        self.preview.set_device_size(rect["width"], rect["height"])
+        self.preview.set_device_size(
+            rect["width"], rect["height"],
+            rect.get("left", 0), rect.get("top", 0),
+        )
         self.device_status.setText(
             f"● {title} · {rect['width']}×{rect['height']}"
         )
@@ -1039,6 +1046,21 @@ class WarBotWindow(QMainWindow):
             f"{metrics.get('fps', 0.0):.1f} FPS · "
             f"{metrics.get('latency_ms', 0.0):.0f} ms"
         )
+
+    @staticmethod
+    def _crop_for_render(frame, rect):
+        left, top, width, height = bot.detect_content_rect(frame)
+        phone, _, _ = bot.crop_phone(frame)
+        scale_x = rect["width"] / max(1, frame.shape[1])
+        scale_y = rect["height"] / max(1, frame.shape[0])
+        viewport = dict(rect)
+        viewport.update(
+            left=round(left * scale_x),
+            top=round(top * scale_y),
+            width=round(width * scale_x),
+            height=round(height * scale_y),
+        )
+        return phone, viewport
 
     def refresh_capture(self):
         mode = str(self.backend_mode.currentData() or "wsa")
@@ -1081,8 +1103,8 @@ class WarBotWindow(QMainWindow):
                     self.capture = bot.ScrcpyCapture()
                     self.capture_signature = signature
                 frame, title, rect = self.capture.grab()
-                phone, _, _ = bot.crop_phone(frame)
-                self._render_capture(phone, title, rect)
+                phone, viewport = self._crop_for_render(frame, rect)
+                self._render_capture(phone, title, viewport)
                 self.stream_value.setText("legacy scrcpy")
             except Exception as error:
                 self._capture_failed(str(error))
@@ -1101,23 +1123,40 @@ class WarBotWindow(QMainWindow):
             and self.frame_stream_signature == signature
             and self.frame_stream.running
         ):
-            return
+            active_transport = getattr(self.frame_stream.capture, "transport_name", "")
+            window_ready = (
+                mode == "wsa" and
+                len(bot.WsaGameWindowCapture._visible_scrcpy_windows()) == 1
+            )
+            if active_transport == "wsa-window" or not window_ready:
+                return
 
         self._stop_frame_stream()
         try:
             backend = create_backend(mode, serial=serial, adb_path=adb_path)
-            capture = create_preview_capture(backend)
+            capture = None
+            if mode == "wsa":
+                candidate = None
+                try:
+                    candidate = bot.WsaGameWindowCapture()
+                    candidate.grab()
+                    capture = candidate
+                except Exception:
+                    if candidate is not None:
+                        candidate.close()
+            if capture is None:
+                capture = create_preview_capture(backend)
 
             def on_frame(frame, title, rect, metrics):
-                phone, _, _ = bot.crop_phone(frame)
-                self.capture_ready.emit(phone, title, rect)
+                phone, viewport = self._crop_for_render(frame, rect)
+                self.capture_ready.emit(phone, title, viewport)
                 self.stream_metrics_ready.emit(metrics.to_dict())
 
             stream = ContinuousFrameStream(
                 capture,
                 on_frame=on_frame,
                 on_error=lambda error: self.stream_failed.emit(error),
-                target_fps=15.0,
+                target_fps=30.0 if getattr(capture, "transport_name", "") == "wsa-window" else 15.0,
                 transport="preview",
             )
             self.frame_stream = stream

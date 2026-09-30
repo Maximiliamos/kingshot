@@ -159,6 +159,55 @@ class ScrcpyCapture:
         return cv2.cvtColor(shot, cv2.COLOR_BGRA2BGR), title, dict(self.rect)
 
 
+class WsaGameWindowCapture(ScrcpyCapture):
+    """Capture only the client area of a visible Kingshot WSA host window."""
+
+    transport_name = "wsa-window"
+    TITLE_MARKERS = ("война за трон", "kingshot")
+
+    @staticmethod
+    def _visible_scrcpy_windows():
+        enum_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+        found = []
+
+        def visit(hwnd, _):
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            size = user32.GetWindowTextLengthW(hwnd)
+            if not size:
+                return True
+            title = ctypes.create_unicode_buffer(size + 1)
+            user32.GetWindowTextW(hwnd, title, size + 1)
+            folded = title.value.casefold()
+            if any(marker in folded for marker in WsaGameWindowCapture.TITLE_MARKERS):
+                found.append((hwnd, title.value))
+            return True
+
+        user32.EnumWindows(enum_proc(visit), 0)
+        return found
+
+    def _refresh_rect(self):
+        candidates = self._visible_scrcpy_windows()
+        if len(candidates) != 1:
+            titles = ", ".join(title for _, title in candidates) or "нет"
+            raise RuntimeError(
+                "Ожидается одно видимое окно Kingshot в текущей Windows-сессии; "
+                "найдено: " + titles
+            )
+        self.hwnd, title = candidates[0]
+        rect = wintypes.RECT()
+        point = wintypes.POINT(0, 0)
+        if not user32.GetClientRect(self.hwnd, ctypes.byref(rect)):
+            raise RuntimeError("Не удалось прочитать клиентскую область окна WSA.")
+        if not user32.ClientToScreen(self.hwnd, ctypes.byref(point)):
+            raise RuntimeError("Не удалось определить положение окна WSA.")
+        width, height = rect.right - rect.left, rect.bottom - rect.top
+        if width < 100 or height < 100:
+            raise RuntimeError("Окно Kingshot слишком мало или свёрнуто.")
+        self.rect = {"left": point.x, "top": point.y, "width": width, "height": height}
+        return title
+
+
 class ActionGate:
     """Require visual evidence before the state machine may click again."""
 
@@ -1061,18 +1110,14 @@ def sync_input_geometry(frame, rect=None):
         elif width >= 100 and height >= 100:
             INPUT_W, INPUT_H = width, height
 
-    target = PHONE_W / PHONE_H
-    actual = INPUT_W / max(1.0, INPUT_H)
-    if actual > target:
-        content_h = float(INPUT_H)
-        content_w = content_h * target
-        left = (INPUT_W - content_w) / 2.0
-        top = 0.0
-    else:
-        content_w = float(INPUT_W)
-        content_h = content_w / target
-        left = 0.0
-        top = (INPUT_H - content_h) / 2.0
+    frame_h, frame_w = frame.shape[:2]
+    crop_left, crop_top, crop_w, crop_h = detect_content_rect(frame)
+    scale_x = INPUT_W / max(1.0, float(frame_w))
+    scale_y = INPUT_H / max(1.0, float(frame_h))
+    left = crop_left * scale_x
+    top = crop_top * scale_y
+    content_w = crop_w * scale_x
+    content_h = crop_h * scale_y
 
     INPUT_CONTENT_LEFT = left
     INPUT_CONTENT_TOP = top
@@ -1080,21 +1125,35 @@ def sync_input_geometry(frame, rect=None):
     INPUT_CONTENT_H = content_h
 
 
+def detect_content_rect(frame):
+    """Return the real non-black Android/game viewport inside a WSA frame."""
+    sh, sw = frame.shape[:2]
+    if sh < 2 or sw < 2:
+        return 0, 0, sw, sh
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    active = gray > 8
+    cols = np.flatnonzero(active.sum(axis=0) >= max(8, round(sh * 0.05)))
+    rows = np.flatnonzero(active.sum(axis=1) >= max(8, round(sw * 0.05)))
+    if cols.size and rows.size:
+        left, right = int(cols[0]), int(cols[-1] + 1)
+        top, bottom = int(rows[0]), int(rows[-1] + 1)
+        width, height = right - left, bottom - top
+        if width >= 100 and height >= 100:
+            return left, top, width, height
+
+    target = PHONE_W / PHONE_H
+    actual = sw / max(1.0, sh)
+    if actual > target:
+        width = round(sh * target)
+        return max(0, (sw - width) // 2), 0, width, sh
+    height = round(sw / target)
+    return 0, max(0, (sh - height) // 2), sw, height
+
+
 def crop_phone(frame):
     sh, sw = frame.shape[:2]
-    # SDL may letterbox the stream when scrcpy is resized freely. Crop to the
-    # device aspect ratio, then normalize vision to one stable resolution.
-    target = PHONE_W / PHONE_H
-    actual = sw / sh
-    if actual > target:
-        content_w = round(sh * target)
-        left = max(0, (sw - content_w) // 2)
-        phone = frame[:, left:left + content_w]
-    else:
-        content_h = round(sw / target)
-        top = max(0, (sh - content_h) // 2)
-        phone = frame[top:top + content_h, :]
-        left = 0
+    left, top, content_w, content_h = detect_content_rect(frame)
+    phone = frame[top:top + content_h, left:left + content_w]
     if phone.size == 0:
         raise RuntimeError(f"Неверный crop Android frame: {sw}x{sh}")
     normalized = cv2.resize(phone, (VISION_W, VISION_H), interpolation=cv2.INTER_AREA)

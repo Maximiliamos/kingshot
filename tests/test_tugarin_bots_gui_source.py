@@ -64,6 +64,18 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("if bot_pid() is not None", self.gui)
         self.assertIn("self._stop_frame_stream()", self.gui)
 
+    def test_gui_maps_cropped_viewport_back_to_framebuffer_coordinates(self):
+        self.assertIn("def _crop_for_render(frame, rect):", self.gui)
+        self.assertIn("rect.get(\"left\", 0)", self.gui)
+        self.assertIn("self._device_left + round", self.gui)
+
+    def test_wsa_prefers_exact_visible_game_window_capture(self):
+        bot_source = (ROOT / "bot.py").read_text(encoding="utf-8-sig")
+        self.assertIn("class WsaGameWindowCapture", bot_source)
+        self.assertIn("GetClientRect", bot_source)
+        self.assertIn('transport_name = "wsa-window"', bot_source)
+        self.assertIn("bot.WsaGameWindowCapture()", self.gui)
+
 
 if __name__ == "__main__":
     unittest.main()

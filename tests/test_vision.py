@@ -52,12 +52,12 @@ class TutorialVisionTests(unittest.TestCase):
             self.assertAlmostEqual(
                 bot.INPUT_CONTENT_W,
                 1080.0 * bot.PHONE_W / bot.PHONE_H,
-                places=3,
+                delta=1.0,
             )
             with patch("bot.tap") as tap:
                 bot.tap_norm(0.5, 0.5)
             x, y = tap.call_args.args
-            self.assertAlmostEqual(x, 960.0, places=3)
+            self.assertAlmostEqual(x, 960.0, delta=1.0)
             self.assertAlmostEqual(y, 540.0, places=3)
 
             with patch("bot.tap") as tap:
@@ -91,6 +91,18 @@ class TutorialVisionTests(unittest.TestCase):
         phone, _, _ = bot.crop_phone(frame)
         self.assertEqual(phone.shape[:2], (bot.VISION_H, bot.VISION_W))
         self.assertGreater(float(phone.mean()), 250.0)
+
+    def test_wsa_crop_uses_actual_nonblack_viewport_not_phone_aspect_guess(self):
+        frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
+        frame[155:884, 677:1173] = (40, 80, 120)
+
+        rect = bot.detect_content_rect(frame)
+        phone, left, right = bot.crop_phone(frame)
+
+        self.assertEqual(rect, (677, 155, 496, 729))
+        self.assertEqual((left, right), (677, 1173))
+        self.assertEqual(phone.shape[:2], (bot.VISION_H, bot.VISION_W))
+        self.assertGreater(float(phone.mean()), 70.0)
 
     def test_skip_is_found_in_common_upper_right_area(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)

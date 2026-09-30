@@ -24,6 +24,14 @@
 4. Deep health probes are less frequent, while lightweight liveness remains
    independent.
 5. scrcpy server stdout and stderr are both retained for diagnosis.
+6. WSA preview detects the actual non-black game viewport on both axes instead
+   of reusing the old HONOR phone aspect ratio. Pointer coordinates are mapped
+   back through the same viewport offset.
+7. When a visible Kingshot window exists in the same Windows session as the
+   GUI, preview automatically uses its exact Win32 client rectangle through
+   MSS (`wsa-window`, target 30 FPS). A disconnected-user WSA window cannot be
+   captured across Windows sessions, so that case remains on the labelled ADB
+   fallback.
 
 ## Remaining performance gate
 
