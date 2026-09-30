@@ -35,6 +35,7 @@ jobs:
           [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/audit_runtime_processes.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/verify_release.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_preview.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/run_and_report.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/upload_runtime_report.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/setup_dedicated_wsa_user.ps1)) | Out-Null
