@@ -63,6 +63,10 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('[string]$head = Update-Repository', self.source)
         self.assertIn('[string]$venvPython = Ensure-PythonEnvironment', self.source)
 
+    def test_production_venv_installs_android_unicode_helpers(self):
+        self.assertIn("requirements-android-optional.txt", self.source)
+        self.assertIn("Android Unicode/system-UI helpers", self.source)
+
     def test_gui_is_never_auto_launched_and_shortcut_is_fail_closed_on_p0(self):
         p0_check = self.source.index('if ($p0Exit -ne 0)')
         shortcut = self.source.index('$shortcutPath = Create-GuiShortcut', p0_check)
