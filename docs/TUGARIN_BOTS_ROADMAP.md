@@ -12,7 +12,7 @@ production proof.
 | P0 | XML/AUMID installer regression | DONE | NEXT smoke |
 | P0 | Consoleless GUI/process cleanup | DONE | NEXT smoke |
 | P0 | Full Windows CI incl. Qt GUI | DONE | required green |
-| P1 | Continuous preview transport boundary | DONE | ADB transport smoke |
+| P1 | Continuous H.264 preview + screencap fallback | DONE | H.264 host latency/stability smoke pending |
 | P1 | FPS/latency telemetry | DONE | smoke |
 | P1 | Full mouse controls | DONE | smoke |
 | P1 | Keyboard + Unicode clipboard path | DONE | Unicode host smoke |
@@ -24,10 +24,10 @@ production proof.
 | P2 | Structured event log | DONE | soak pending |
 | P2 | Corrupt-state fail-closed + previous snapshot | DONE | smoke |
 | P2 | Deterministic long-run-lite tests | DONE | CI |
-| P2 | Multi-cycle real-game soak | tooling ready | pending |
+| P2 | Multi-cycle real-game soak | release/heartbeat/event tooling ready | pending |
 | P3 | Consolidate production history into main | pending CI/host gate | — |
 | P3 | Archive old emulator research paths | pending merge | — |
-| P3 | Stable installer/release tag | pending final host gate | — |
+| P3 | Stable installer/release tag | installer/release gate DONE | tag pending final host evidence |
 
 ## Next real-host acceptance command
 
