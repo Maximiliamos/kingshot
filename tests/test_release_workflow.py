@@ -48,6 +48,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
             "runtime_watchdog.py",
             "run_gui.vbs",
             "verify_mvp_full.ps1",
+            "verify_gui.ps1",
             "verify_operator_io.ps1",
             "verify_game_flow.ps1",
             "verify_recovery.ps1",
