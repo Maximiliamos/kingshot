@@ -25,6 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "restart-game", "preview-smoke", "preview-probe",
+            "restriction-check",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
             "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
             "operator-io-smoke", "tap", "swipe", "ui-dump",
@@ -577,6 +578,27 @@ def main(argv=None) -> int:
     if args.action == "status":
         print(json.dumps(backend.health().to_dict(), ensure_ascii=False, indent=2))
         return 0
+
+    if args.action == "restriction-check":
+        backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+        import bot
+        frame = backend.frame()
+        phone, _, _ = bot.crop_phone(frame)
+        reason = bot.detect_stop_reason(phone)
+        evidence = ""
+        if reason:
+            output = Path(args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            if not cv2.imwrite(str(output), phone):
+                raise BackendError(f"Could not save restriction evidence: {output}")
+            evidence = str(output.resolve())
+        print(json.dumps({
+            "pass": not bool(reason),
+            "restricted": bool(reason),
+            "reason": reason,
+            "evidence_screenshot": evidence,
+        }, ensure_ascii=False, indent=2))
+        return 4 if reason else 0
 
     if args.action == "start-runtime":
         if not isinstance(backend, (NativeArm64Backend, WsaBackend)):

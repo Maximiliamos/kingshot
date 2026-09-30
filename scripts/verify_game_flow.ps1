@@ -50,6 +50,13 @@ Write-Host "WARNING: this gate intentionally clears Kingshot app data."
 Write-Host "It preserves the PC-side Tugarin nickname counter."
 Write-Host ""
 
+& $PythonExe .\warbot_cli.py restriction-check --backend wsa --serial 127.0.0.1:58526 `
+    --output .\debug\account-restriction-preflight.png
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "MVP GAME FLOW BLOCKED: account/server restriction detected before pm clear."
+    exit 44
+}
+
 & $PythonExe .\warbot_cli.py prepare-mvp-flow --backend wsa --serial 127.0.0.1:58526 --yes
 if ($LASTEXITCODE -ne 0) {
     Write-Host "MVP GAME FLOW PREP FAIL"

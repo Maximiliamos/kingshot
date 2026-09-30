@@ -11,6 +11,8 @@ class GameFlowAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("intentionally clears Kingshot app data", SOURCE)
         self.assertIn("prepare-mvp-flow", SOURCE)
         self.assertIn("--yes", SOURCE)
+        self.assertLess(SOURCE.index("restriction-check"), SOURCE.index("prepare-mvp-flow"))
+        self.assertIn("before pm clear", SOURCE)
         self.assertIn("TimeoutMinutes", SOURCE)
         self.assertIn("Stop-Process", SOURCE)
 

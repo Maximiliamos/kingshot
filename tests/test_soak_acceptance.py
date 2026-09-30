@@ -15,6 +15,8 @@ class SoakAcceptanceScriptTests(unittest.TestCase):
 
     def test_soak_is_bounded_and_stops_gracefully(self):
         self.assertIn("TimeoutMinutes", SOURCE)
+        self.assertLess(SOURCE.index("restriction-check"), SOURCE.index("prepare-mvp-soak"))
+        self.assertIn("before pm clear", SOURCE)
         self.assertIn("requesting graceful stop", SOURCE)
         self.assertIn("control.json", SOURCE)
         self.assertIn("Stop-Process", SOURCE)

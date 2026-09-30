@@ -52,6 +52,13 @@ Write-Host "WARNING: this gate intentionally clears Kingshot app data between cy
 Write-Host "Target committed characters: $MinCharacters"
 Write-Host ""
 
+& $PythonExe .\warbot_cli.py restriction-check --backend wsa --serial 127.0.0.1:58526 `
+    --output .\debug\account-restriction-preflight.png
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "MVP SOAK BLOCKED: account/server restriction detected before pm clear."
+    exit 44
+}
+
 $prepText = (& $PythonExe .\warbot_cli.py prepare-mvp-soak --backend wsa --serial 127.0.0.1:58526 --yes | Out-String)
 if ($LASTEXITCODE -ne 0) {
     Write-Host $prepText
