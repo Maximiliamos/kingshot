@@ -56,10 +56,15 @@ transport on the same WSA host:
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_preview.ps1
 ```
 
-Default acceptance requires the active transport to remain
-`h264-screenrecord` for the smoke window and reports measured FPS plus average
-and p95 frame latency. Use `-AllowFallback` only for diagnostics; PNG
-`screencap` fallback is not considered a PASS for the H.264 release gate.
+Target-host diagnostics proved Android `screenrecord v1.3` is file-only on
+this WSA build (zero stdout H.264 bytes at 720p/540p/native). It is therefore
+not a release transport.
+
+Default acceptance now provisions the pinned official `scrcpy-server v4.1`
+(SHA-256 verified), runs it as Android shell **inside WSA**, and requires the
+active transport to remain `scrcpy-h264` for the smoke window. FPS plus
+average/p95 frame latency are reported. Use `-AllowFallback` only for
+diagnostics; PNG `screencap` is not a PASS.
 
 ## Full registration-flow acceptance
 
@@ -126,13 +131,30 @@ Track:
 A 1.0 tag should not be created while any release-gate failure remains
 unexplained.
 
+## One-command MVP 1.0 host acceptance
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
+```
+
+The orchestrator is fail-fast and runs:
+
+```text
+verify_release.ps1
+→ verify_preview.ps1 (scrcpy-h264 required)
+→ verify_recovery.ps1 (stop Kingshot + ADB disconnect/reconnect)
+→ verify_game_flow.ps1 (exact State #3 → tutorial → Тугарин<N>)
+→ verify_soak.ps1 (minimum two one-character reset cycles)
+```
+
+The game-flow and soak stages intentionally clear Kingshot application data;
+the PC-side nickname counter is preserved.
+
 ## Release sequence
 
 ```text
 hosted CI green
-→ verify_release.ps1 PASS on release commit
-→ full State #3/Tugarin flow PASS
-→ multi-cycle soak PASS
+→ verify_mvp_full.ps1 PASS on the exact release commit
 → merge/consolidate into main
 → archive old emulator research PRs/branches
 → tag 1.0
