@@ -1,6 +1,8 @@
 # Runtime state
 state.json
 state.json.tmp
+state.previous.json
+state.corrupt.*.json
 control.json
 gui_config.json
 bot.pid
