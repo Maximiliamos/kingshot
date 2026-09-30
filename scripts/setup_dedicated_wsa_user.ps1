@@ -387,6 +387,14 @@ function Ensure-PythonEnvironment {
         ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw "pip install failed." }
 
+    $androidHelpers = Join-Path $RepoRoot "requirements-android-optional.txt"
+    if (Test-Path -LiteralPath $androidHelpers -PathType Leaf) {
+        Write-SetupLog "Installing Android Unicode/system-UI helpers."
+        & $venvPython -m pip install --disable-pip-version-check -r $androidHelpers 2>&1 |
+            ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -ne 0) { throw "Android helper dependency installation failed." }
+    }
+
     if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
         throw "Dedicated venv Python disappeared after dependency installation: $venvPython"
     }
