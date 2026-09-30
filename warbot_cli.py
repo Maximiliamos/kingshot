@@ -18,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
         "action",
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
+            "restart-game",
             "clear-game-data", "clean-start", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
@@ -279,6 +280,14 @@ def main(argv=None) -> int:
         print(backend.stop_app().strip())
         return 0
 
+    if args.action == "restart-game":
+        backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+        backend.stop_app()
+        backend.launch_app()
+        pid = backend.wait_package_running(timeout=90)
+        print(json.dumps({"restarted": True, "game_pid": pid}, ensure_ascii=False))
+        return 0
+
     if args.action == "clear-game-data":
         if not args.yes:
             raise BackendError("Refusing pm clear without --yes")
@@ -332,5 +341,5 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (BackendError, OSError, RuntimeError) as exc:
-        print(f"WAR BOT CLI ERROR: {exc}", file=sys.stderr)
+        print(f"TUGARIN BOTS CLI ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
