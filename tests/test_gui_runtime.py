@@ -20,6 +20,10 @@ class GuiRuntimeSmokeTests(unittest.TestCase):
             self.assertIsNotNone(window.preview)
             self.assertEqual(window.backend_mode.currentData(), "wsa")
             self.assertTrue(window.timer.isActive())
+            self.assertFalse(window.backend_card.isVisible())
+            window.developer_mode.setChecked(True)
+            self.app.processEvents()
+            self.assertFalse(window.backend_card.isHidden())
         finally:
             window.timer.stop()
             window.close()
