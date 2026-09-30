@@ -4,6 +4,7 @@ param(
     [string]$Serial = "127.0.0.1:58526",
     [string]$PairEndpoint = "",
     [string]$PairCode = "",
+    [string]$Branch = "feature/tugarin-bots-v1-hardening",
     [switch]$NoAutoDeveloperModePatch,
     [switch]$WipeRuntime,
     [switch]$CleanGame,
@@ -38,8 +39,8 @@ if (-not $SkipPull) {
     }
 
     $beforePull = (& git rev-parse HEAD).Trim()
-    Write-Host "Updating feature/unified-android-backend..."
-    & git pull --ff-only origin feature/unified-android-backend
+    Write-Host "Updating $Branch..."
+    & git pull --ff-only origin $Branch
     if ($LASTEXITCODE -ne 0) {
         throw "git pull failed."
     }
@@ -58,6 +59,7 @@ if (-not $SkipPull) {
             "-Backend", $Backend,
             "-Serial", $Serial,
             "-WsaFlavor", $WsaFlavor,
+            "-Branch", $Branch,
             "-SkipPull"
         )
         if ($PairEndpoint) { $reexec += @("-PairEndpoint", $PairEndpoint) }
