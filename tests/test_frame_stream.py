@@ -1,9 +1,11 @@
+import queue
 import threading
 import time
 import unittest
 
 import numpy as np
 
+from device_backend import BackendError
 from frame_stream import (
     AutoPreviewCapture,
     ContinuousFrameStream,
@@ -66,6 +68,28 @@ class FrameStreamTests(unittest.TestCase):
         self.assertLessEqual(width, 1280)
         self.assertLessEqual(height, 720)
         self.assertAlmostEqual(width / height, 2376 / 1060, delta=0.02)
+
+    def test_h264_frame_wait_is_bounded(self):
+        capture = H264ScreenrecordCapture.__new__(H264ScreenrecordCapture)
+        capture._ffmpeg_process = object()
+        capture._frame_queue = queue.Queue()
+        capture.frame_timeout = 0.01
+        capture._reader_error = None
+        with self.assertRaisesRegex(BackendError, "preview stalled"):
+            capture._read_frame()
+
+    def test_h264_preview_reports_physical_geometry_after_downscale(self):
+        capture = H264ScreenrecordCapture.__new__(H264ScreenrecordCapture)
+        capture.width = 1280
+        capture.height = 720
+        capture.source_width = 1920
+        capture.source_height = 1080
+        capture.backend = type("Backend", (), {"serial": "127.0.0.1:58526"})()
+        capture._read_frame = lambda: np.zeros((720, 1280, 3), dtype=np.uint8)
+        frame, _, rect = capture.grab()
+        self.assertEqual(frame.shape, (720, 1280, 3))
+        self.assertEqual(rect["width"], 1920)
+        self.assertEqual(rect["height"], 1080)
 
     def test_fallback_capture_demotes_after_primary_failure(self):
         preferred = FailingOnceCapture()
