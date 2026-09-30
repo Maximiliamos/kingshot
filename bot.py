@@ -20,6 +20,7 @@ import numpy as np
 from device_backend import BackendCapture, BackendError, create_backend
 from runtime_events import emit_event
 from runtime_recovery import RecoveryController
+from runtime_watchdog import RuntimeHeartbeat
 
 
 WINDOWS_NO_WINDOW = (
@@ -1566,6 +1567,15 @@ def main():
     capture = None
     pause_reported = False
     recovery = RecoveryController()
+    heartbeat = RuntimeHeartbeat()
+    backend = get_device_backend()
+    heartbeat.write(
+        state=state,
+        backend=backend.backend_name,
+        serial=backend.serial,
+        force=True,
+        status="starting",
+    )
 
     try:
         while True:
@@ -1630,6 +1640,12 @@ def main():
                     break
                 time.sleep(2)
                 continue
+            heartbeat.mark_frame()
+            heartbeat.write(
+                state=state,
+                backend=backend.backend_name,
+                serial=backend.serial,
+            )
             sync_input_geometry(frame)
             phone, left, right = crop_phone(frame)
 
@@ -1681,6 +1697,7 @@ def main():
                     continue
 
             if acted:
+                heartbeat.mark_action()
                 gate.arm(phone, f"{state['phase']}/{state['step']}")
                 unknown_since = None
                 continue
@@ -1726,6 +1743,17 @@ def main():
                 capture.close()
             except Exception:
                 pass
+        try:
+            heartbeat.write(
+                state=state,
+                backend=backend.backend_name,
+                serial=backend.serial,
+                force=True,
+                status="stopped",
+                detail=str(state.get("last_stop_reason", "") or ""),
+            )
+        except Exception:
+            pass
 
     log("TUGARIN BOTS остановлен.")
 
