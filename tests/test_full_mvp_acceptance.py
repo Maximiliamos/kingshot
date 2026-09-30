@@ -24,6 +24,13 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("exit $code", SOURCE)
         self.assertIn("MVP 1.0 HOST ACCEPTANCE PASS", SOURCE)
 
+    def test_master_requires_final_current_user_cleanup(self):
+        self.assertIn("Final current-user process cleanup", SOURCE)
+        self.assertIn("audit_runtime_processes.ps1", SOURCE)
+        self.assertIn('" -TargetUser"', SOURCE.replace("\n", " "))
+        self.assertIn("$env:USERNAME", SOURCE)
+        self.assertIn("mvp-final-process-audit.json", SOURCE)
+
     def test_destructive_gates_are_disclosed(self):
         self.assertIn("intentionally clear Kingshot app data", SOURCE)
         self.assertIn("nickname counter is preserved", SOURCE)
