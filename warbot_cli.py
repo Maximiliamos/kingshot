@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
-import re
-import shutil
-import subprocess
 import sys
 import time
 
@@ -16,6 +12,7 @@ import cv2
 
 from device_backend import BackendError, NativeArm64Backend, WsaBackend, create_backend
 from frame_stream import create_preview_capture
+from scrcpy_transport import ScrcpyServerCapture, default_server_path
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -121,152 +118,43 @@ def loading_logo_visible(frame) -> bool:
 
 
 
-def _bounded_text(value, limit: int = 4000) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        text = value.decode("utf-8", errors="replace")
-    else:
-        text = str(value)
-    return text[-max(1, int(limit)):]
-
-
 def probe_h264_transport(backend) -> dict:
-    """Separate Android encoder/ADB transport from FFmpeg decoder failures."""
-    health = backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
-    adb_path = str(getattr(backend, "adb_path", "") or "")
-    if not adb_path:
-        raise BackendError("preview-probe requires an ADB-backed backend")
-
-    ffmpeg_path = (
-        os.environ.get("TUGARIN_FFMPEG")
-        or shutil.which("ffmpeg.exe")
-        or shutil.which("ffmpeg")
-    )
-    if not ffmpeg_path:
-        raise BackendError("FFmpeg executable not found for preview-probe")
-
-    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
-
-    help_cmd = [adb_path, "-s", backend.serial, "shell", "screenrecord", "--help"]
-    try:
-        help_proc = subprocess.run(
-            help_cmd,
-            capture_output=True,
-            timeout=8,
-            check=False,
-            creationflags=creationflags,
-        )
-        help_text = _bounded_text((help_proc.stdout or b"") + (help_proc.stderr or b""))
-        help_rc = int(help_proc.returncode)
-    except Exception as exc:
-        help_text = str(exc)
-        help_rc = -1
-
-    match = re.search(r"(\d+)\s*x\s*(\d+)", health.resolution or "")
-    native = None
-    if match:
-        native = (int(match.group(1)), int(match.group(2)))
-
-    candidates = [
-        {"name": "720p", "width": 1280, "height": 720, "bit_rate": 4_000_000},
-        {"name": "540p", "width": 960, "height": 540, "bit_rate": 2_000_000},
-    ]
-    if native and native not in {(1280, 720), (960, 540)}:
-        candidates.append({
-            "name": "native",
-            "width": native[0],
-            "height": native[1],
-            "bit_rate": 4_000_000,
-        })
-
-    results = []
-    for spec in candidates:
-        adb_cmd = [
-            adb_path, "-s", backend.serial, "exec-out",
-            "screenrecord",
-            "--output-format=h264",
-            "--bit-rate", str(spec["bit_rate"]),
-            "--size", f'{spec["width"]}x{spec["height"]}',
-            "--time-limit", "3",
-            "-",
-        ]
-
-        item = dict(spec)
-        item.update({
-            "screenrecord_returncode": None,
-            "h264_bytes": 0,
-            "screenrecord_stderr": "",
-            "ffmpeg_returncode": None,
-            "decoded_png_bytes": 0,
-            "ffmpeg_stderr": "",
-            "encoder_ok": False,
-            "decoder_ok": False,
-        })
-
-        try:
-            proc = subprocess.run(
-                adb_cmd,
-                capture_output=True,
-                timeout=8,
-                check=False,
-                creationflags=creationflags,
-            )
-            raw = bytes(proc.stdout or b"")
-            item["screenrecord_returncode"] = int(proc.returncode)
-            item["h264_bytes"] = len(raw)
-            item["screenrecord_stderr"] = _bounded_text(proc.stderr)
-            item["encoder_ok"] = len(raw) >= 1024
-
-            if raw:
-                ffmpeg_cmd = [
-                    str(ffmpeg_path),
-                    "-hide_banner",
-                    "-loglevel", "error",
-                    "-f", "h264",
-                    "-i", "pipe:0",
-                    "-frames:v", "1",
-                    "-f", "image2pipe",
-                    "-vcodec", "png",
-                    "pipe:1",
-                ]
-                decoded = subprocess.run(
-                    ffmpeg_cmd,
-                    input=raw,
-                    capture_output=True,
-                    timeout=8,
-                    check=False,
-                    creationflags=creationflags,
-                )
-                png = bytes(decoded.stdout or b"")
-                item["ffmpeg_returncode"] = int(decoded.returncode)
-                item["decoded_png_bytes"] = len(png)
-                item["ffmpeg_stderr"] = _bounded_text(decoded.stderr)
-                item["decoder_ok"] = (
-                    decoded.returncode == 0 and png.startswith(b"\x89PNG")
-                )
-        except subprocess.TimeoutExpired as exc:
-            item["screenrecord_stderr"] = (
-                "TIMEOUT: " + _bounded_text(exc.stderr or exc.stdout or b"")
-            )
-        except Exception as exc:
-            item["screenrecord_stderr"] = f"EXCEPTION: {exc}"
-
-        results.append(item)
-
+    """Exercise scrcpy H.264 directly, without the PNG fallback."""
+    server_path = default_server_path()
     report = {
-        "backend": health.backend,
-        "serial": health.serial,
-        "android": health.android,
-        "resolution": health.resolution,
-        "adb_path": adb_path,
-        "ffmpeg_path": str(ffmpeg_path),
-        "screenrecord_help_returncode": help_rc,
-        "screenrecord_help": help_text,
-        "probes": results,
-        "any_encoder_ok": any(x["encoder_ok"] for x in results),
-        "any_decoder_ok": any(x["decoder_ok"] for x in results),
+        "transport": "scrcpy-h264",
+        "server_path": str(server_path),
+        "server_exists": server_path.is_file(),
+        "pass": False,
+        "frames": 0,
+        "elapsed_seconds": 0.0,
+        "fps": 0.0,
+        "diagnostics": {},
+        "error": "",
     }
+    capture = None
+    started = time.monotonic()
+    try:
+        capture = ScrcpyServerCapture(backend, frame_timeout=4.0)
+        deadline = started + 8.0
+        while time.monotonic() < deadline and report["frames"] < 10:
+            frame, _, _ = capture.grab()
+            if frame is None or getattr(frame, "size", 0) == 0:
+                raise BackendError("scrcpy probe returned an empty frame")
+            report["frames"] += 1
+        report["pass"] = report["frames"] >= 3
+        report["diagnostics"] = capture.diagnostics()
+    except Exception as exc:
+        report["error"] = str(exc)
+        if capture is not None:
+            report["diagnostics"] = capture.diagnostics()
+    finally:
+        if capture is not None:
+            capture.close()
+
+    elapsed = max(0.001, time.monotonic() - started)
+    report["elapsed_seconds"] = round(elapsed, 3)
+    report["fps"] = round(report["frames"] / elapsed, 3)
 
     debug_dir = Path("debug")
     debug_dir.mkdir(parents=True, exist_ok=True)
@@ -277,7 +165,6 @@ def probe_h264_transport(backend) -> dict:
     )
     report["report_path"] = str(report_path.resolve())
     return report
-
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
@@ -309,7 +196,7 @@ def main(argv=None) -> int:
     if args.action == "preview-probe":
         report = probe_h264_transport(backend)
         print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
-        return 0 if report["any_decoder_ok"] else 3
+        return 0 if report["pass"] else 3
 
     if args.action == "preview-smoke":
         backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
@@ -360,7 +247,7 @@ def main(argv=None) -> int:
             "active_transport": active_transport,
             "transport_history": transports,
             "frame_shape": last_shape,
-            "h264": active_transport == "h264-screenrecord",
+            "h264": active_transport in {"scrcpy-h264", "h264-screenrecord"},
         }
         print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
         if frames < 3:
