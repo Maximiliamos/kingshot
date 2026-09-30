@@ -60,7 +60,10 @@ class H264ScreenrecordCapture:
         backend,
         *,
         ffmpeg_path: str | None = None,
-        bit_rate: int = 8_000_000,
+        bit_rate: int = 4_000_000,
+        max_width: int = 1280,
+        max_height: int = 720,
+        input_fps: int = 60,
     ):
         self.backend = backend
         self.ffmpeg_path = (
@@ -77,6 +80,9 @@ class H264ScreenrecordCapture:
             raise BackendError("H.264 preview requires an ADB-backed DeviceBackend.")
         self.adb_path = str(adb_path)
         self.bit_rate = max(500_000, int(bit_rate))
+        self.input_fps = max(1, int(input_fps))
+        self.max_width = max(320, int(max_width))
+        self.max_height = max(240, int(max_height))
 
         health = backend.health()
         if not health.ready:
@@ -86,15 +92,39 @@ class H264ScreenrecordCapture:
             raise BackendError(
                 f"Could not determine Android framebuffer size: {health.resolution!r}"
             )
-        self.width = int(match.group(1))
-        self.height = int(match.group(2))
-        if self.width <= 0 or self.height <= 0:
+        self.source_width = int(match.group(1))
+        self.source_height = int(match.group(2))
+        if self.source_width <= 0 or self.source_height <= 0:
             raise BackendError("Android framebuffer dimensions are invalid.")
+
+        self.width, self.height = self._fit_preview_size(
+            self.source_width,
+            self.source_height,
+            self.max_width,
+            self.max_height,
+        )
 
         self._adb_process = None
         self._ffmpeg_process = None
         self._closed = False
         self._start_pipeline()
+
+    @staticmethod
+    def _fit_preview_size(
+        width: int,
+        height: int,
+        max_width: int = 1280,
+        max_height: int = 720,
+    ) -> tuple[int, int]:
+        width = max(2, int(width))
+        height = max(2, int(height))
+        scale = min(1.0, max_width / width, max_height / height)
+        out_w = max(2, int(width * scale))
+        out_h = max(2, int(height * scale))
+        # MediaCodec/FFmpeg are happier with even dimensions.
+        out_w -= out_w % 2
+        out_h -= out_h % 2
+        return max(2, out_w), max(2, out_h)
 
     def _start_pipeline(self) -> None:
         self._stop_pipeline()
@@ -126,13 +156,17 @@ class H264ScreenrecordCapture:
             str(self.ffmpeg_path),
             "-hide_banner",
             "-loglevel", "error",
-            "-fflags", "nobuffer",
+            "-fflags", "nobuffer+discardcorrupt",
             "-flags", "low_delay",
+            "-framerate", str(self.input_fps),
+            "-use_wallclock_as_timestamps", "1",
             "-probesize", "32",
             "-analyzeduration", "0",
             "-f", "h264",
             "-i", "pipe:0",
             "-an",
+            "-vf", "setpts=0",
+            "-fps_mode", "passthrough",
             "-f", "rawvideo",
             "-pix_fmt", "bgr24",
             "pipe:1",
@@ -187,7 +221,12 @@ class H264ScreenrecordCapture:
         return (
             frame,
             f"h264:{self.backend.serial}",
-            {"left": 0, "top": 0, "width": self.width, "height": self.height},
+            {
+                "left": 0,
+                "top": 0,
+                "width": self.source_width,
+                "height": self.source_height,
+            },
         )
 
     def _stop_pipeline(self) -> None:
