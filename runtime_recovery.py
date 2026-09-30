@@ -37,22 +37,15 @@ class RecoveryController:
         self.capture_failures = 0
         self.runtime_failures = 0
 
-    def capture_failed(self, backend: Any, error: str = "") -> RecoveryDecision:
-        self.capture_failures += 1
-        if self.capture_failures < self.capture_threshold:
-            return RecoveryDecision(
-                "retry_capture",
-                f"capture failure {self.capture_failures}/{self.capture_threshold}: {error}",
-            )
-
-        self.capture_failures = 0
+    def probe_runtime(self, backend: Any) -> RecoveryDecision:
+        """Check Android and Kingshot even when video capture is still healthy."""
         health = backend.health()
         if not health.ready:
             self.runtime_failures += 1
             if self.runtime_failures >= self.max_runtime_failures:
                 return RecoveryDecision(
                     "stop",
-                    "Android runtime remained unavailable after bounded recovery attempts",
+                    "Android runtime remained unavailable after bounded health probes",
                     terminal=True,
                 )
             return RecoveryDecision(
@@ -76,7 +69,21 @@ class RecoveryController:
                 f"Kingshot relaunched ({self.game_restarts}/{self.max_game_restarts})",
             )
 
-        return RecoveryDecision(
-            "reconnect_capture",
-            "Android and Kingshot are healthy; recreate capture transport",
-        )
+        return RecoveryDecision("healthy", "Android and Kingshot are healthy")
+
+    def capture_failed(self, backend: Any, error: str = "") -> RecoveryDecision:
+        self.capture_failures += 1
+        if self.capture_failures < self.capture_threshold:
+            return RecoveryDecision(
+                "retry_capture",
+                f"capture failure {self.capture_failures}/{self.capture_threshold}: {error}",
+            )
+
+        self.capture_failures = 0
+        decision = self.probe_runtime(backend)
+        if decision.action == "healthy":
+            return RecoveryDecision(
+                "reconnect_capture",
+                "Android and Kingshot are healthy; recreate capture transport",
+            )
+        return decision
