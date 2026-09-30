@@ -41,6 +41,7 @@ if (-not $SkipInfrastructure) {
 }
 
 Run-Gate -Name "Low-latency scrcpy H.264 preview" -Script (Join-Path $Root "scripts\verify_preview.ps1")
+Run-Gate -Name "Operator Unicode/UI/audio channel" -Script (Join-Path $Root "scripts\verify_operator_io.ps1")
 Run-Gate -Name "Bounded game + ADB recovery" -Script (Join-Path $Root "scripts\verify_recovery.ps1")
 Run-Gate -Name "Exact State #3 -> tutorial -> Tugarin<N>" -Script (Join-Path $Root "scripts\verify_game_flow.ps1") -Arguments @("-TimeoutMinutes", [string]$FlowTimeoutMinutes)
 Run-Gate -Name "Multi-cycle soak" -Script (Join-Path $Root "scripts\verify_soak.ps1") -Arguments @(
