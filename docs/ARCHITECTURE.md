@@ -1,151 +1,135 @@
-# WAR BOT architecture
+# TUGARIN BOTS architecture
 
-## Goal
+Updated: 2026-09-30
 
-Keep the game workflow independent from Android transport. The state machine
-should not know whether the frame came from native ARM64 QEMU, another ADB
-device, or the legacy scrcpy window.
+## Production decision
 
-## Runtime layers
-
-```text
-┌───────────────────────────────────────────────────────────────┐
-│                         WAR BOT GUI                           │
-│ backend selection · runtime controls · preview · logs · state │
-└──────────────────────────────┬────────────────────────────────┘
-                               │
-                               ▼
-┌───────────────────────────────────────────────────────────────┐
-│                       game state machine                       │
-│ create character · tutorial · rename · safety/action gate     │
-└──────────────────────────────┬────────────────────────────────┘
-                               │
-                               ▼
-┌───────────────────────────────────────────────────────────────┐
-│                         vision layer                           │
-│ OpenCV templates · OCR fallback · unknown-screen fail closed  │
-└──────────────────────────────┬────────────────────────────────┘
-                               │
-                               ▼
-┌───────────────────────────────────────────────────────────────┐
-│                       DeviceBackend                            │
-│ health · frame · tap · swipe · keyevent · shell · app control │
-└───────────────┬───────────────────────────────┬───────────────┘
-                │                               │
-                ▼                               ▼
-       NativeArm64Backend                AdbDeviceBackend
-       QEMU ARM64 runtime                existing ADB Android
-       127.0.0.1:5561
-```
-
-Legacy scrcpy remains a diagnostics-only frame source while migration is in
-progress. It is not the production target.
-
-## Open-source ideas reused
-
-WAR BOT does not vendor source code from these projects. It adopts only the
-parts that fit our use case:
-
-- **adbutils**: one explicit device/serial per session; shell, screenshot and
-  app lifecycle belong behind one transport object.
-- **uiautomator2**: Android system dialogs are better handled through a
-  structured UI channel than through blind coordinates. WAR BOT exposes an
-  optional uiautomator2 bridge, while Unity/game UI remains image-driven.
-- **scrcpy**: video transport and control transport are independent concerns.
-  The game state machine must not depend on the existence of a desktop window.
-- **Airtest**: game automation should be image-first. The existing OpenCV
-  templates are retained instead of adding a second recognition engine.
-
-Cuttlefish/ReDroid remain alternative runtime research paths if the custom
-ranchu runtime proves fundamentally unstable; they are not mixed into the
-current production path.
-
-## Backend contract
-
-`device_backend.py` provides:
+The production Windows runtime is **Windows Subsystem for Android (WSA)**.
+Native ARM64 QEMU, BlueStacks and the old Android Emulator are retained only as
+diagnostic/research paths and must not drive normal product behavior.
 
 ```text
-health()
-frame()
-tap(x, y)
-swipe(x1, y1, x2, y2, duration_ms)
-hold(x, y, duration_ms)
-keyevent(code)
-input_text(value)
-shell(...)
-launch_app()
-stop_app()
-clear_app_data()
+TUGARIN BOTS GUI
+  ├─ continuous preview worker + manual input
+  ├─ runtime/game/network/audio health
+  └─ operator controls
+          │
+          ▼
+DeviceBackend
+  ├─ WsaBackend                 <- production
+  ├─ AdbDeviceBackend           <- compatibility/debug
+  └─ NativeArm64Backend         <- experimental fallback
+          │
+          ├─ screenshot/input/app lifecycle
+          └─ optional uiautomator2 system-UI/Unicode channel
+          │
+          ▼
+OpenCV vision + action gate
+          │
+          ▼
+Fail-closed game state machine
 ```
 
-The ARM64 backend adds:
+## Runtime acceptance
+
+WSA is accepted only after all required runtime services are proven:
+
+- ADB state is `device`;
+- `sys.boot_completed=1`;
+- a real framebuffer PNG is decoded;
+- package manager responds;
+- at least 1024 MiB is free in `/data`;
+- Android reports a usable network;
+- Internet is validated/reachable;
+- Android audio service responds;
+- Kingshot starts and remains on one PID through the stability gate.
+
+WSA is allowed to expose x86/native-bridge translation. The no-x86/no-bridge
+gate applies only to the experimental Native ARM64 backend.
+
+## Capture and preview
+
+Automation consumes frames through the backend contract. The GUI uses
+`ContinuousFrameStream`, a single long-lived preview worker, instead of
+creating a new worker for every Qt timer tick.
+
+The currently proven transport remains `adb exec-out screencap -p`. The
+stream boundary deliberately isolates transport from GUI/state-machine code so
+an H.264/scrcpy-server transport can replace it after real-host validation
+without another application rewrite.
+
+## Input
+
+The backend provides:
 
 ```text
-start_runtime()
-stop_runtime()
+tap
+swipe
+hold
+keyevent
+ASCII text
+Unicode clipboard/paste when uiautomator2 is available
+volume up/down/mute
+app launch/stop/clear
 ```
 
-All ADB calls are scoped to a single serial. This removes the old risk that a
-command is sent to the wrong Android device when multiple transports exist.
+Manual GUI control automatically pauses game automation before sending input.
+Right-click maps to Android Back; mouse hold maps to long-press; wheel maps to a
+vertical swipe.
 
-## Capture
+## State durability
 
-Production capture path:
+Runtime state is PC-side and independent of WSA userdata.
 
-```text
-ADB exec-out screencap -p
-        ↓
-PNG bytes
-        ↓
-OpenCV BGR frame
-        ↓
-normalize to 421 × 944
-        ↓
-existing templates/state machine
-```
+- writes are atomic through temporary-file replacement;
+- the previous valid snapshot is retained as `state.previous.json`;
+- unreadable/corrupt `state.json` is preserved as
+  `state.corrupt.<timestamp>.json`;
+- corrupt state **stops** the bot instead of silently resetting to defaults;
+- `pm clear` never resets the PC-side nickname counter.
 
-This deliberately avoids desktop-window coordinates. If later profiling shows
-that ADB screencap is too slow, a scrcpy-server based frame provider can be
-added behind the same `frame()` contract without changing the bot logic.
+## Recovery
 
-## System UI vs game UI
+`RecoveryController` handles transport/game failures with bounded budgets.
 
-Use two different strategies:
+- transient capture failures retry;
+- repeated failures trigger a runtime health probe;
+- if Android is ready but Kingshot is dead, Kingshot may be relaunched a small
+  bounded number of times;
+- persistent runtime loss or exhausted restart budget stops the bot;
+- unknown game screens are never auto-recovered with blind clicks and remain
+  governed by the visual fail-closed watchdog.
 
-- Android permission/settings dialogs: optional uiautomator2 selectors.
-- Unity game UI: OpenCV/template recognition.
+## Observability
 
-This avoids forcing UiAutomator onto a Unity scene that often has no useful
-Android accessibility hierarchy.
+Two logs exist for different consumers:
 
-## Safety model
+- `logs/bot.log` — human-readable operator log;
+- `logs/events.jsonl` — structured events.
 
-The bot prefers doing nothing over guessing.
+`debug/runtime-heartbeat.json` records PID, backend, serial, phase, step and
+frame/action ages. The GUI surfaces heartbeat age together with network,
+Internet, audio and P0 state.
 
-Rules:
+## Safety rules
 
-- action only on expected state-specific evidence;
-- no blind generic close/confirm taps;
-- unexpected screens are saved;
-- action gate requires visual change after an input;
-- F8 is the global emergency stop;
-- dry-run does not send input;
-- native ARM64 mode refuses to start game automation unless:
-  - ADB state is `device`;
-  - `sys.boot_completed=1`;
-  - primary ABI is `arm64-v8a`;
-  - ABI list contains no x86;
-  - native bridge is empty/none/0;
-- server/account restrictions stop the workflow; they are not bypassed.
+- all ADB commands are scoped to one explicit serial;
+- no blind generic confirm/close actions;
+- actions require state-specific visual evidence;
+- action gate requires visual change after click/tap when applicable;
+- server/account restrictions stop the workflow;
+- no Play Integrity spoofing, APK patching, Frida/Magisk-based evasion or
+  character-limit bypass belongs in the automation layer;
+- GUI is single-instance and launched consolelessly through `run_gui.vbs`.
 
-## Current blocker
+## Legacy paths
 
-The DeviceBackend/application layer is now decoupled from the runtime PoC, but
-the native ARM64 Android guest itself is not yet A1/A2 PASS. The current boot
-reaches zygote/SurfaceFlinger and then repeatedly crashes `app_process64` in
-`libcodec2_vndk.so`.
+The following code is retained for diagnostics/history but is not production:
 
-That blocker belongs to the runtime layer. Once ADB reaches `device` and
-`sys.boot_completed=1`, the application can immediately reuse the backend,
-preview, input and existing vision/state-machine layers without another major
-rewrite.
+- `emulator_poc.py`;
+- `bluestacks_poc.py`;
+- `native_arm64_poc.py`;
+- legacy scrcpy desktop-window capture.
+
+These paths should be moved out of the normal operator surface after the final
+WSA host acceptance and repository consolidation.
