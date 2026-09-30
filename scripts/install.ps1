@@ -52,6 +52,10 @@ foreach ($scriptName in @(
     "audit_runtime_processes.ps1",
     "verify_release.ps1",
     "verify_preview.ps1",
+    "verify_recovery.ps1",
+    "verify_game_flow.ps1",
+    "verify_soak.ps1",
+    "verify_mvp_full.ps1",
     "provision_scrcpy_server.ps1",
     "setup_dedicated_wsa_user.ps1",
     "stop_gapps_migration_task.ps1"
@@ -82,5 +86,5 @@ Write-Host "Installed."
 Write-Host "GUI:          wscript.exe //B $Target\run_gui.vbs"
 Write-Host "Reset state:  python $Target\bot.py --reset-state"
 Write-Host "Native probe: python $Target\native_arm64_poc.py probe"
-Write-Host "MVP verify:   powershell -ExecutionPolicy Bypass -File $Target\scripts\verify_mvp.ps1"
+Write-Host "MVP verify:   powershell -ExecutionPolicy Bypass -File $Target\scripts\verify_mvp_full.ps1"
 Write-Host "Remote cycle: powershell -ExecutionPolicy Bypass -File $Target\scripts\run_and_report.ps1"
