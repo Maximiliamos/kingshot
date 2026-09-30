@@ -39,6 +39,20 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("Google Services", self.gui)
         self.assertIn("P0 manifest", self.gui)
 
+    def test_gui_uses_continuous_stream_and_complete_manual_controls(self):
+        self.assertIn("ContinuousFrameStream", self.gui)
+        self.assertIn("hold_requested = Signal(int, int, int)", self.gui)
+        self.assertIn("def wheelEvent", self.gui)
+        self.assertIn("KEYCODE_BACK", self.gui)
+        self.assertIn("volume_mute", self.gui)
+        self.assertIn("stream_metrics_ready", self.gui)
+
+    def test_operator_recovery_is_visible_and_backend_debug_is_hidden_by_default(self):
+        self.assertIn("БЫСТРОЕ ВОССТАНОВЛЕНИЕ", self.gui)
+        self.assertIn("def restart_game", self.gui)
+        self.assertIn("Режим разработчика", self.gui)
+        self.assertIn("card.setVisible(False)", self.gui)
+
     def test_gui_children_prefer_consoleless_python(self):
         self.assertIn("def consoleless_python(path):", self.gui)
         self.assertIn('"pythonw.exe"', self.gui)
