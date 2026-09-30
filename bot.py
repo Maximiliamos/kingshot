@@ -1370,14 +1370,18 @@ def handle_rename_governor(phone, state):
             DEBUG_DIR,
             f"rename_committed_{committed_number}_{fs()}.png",
         )
-        save_img(evidence_path, phone)
+        if not save_img(evidence_path, phone) or not os.path.isfile(evidence_path):
+            log("Не удалось сохранить обязательный screenshot после переименования.")
+            return False
         x, y = confirmed_line["loc"]
         crop = phone[y:y + confirmed_line["h"], x:x + confirmed_line["w"]]
         crop_path = os.path.join(
             DEBUG_DIR,
             f"rename_committed_{committed_number}_{fs()}_name.png",
         )
-        save_img(crop_path, crop)
+        if not save_img(crop_path, crop) or not os.path.isfile(crop_path):
+            log("Не удалось сохранить обязательный crop имени после переименования.")
+            return False
         with open(evidence_path, "rb") as stream:
             evidence_sha256 = hashlib.sha256(stream.read()).hexdigest()
         with open(crop_path, "rb") as stream:

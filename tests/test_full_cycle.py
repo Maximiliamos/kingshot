@@ -1,4 +1,5 @@
 import unittest
+import tempfile
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -76,7 +77,9 @@ class FullCycleTests(unittest.TestCase):
         })
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         ocr = [{"text": "Тугарин7", "normalized": "тугарин7", "loc": (0, 0), "w": 20, "h": 10, "score": 99}]
-        with patch("bot.match", return_value=None), \
+        with tempfile.TemporaryDirectory() as evidence_dir, \
+                patch("bot.DEBUG_DIR", evidence_dir), \
+                patch("bot.match", return_value=None), \
                 patch("bot.ocr_lines", return_value=ocr), \
                 patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
             result = bot.handle_rename_governor(phone, state)
@@ -103,7 +106,9 @@ class FullCycleTests(unittest.TestCase):
         })
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         ocr = [{"text": "Тугарин4", "normalized": "тугарин4", "loc": (0, 0), "w": 20, "h": 10, "score": 99}]
-        with patch("bot.match", return_value=None), \
+        with tempfile.TemporaryDirectory() as evidence_dir, \
+                patch("bot.DEBUG_DIR", evidence_dir), \
+                patch("bot.match", return_value=None), \
                 patch("bot.ocr_lines", return_value=ocr), \
                 patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
             bot.handle_rename_governor(phone, state)
