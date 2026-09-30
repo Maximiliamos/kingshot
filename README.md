@@ -335,10 +335,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 python .\warbot_cli.py bootstrap --output bootstrap-frame.png
 ```
 
-PASS означает: Android полностью загрузился, WSA доступен по ADB, игра
-установлена/запущена, процесс жив и получен реальный PNG. После этого GUI
-кнопкой «ЗАПУСТИТЬ» использует тот же bootstrap автоматически и запускает
-state machine.
+PASS полного MVP-gate означает: clean tracked worktree, готовый WSA/ADB,
+стабильный Kingshot, реальный `scrcpy-h264` preview, consoleless GUI render,
+Unicode/UI/audio channel, recovery после остановки игры и ADB reconnect,
+точный State #3 → tutorial → `Тугарин<N>` flow с post-rename screenshot
+evidence и успешный multi-cycle soak. Итог сохраняется в
+`debug/mvp-full-acceptance.json` с точным Git SHA и результатом каждого gate.
 
 WSA installer и verifier сохраняют отчёты в `runtime-reports`; native ARM64
 fallback дополнительно формирует `C:\warbot_arm64_runtime\zygote-crash.txt`
