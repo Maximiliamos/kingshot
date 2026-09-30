@@ -23,11 +23,20 @@ if (-not $PythonExe -or -not (Test-Path -LiteralPath $PythonExe -PathType Leaf))
     throw "TUGARIN BOTS Python venv not found. Run verify_release.ps1 first."
 }
 
+$provision = Join-Path $Root "scripts\provision_scrcpy_server.ps1"
+if (-not (Test-Path -LiteralPath $provision -PathType Leaf)) {
+    throw "scrcpy provisioner is missing: $provision"
+}
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $provision
+if ($LASTEXITCODE -ne 0) {
+    throw "Pinned scrcpy-server provisioning failed with exit=$LASTEXITCODE"
+}
+
 $env:PYTHONIOENCODING = "utf-8"
 Write-Host "=== TUGARIN BOTS PREVIEW ACCEPTANCE ==="
 Write-Host "Python: $PythonExe"
 Write-Host "Duration: $PreviewSeconds sec"
-Write-Host "Expected transport: $(if ($AllowFallback) { 'H.264 or fallback' } else { 'H.264 required' })"
+Write-Host "Expected transport: $(if ($AllowFallback) { 'scrcpy H.264 or fallback' } else { 'scrcpy H.264 required' })"
 
 $args = @(
     ".\warbot_cli.py", "preview-smoke",
@@ -43,7 +52,7 @@ if ($code -ne 0) {
     Write-Host ""
     Write-Host "PREVIEW HOST GATE FAIL"
     Write-Host ""
-    Write-Host "Collecting H.264 encoder/decoder diagnostics..."
+    Write-Host "Collecting scrcpy H.264 transport diagnostics..."
     $probeArgs = @(
         ".\warbot_cli.py", "preview-probe",
         "--backend", "wsa",
