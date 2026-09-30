@@ -152,7 +152,7 @@ function Grant-BootstrapAccess {
 
 function Stop-WsaProcesses {
     Write-SetupLog "Stopping WSA processes."
-    Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 3
 }
 
