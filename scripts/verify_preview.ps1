@@ -42,6 +42,18 @@ $code = [int]$LASTEXITCODE
 if ($code -ne 0) {
     Write-Host ""
     Write-Host "PREVIEW HOST GATE FAIL"
+    Write-Host ""
+    Write-Host "Collecting H.264 encoder/decoder diagnostics..."
+    $probeArgs = @(
+        ".\warbot_cli.py", "preview-probe",
+        "--backend", "wsa",
+        "--serial", "127.0.0.1:58526"
+    )
+    & $PythonExe @probeArgs
+    $probeCode = [int]$LASTEXITCODE
+    Write-Host ""
+    Write-Host "Preview probe exit: $probeCode"
+    Write-Host "Diagnostic JSON: C:\warbot_git\debug\preview-h264-probe.json"
     exit $code
 }
 
