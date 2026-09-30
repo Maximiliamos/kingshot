@@ -382,6 +382,20 @@ class WarBotWindow(QMainWindow):
         state_card.layout.addLayout(audio_row)
         side.addWidget(state_card)
 
+        recovery_card = Card("БЫСТРОЕ ВОССТАНОВЛЕНИЕ")
+        recovery_row = QHBoxLayout()
+        restart_game_button = QPushButton("↻ Игра")
+        wake_wsa_button = QPushButton("↻ WSA")
+        check_button = QPushButton("✓ Проверить")
+        restart_game_button.clicked.connect(self.restart_game)
+        wake_wsa_button.clicked.connect(self.start_android_runtime)
+        check_button.clicked.connect(self.check_android_status)
+        recovery_row.addWidget(restart_game_button)
+        recovery_row.addWidget(wake_wsa_button)
+        recovery_row.addWidget(check_button)
+        recovery_card.layout.addLayout(recovery_row)
+        side.addWidget(recovery_card)
+
         action_card = Card("ПОСЛЕДНИЕ ДЕЙСТВИЯ")
         self.mini_log = QListWidget()
         action_card.layout.addWidget(self.mini_log)
@@ -454,7 +468,13 @@ class WarBotWindow(QMainWindow):
     def settings_page(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        card = Card("ANDROID BACKEND")
+        self.developer_mode = QCheckBox("Режим разработчика: показать backend/ADB/PoC настройки")
+        self.developer_mode.setChecked(False)
+        layout.addWidget(self.developer_mode)
+        card = Card("ANDROID BACKEND · РАЗРАБОТЧИК")
+        self.backend_card = card
+        card.setVisible(False)
+        self.developer_mode.toggled.connect(card.setVisible)
         grid = QGridLayout()
         self.backend_mode = QComboBox()
         self.backend_mode.addItem("Windows Subsystem for Android (WSA)", "wsa")
@@ -685,6 +705,9 @@ class WarBotWindow(QMainWindow):
 
     def launch_game(self):
         self.run_device_cli("launch-game")
+
+    def restart_game(self):
+        self.run_device_cli("restart-game")
 
     def stop_game(self):
         self.run_device_cli("stop-game")
