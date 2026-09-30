@@ -24,8 +24,8 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("RELEASE HOST GATE PASS", RELEASE)
 
     def test_release_gate_prefers_dedicated_python_and_syncs_dependencies(self):
-        self.assertIn(r"C:\\warbot_wsa\\tugarin-venv\\Scripts\\python.exe", RELEASE)
-        self.assertIn(r"C:\\warbot_wsa\\release-venv", RELEASE)
+        self.assertIn(r"C:\warbot_wsa\tugarin-venv\Scripts\python.exe", RELEASE)
+        self.assertIn(r"C:\warbot_wsa\release-venv", RELEASE)
         self.assertIn("-m venv $releaseVenvRoot", RELEASE)
         self.assertIn("requirements.txt", RELEASE)
         self.assertIn("Runtime imports: OK", RELEASE)
