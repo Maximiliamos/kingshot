@@ -127,6 +127,41 @@ class WarBotCliTests(unittest.TestCase):
         self.assertEqual(report["diagnostics"]["transport"], "scrcpy-h264")
         self.assertIn("preview-h264-probe.json", report["report_path"])
 
+    def test_prepare_mvp_flow_requires_explicit_yes(self):
+        backend = MagicMock()
+        with patch("warbot_cli.create_backend", return_value=backend):
+            with self.assertRaises(BackendError):
+                warbot_cli.main(["prepare-mvp-flow", "--backend", "wsa"])
+        backend.clear_app_data.assert_not_called()
+
+    def test_flow_evidence_accepts_exact_ordered_cycle(self):
+        state = {
+            "phase": "complete",
+            "step": "done",
+            "next_nickname": 8,
+            "characters_created": 7,
+            "characters_created_cycle": 1,
+            "last_stop_reason": "",
+        }
+        events = [
+            {
+                "event": "mvp_flow_start",
+                "expected_nickname": "Тугарин7",
+                "next_nickname_before": 7,
+                "characters_before": 6,
+            },
+            {"event": "tutorial_complete", "origin": "initial"},
+            {"event": "state3_confirmed", "target_state": 3},
+            {"event": "tutorial_complete", "origin": "new_character"},
+            {"event": "nickname_committed", "nickname": "Тугарин7"},
+        ]
+        with patch("bot.load_state", return_value=state), \
+                patch("runtime_events.read_recent_events", return_value=events):
+            result = warbot_cli.collect_mvp_flow_evidence()
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["expected_nickname"], "Тугарин7")
+        self.assertTrue(result["checks"]["ordered_flow"])
+
     def test_clear_game_data_requires_explicit_yes(self):
         backend = MagicMock()
         with patch("warbot_cli.create_backend", return_value=backend):
