@@ -4,22 +4,26 @@ Updated: 2026-09-30
 
 ## Proven on the real Windows host
 
-The latest published WSA P0 evidence before this hardening branch proved:
+Latest release-candidate host acceptance: **PASS** on 2026-09-30 at
+commit `5aacd64efdfb2b6d2b609f9a5a25cf93255bba04`.
 
-- Windows 10 WSA registration and Android 13 boot;
-- authorized ADB at `127.0.0.1:58526`;
-- framebuffer capture;
-- package manager and storage;
-- Android network + validated Internet;
-- Android audio service;
-- all three Kingshot APK splits installed;
-- Kingshot stable on one PID for 120 seconds;
-- startup/final frames no longer classified as loading;
-- Google services installed and interactive Google authorization completed.
+Evidence:
 
-That evidence was produced at commit `b565c8d`. The later console-window fixes
-were code/CI green but still require one final real-host smoke on the newest
-hardening HEAD.
+- dedicated runtime Python `C:\warbot_wsa\tugarin-venv\Scripts\python.exe`;
+- 179 hosted-equivalent tests passed locally with `OK`;
+- Windows 10 WSA / Android 13 ready on `127.0.0.1:58526`;
+- framebuffer resolution 1920×1080;
+- network ready and Internet reachable;
+- Android audio service ready;
+- package manager ready;
+- free `/data` space ~121790 MiB;
+- Kingshot PID 9507 remained stable for 120 seconds;
+- startup/final loading-logo checks both false;
+- dedicated-user stale-process audit passed with no Python/CMD/conhost process;
+- old GApps migration task exists only in disabled state.
+
+Earlier P0 evidence at `b565c8d` is now superseded by this current-head
+release acceptance.
 
 ## Implemented on feature/unified-android-backend
 
@@ -57,9 +61,9 @@ hardening HEAD.
 | Gate | State |
 |---|---|
 | WSA boot/game P0 on previously proven commit | PASS |
-| Latest hosted Windows CI | MUST BE GREEN before merge |
-| Latest hardening HEAD real-host smoke | PENDING HOST |
-| Console flash/zombie-process host smoke | PENDING HOST |
+| Latest hosted Windows CI | PASS — 179 tests, zero skips |
+| Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
+| Dedicated-user stale-process audit | PASS — zero stale processes |
 | Full State #3 -> tutorial -> rename real-game cycle | PENDING HOST |
 | Multi-cycle unattended real-game soak | PENDING HOST |
 | True compressed low-latency video transport | CODE DONE; TARGET-HOST LATENCY/STABILITY ACCEPTANCE PENDING |
