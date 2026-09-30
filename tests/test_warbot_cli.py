@@ -1,11 +1,13 @@
 import io
 import json
+import os
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
 import numpy as np
 from contextlib import redirect_stdout
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import warbot_cli
@@ -73,6 +75,46 @@ class WarBotCliTests(unittest.TestCase):
         self.assertTrue(payload["h264"])
         self.assertEqual(payload["active_transport"], "h264-screenrecord")
         self.assertGreaterEqual(payload["frames"], 3)
+
+    def test_preview_probe_separates_encoder_and_decoder(self):
+        backend = MagicMock()
+        backend.adb_path = r"C:\\fake\\adb.exe"
+        backend.serial = "127.0.0.1:58526"
+        backend.require_ready.return_value = DeviceHealth(
+            backend="wsa",
+            serial=backend.serial,
+            state="device",
+            boot_completed="1",
+            android="13",
+            resolution="Physical size: 1280x720",
+        )
+
+        raw = b"\x00\x00\x00\x01" + (b"x" * 2048)
+        png = b"\x89PNG" + (b"y" * 128)
+        responses = [
+            SimpleNamespace(returncode=0, stdout=b"screenrecord help", stderr=b""),
+            SimpleNamespace(returncode=0, stdout=raw, stderr=b""),
+            SimpleNamespace(returncode=0, stdout=png, stderr=b""),
+            SimpleNamespace(returncode=0, stdout=raw, stderr=b""),
+            SimpleNamespace(returncode=0, stdout=png, stderr=b""),
+        ]
+
+        with TemporaryDirectory() as td, \
+                patch("warbot_cli.subprocess.run", side_effect=responses), \
+                patch("warbot_cli.shutil.which", return_value=r"C:\\ffmpeg\\ffmpeg.exe"):
+            old_cwd = os.getcwd()
+            os.chdir(td)
+            try:
+                report = warbot_cli.probe_h264_transport(backend)
+            finally:
+                os.chdir(old_cwd)
+
+        self.assertTrue(report["any_encoder_ok"])
+        self.assertTrue(report["any_decoder_ok"])
+        self.assertEqual(len(report["probes"]), 2)
+        self.assertTrue(report["probes"][0]["encoder_ok"])
+        self.assertTrue(report["probes"][0]["decoder_ok"])
+        self.assertIn("preview-h264-probe.json", report["report_path"])
 
     def test_clear_game_data_requires_explicit_yes(self):
         backend = MagicMock()
