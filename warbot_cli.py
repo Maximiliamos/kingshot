@@ -22,7 +22,8 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "restart-game", "preview-smoke", "preview-probe",
-            "clear-game-data", "clean-start", "tap", "swipe", "ui-dump",
+            "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
+            "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -165,6 +166,155 @@ def probe_h264_transport(backend) -> dict:
     )
     report["report_path"] = str(report_path.resolve())
     return report
+
+def prepare_mvp_flow(backend) -> dict:
+    """Prepare exactly one destructive-but-explicit MVP registration cycle."""
+    import bot
+    from runtime_events import emit_event
+
+    backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+    if not getattr(backend, "package_installed", lambda: False)():
+        raise BackendError("Game is not installed; run bootstrap first.")
+
+    old = bot.load_state()
+    next_nickname = int(old.get("next_nickname", 1))
+    characters_before = int(old.get("characters_created", 0))
+    current_cycle = int(old.get("current_cycle", 1))
+
+    backend.stop_app()
+    clear_result = backend.clear_app_data()
+
+    fresh = dict(bot.DEFAULT_STATE)
+    fresh["next_nickname"] = next_nickname
+    fresh["pending_nickname"] = next_nickname
+    fresh["characters_created"] = characters_before
+    fresh["characters_created_cycle"] = 0
+    fresh["characters_per_cycle"] = 1
+    fresh["auto_reset_data"] = True
+    fresh["repeat_cycles"] = False
+    fresh["current_cycle"] = current_cycle
+    fresh["target_state"] = 3
+    fresh["tutorial_origin"] = "initial"
+    fresh["last_stop_reason"] = ""
+    bot.save_state(fresh)
+
+    Path(bot.CONTROL_FILE).write_text(
+        json.dumps({"paused": False, "stop": False}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    expected_nickname = f"Тугарин{next_nickname}"
+    emit_event(
+        "mvp_flow_start",
+        expected_nickname=expected_nickname,
+        next_nickname_before=next_nickname,
+        characters_before=characters_before,
+        current_cycle=current_cycle,
+    )
+
+    backend.launch_app()
+    return {
+        "prepared": True,
+        "clear_result": str(clear_result).strip(),
+        "expected_nickname": expected_nickname,
+        "next_nickname_before": next_nickname,
+        "characters_before": characters_before,
+        "target_state": 3,
+        "characters_per_cycle": 1,
+        "repeat_cycles": False,
+    }
+
+
+def collect_mvp_flow_evidence() -> dict:
+    import bot
+    from runtime_events import read_recent_events
+
+    state = bot.load_state()
+    events = read_recent_events(limit=5000)
+    start_index = -1
+    for index, event in enumerate(events):
+        if event.get("event") == "mvp_flow_start":
+            start_index = index
+
+    checks = {
+        "start_event": start_index >= 0,
+        "initial_tutorial_complete": False,
+        "state3_confirmed": False,
+        "character_tutorial_complete": False,
+        "nickname_committed": False,
+        "ordered_flow": False,
+        "final_phase_complete": state.get("phase") == "complete",
+        "final_step_done": state.get("step") == "done",
+        "no_stop_reason": not bool(state.get("last_stop_reason")),
+        "character_delta_one": False,
+        "nickname_counter_advanced": False,
+    }
+    expected_nickname = ""
+    evidence_events = []
+    if start_index >= 0:
+        flow = events[start_index:]
+        start = flow[0]
+        expected_nickname = str(start.get("expected_nickname", ""))
+        characters_before = int(start.get("characters_before", 0))
+        nickname_before = int(start.get("next_nickname_before", 1))
+
+        positions = {}
+        for offset, event in enumerate(flow):
+            kind = event.get("event")
+            if kind == "tutorial_complete" and event.get("origin") == "initial":
+                positions.setdefault("initial", offset)
+                checks["initial_tutorial_complete"] = True
+            elif kind == "state3_confirmed" and int(event.get("target_state", 0)) == 3:
+                positions.setdefault("state3", offset)
+                checks["state3_confirmed"] = True
+            elif kind == "tutorial_complete" and event.get("origin") == "new_character":
+                positions.setdefault("character_tutorial", offset)
+                checks["character_tutorial_complete"] = True
+            elif kind == "nickname_committed" and event.get("nickname") == expected_nickname:
+                positions.setdefault("nickname", offset)
+                checks["nickname_committed"] = True
+
+            if kind in {
+                "mvp_flow_start",
+                "tutorial_complete",
+                "state3_confirmed",
+                "nickname_committed",
+                "cycle_reset",
+                "runtime_probe",
+            }:
+                evidence_events.append(event)
+
+        checks["ordered_flow"] = all(k in positions for k in (
+            "initial", "state3", "character_tutorial", "nickname"
+        )) and (
+            positions["initial"]
+            < positions["state3"]
+            < positions["character_tutorial"]
+            < positions["nickname"]
+        )
+        checks["character_delta_one"] = (
+            int(state.get("characters_created", 0)) == characters_before + 1
+        )
+        checks["nickname_counter_advanced"] = (
+            int(state.get("next_nickname", 0)) == nickname_before + 1
+        )
+
+    passed = all(checks.values())
+    return {
+        "pass": passed,
+        "expected_nickname": expected_nickname,
+        "checks": checks,
+        "state": {
+            "phase": state.get("phase"),
+            "step": state.get("step"),
+            "next_nickname": state.get("next_nickname"),
+            "characters_created": state.get("characters_created"),
+            "characters_created_cycle": state.get("characters_created_cycle"),
+            "last_stop_reason": state.get("last_stop_reason"),
+        },
+        "evidence_events": evidence_events[-50:],
+    }
+
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
@@ -407,6 +557,18 @@ def main(argv=None) -> int:
         pid = backend.wait_package_running(timeout=90)
         print(json.dumps({"restarted": True, "game_pid": pid}, ensure_ascii=False))
         return 0
+
+    if args.action == "prepare-mvp-flow":
+        if not args.yes:
+            raise BackendError("Refusing MVP flow preparation without --yes")
+        result = prepare_mvp_flow(backend)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.action == "flow-evidence":
+        result = collect_mvp_flow_evidence()
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["pass"] else 4
 
     if args.action == "clear-game-data":
         if not args.yes:
