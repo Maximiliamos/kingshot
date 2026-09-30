@@ -4,7 +4,7 @@ param(
     [string]$Serial = "127.0.0.1:58526",
     [string]$PairEndpoint = "",
     [string]$PairCode = "",
-    [string]$Branch = "feature/tugarin-bots-v1-hardening",
+    [string]$Branch = "feature/unified-android-backend",
     [switch]$NoAutoDeveloperModePatch,
     [switch]$WipeRuntime,
     [switch]$CleanGame,
