@@ -1,0 +1,50 @@
+﻿[
+    {
+        "Name":  "vSwitch (WSLCore)",
+        "InterfaceDescription":  "Hyper-V Virtual Switch Extension Adapter #2",
+        "Status":  "Up",
+        "MacAddress":  "",
+        "LinkSpeed":  "10 Gbps",
+        "ifIndex":  66
+    },
+    {
+        "Name":  "vEthernet (WSLCore)",
+        "InterfaceDescription":  "Hyper-V Virtual Ethernet Adapter #2",
+        "Status":  "Up",
+        "MacAddress":  "00-15-5D-E1-C3-7D",
+        "LinkSpeed":  "10 Gbps",
+        "ifIndex":  68
+    },
+    {
+        "Name":  "Подключение по локальной сети* 1",
+        "InterfaceDescription":  "Microsoft Wi-Fi Direct Virtual Adapter",
+        "Status":  "Disconnected",
+        "MacAddress":  "EA-FB-1C-B2-C5-4D",
+        "LinkSpeed":  "0 bps",
+        "ifIndex":  15
+    },
+    {
+        "Name":  "vEthernet (WSL)",
+        "InterfaceDescription":  "Hyper-V Virtual Ethernet Adapter",
+        "Status":  "Up",
+        "MacAddress":  "00-15-5D-57-12-6B",
+        "LinkSpeed":  "10 Gbps",
+        "ifIndex":  57
+    },
+    {
+        "Name":  "vSwitch (WSL)",
+        "InterfaceDescription":  "Hyper-V Virtual Switch Extension Adapter",
+        "Status":  "Up",
+        "MacAddress":  "",
+        "LinkSpeed":  "10 Gbps",
+        "ifIndex":  55
+    },
+    {
+        "Name":  "Подключение по локальной сети* 2",
+        "InterfaceDescription":  "Microsoft Wi-Fi Direct Virtual Adapter #2",
+        "Status":  "Disconnected",
+        "MacAddress":  "EA-FB-1C-B2-D5-5D",
+        "LinkSpeed":  "0 bps",
+        "ifIndex":  7
+    }
+]

@@ -1,0 +1,89 @@
+﻿
+
+TimeCreated      : 30.09.2026 23:51:59
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Attach":-  
+                    ИД конечной точки = "{7970ed70-4096-4917-8498-f222d1829634}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:51:59
+Id               : 1053
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-GuestNetworkService-Create :- 
+                    ИД GuestNetworkService = "{2fd05f84-47ce-42ba-a853-a543b4966f50}".
+                    Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:51:59
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Create":-  
+                    ИД конечной точки = "{7970ed70-4096-4917-8498-f222d1829634}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:50:47
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Attach":-  
+                    ИД конечной точки = "{cd48ba82-15b2-4ca8-a390-f2509d4fd424}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:50:47
+Id               : 1053
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-GuestNetworkService-Create :- 
+                    ИД GuestNetworkService = "{fb5ac083-17fa-4f98-9aa7-ba268f2e530a}".
+                    Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:50:47
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Create":-  
+                    ИД конечной точки = "{cd48ba82-15b2-4ca8-a390-f2509d4fd424}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:48:40
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Attach":-  
+                    ИД конечной точки = "{6d6103c6-3031-4910-9986-82a358900cdc}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:48:40
+Id               : 1053
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-GuestNetworkService-Create :- 
+                    ИД GuestNetworkService = "{97a90030-73d2-4c21-88fa-1ac9629dac96}".
+                    Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 23:48:40
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Create":-  
+                    ИД конечной точки = "{6d6103c6-3031-4910-9986-82a358900cdc}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+
+
+

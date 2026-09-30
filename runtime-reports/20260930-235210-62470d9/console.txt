@@ -1,0 +1,30 @@
+﻿[2026-09-30T23:38:17.9853725+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T23:38:32.4889228+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T23:38:41.6533146+03:00] Windows developer package registration is enabled.
+[2026-09-30T23:46:14.8190857+03:00] Backed up existing WSA userdata VHDX and settings to C:\warbot_wsa\profile-backups\wsa-flavor-migration-20260930-234032.
+[2026-09-30T23:46:41.0051012+03:00] Removed the current-user WSA registration for approved GApps migration.
+[2026-09-30T23:47:29.4531913+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-30T23:47:58.9278548+03:00] Extracting WSA archive.
+[2026-09-30T23:48:13.7027065+03:00] Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge).
+[2026-09-30T23:48:13.8165983+03:00] Dependency Microsoft.UI.Xaml.2.8 already satisfies minimum 8.2208.12001.0.
+[2026-09-30T23:48:13.8341074+03:00] Dependency Microsoft.VCLibs.140.00.UWPDesktop already satisfies minimum 14.0.33728.0.
+[2026-09-30T23:48:13.8501565+03:00] Dependency Microsoft.VCLibs.140.00 already satisfies minimum 14.0.33519.0.
+[2026-09-30T23:48:20.3459893+03:00] WSA AppX registration completed.
+[2026-09-30T23:48:25.2983105+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T23:48:25.3681987+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T23:48:25.4223711+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T23:48:27.1972994+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T23:48:30.6442762+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=27784).
+[2026-09-30T23:48:30.7257345+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=31564).
+[2026-09-30T23:50:14.0319859+03:00] WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation.
+[2026-09-30T23:50:14.0715593+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=27784).
+[2026-09-30T23:50:14.1176095+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=6200).
+[2026-09-30T23:50:41.4849176+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch.
+[2026-09-30T23:50:41.4979184+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-09-30T23:50:44.8687346+03:00] Developer-mode fallback applied; original settings preserved at C:\warbot_wsa\developer-mode-fallback\settings.dat.backup-20260930-235041.
+[2026-09-30T23:50:45.3072605+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=28840).
+[2026-09-30T23:50:45.3372613+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=26364).
+[2026-09-30T23:51:53.7493986+03:00] All non-destructive startup routes were exhausted; performing the single allowed WSA recycle.
+[2026-09-30T23:51:58.1846936+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=21252).
+[2026-09-30T23:51:58.2114809+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=34156).
+[2026-09-30T23:52:08.7779722+03:00] Developer-mode repair did not recover ADB; original settings were restored.
