@@ -36,7 +36,9 @@ class ScrcpyTransportTests(unittest.TestCase):
         )
 
     def test_server_runs_inside_android_over_adb_forward(self):
-        self.assertIn("localabstract:scrcpy", SOURCE)
+        self.assertIn("localabstract:", SOURCE)
+        self.assertIn("socket_name", SOURCE)
+        self.assertIn("scrcpy_", SOURCE)
         self.assertIn("app_process / com.genymobile.scrcpy.Server", SOURCE)
         self.assertIn("tunnel_forward=true", SOURCE)
         self.assertIn("raw_stream=true", SOURCE)
