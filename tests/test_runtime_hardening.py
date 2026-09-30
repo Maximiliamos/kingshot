@@ -76,6 +76,24 @@ class RuntimeHardeningTests(unittest.TestCase):
         self.assertEqual(backend.launched, 1)
         self.assertEqual(backend.waited, 1)
 
+    def test_periodic_probe_restarts_dead_game_without_capture_failure(self):
+        backend = FakeBackend(FakeHealth(ready=True, package_running=False))
+        controller = RecoveryController(max_game_restarts=1)
+        decision = controller.probe_runtime(backend)
+        self.assertEqual(decision.action, "game_restarted")
+        self.assertFalse(decision.terminal)
+        self.assertEqual(backend.launched, 1)
+        self.assertEqual(backend.waited, 1)
+
+    def test_periodic_probe_exhausts_restart_budget(self):
+        backend = FakeBackend(FakeHealth(ready=True, package_running=False))
+        controller = RecoveryController(max_game_restarts=1)
+        first = controller.probe_runtime(backend)
+        second = controller.probe_runtime(backend)
+        self.assertEqual(first.action, "game_restarted")
+        self.assertTrue(second.terminal)
+        self.assertEqual(second.action, "stop")
+
     def test_recovery_is_bounded_when_runtime_stays_down(self):
         backend = FakeBackend(FakeHealth(ready=False, package_running=False))
         controller = RecoveryController(capture_threshold=1, max_runtime_failures=2)
