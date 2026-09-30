@@ -50,6 +50,11 @@ Run-Gate -Name "Multi-cycle soak" -Script (Join-Path $Root "scripts\verify_soak.
     "-MinCharacters", [string][Math]::Max(2, $SoakCharacters)
 )
 
+Run-Gate -Name "Final current-user process cleanup" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
+    "-TargetUser", [string]$env:USERNAME,
+    "-Output", (Join-Path $Root "debug\mvp-final-process-audit.json")
+)
+
 Write-Host ""
 Write-Host ("=" * 72)
 Write-Host "MVP 1.0 HOST ACCEPTANCE PASS"
