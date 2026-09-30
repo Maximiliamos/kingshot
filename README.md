@@ -54,7 +54,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через Android transport;
-- low-latency H.264 `screenrecord → FFmpeg` preview с автоматическим fallback на PNG `screencap`;
+- low-latency H.264 preview: pinned `scrcpy-server 4.1` запускается **внутри WSA** как Android shell-процесс, поток идёт через ADB-forward в FFmpeg; внешний scrcpy-клиент/окно не используется; PNG `screencap` остаётся аварийным fallback;
 - один долгоживущий preview-worker вместо создания нового потока на каждый кадр;
 - FPS/latency preview telemetry;
 - интерактивный экран Android внутри GUI: tap/swipe/hold/wheel/right-click Back;
@@ -175,12 +175,20 @@ python C:\warbot\bot.py
 python C:\warbot\bot.py --dry-run
 ```
 
-Для целевого режима scrcpy больше не требуется. После загрузки WSA Android
-кадры берутся напрямую через `adb exec-out screencap -p`, а input отправляется
-в тот же device-scoped ADB serial.
+Внешний scrcpy-клиент и его окно для целевого режима не требуются. Production
+preview и vision используют закреплённый `scrcpy-server v4.1`, который
+TUGARIN BOTS проверяет по SHA-256, отправляет через ADB и запускает **внутри
+того же WSA**. Сервер отдаёт raw H.264 через локальный ADB-forward; FFmpeg
+декодирует его непосредственно во встроенный GUI. Управление по-прежнему
+отправляется нашим `DeviceBackend` в тот же WSA serial `127.0.0.1:58526`.
 
-Legacy scrcpy оставлен только для диагностики. Для него можно задать
-`WAR_BOT_BACKEND=scrcpy` и `WAR_BOT_SCRCPY_TITLE`.
+Если H.264 транспорт не поднимается, интерфейс может диагностически перейти на
+PNG `adb exec-out screencap -p`, но такой fallback не считается PASS
+релизного preview-gate.
+
+Legacy режим захвата *видимого окна* scrcpy оставлен только для диагностики.
+Для него можно задать `WAR_BOT_BACKEND=scrcpy` и
+`WAR_BOT_SCRCPY_TITLE`; он не относится к production scrcpy-server transport.
 
 **F8** — аварийная остановка.
 
@@ -318,7 +326,7 @@ runtime-reports/LATEST.json
 проверку PNG одной командой:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 ```
 
 Низкоуровневый эквивалент:
@@ -345,10 +353,11 @@ fallback дополнительно формирует `C:\warbot_arm64_runtime\
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_release.ps1
 ```
 
-Он повторяет test suite, выполняет реальный WSA + Kingshot 120-second gate и
-проверяет отсутствие оставшихся dedicated-user Python/CMD/conhost процессов.
-Полные критерии игрового flow/soak описаны в
-`docs/RELEASE_ACCEPTANCE.md`.
+Полный verifier последовательно проверяет hosted-equivalent suite, WSA +
+Kingshot 120-second gate, process audit, реальный `scrcpy-h264` preview,
+bounded recovery Kingshot/ADB, точный State #3 → tutorial → `Тугарин<N>`
+flow и многократный reset/soak. Любой этап fail-fast останавливает релиз.
+Полные критерии описаны в `docs/RELEASE_ACCEPTANCE.md`.
 
 ## Дальнейший план
 
