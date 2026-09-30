@@ -246,6 +246,7 @@ def collect_mvp_flow_evidence() -> dict:
         "state3_confirmed": False,
         "character_tutorial_complete": False,
         "nickname_committed": False,
+        "nickname_evidence_screenshot": False,
         "ordered_flow": False,
         "final_phase_complete": state.get("phase") == "complete",
         "final_step_done": state.get("step") == "done",
@@ -277,6 +278,10 @@ def collect_mvp_flow_evidence() -> dict:
             elif kind == "nickname_committed" and event.get("nickname") == expected_nickname:
                 positions.setdefault("nickname", offset)
                 checks["nickname_committed"] = True
+                evidence_path = str(event.get("evidence_screenshot", "") or "")
+                checks["nickname_evidence_screenshot"] = bool(
+                    evidence_path and Path(evidence_path).is_file()
+                )
 
             if kind in {
                 "mvp_flow_start",
@@ -481,6 +486,7 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
         "min_characters": minimum,
         "characters_delta": 0,
         "nickname_commits": [],
+        "nickname_evidence_screenshots": [],
         "cycle_resets": 0,
         "ordered_nicknames": False,
         "no_stop_reason": not bool(state.get("last_stop_reason")),
@@ -501,10 +507,16 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
     start = flow[0]
     before = int(start.get("characters_before", 0))
     nickname_before = int(start.get("next_nickname_before", 1))
-    commits = [
-        str(e.get("nickname"))
-        for e in flow
-        if e.get("event") == "nickname_committed"
+    commit_events = [
+        e for e in flow if e.get("event") == "nickname_committed"
+    ]
+    commits = [str(e.get("nickname")) for e in commit_events]
+    screenshots = [
+        str(e.get("evidence_screenshot", "") or "")
+        for e in commit_events
+    ]
+    valid_screenshots = [
+        path for path in screenshots if path and Path(path).is_file()
     ]
     resets = [e for e in flow if e.get("event") == "cycle_reset"]
     delta = int(state.get("characters_created", 0)) - before
@@ -512,11 +524,13 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
 
     result["characters_delta"] = delta
     result["nickname_commits"] = commits
+    result["nickname_evidence_screenshots"] = valid_screenshots
     result["cycle_resets"] = len(resets)
     result["ordered_nicknames"] = commits[:minimum] == expected
     result["pass"] = all((
         delta >= minimum,
         len(commits) >= minimum,
+        len(valid_screenshots) >= minimum,
         len(resets) >= minimum - 1,
         result["ordered_nicknames"],
         result["no_stop_reason"],
