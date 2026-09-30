@@ -25,7 +25,7 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install -r requirements-ci.txt
       - name: Compile application modules
-        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py frame_stream.py runtime_events.py runtime_recovery.py runtime_watchdog.py warbot_cli.py bot.py gui.py
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py scrcpy_transport.py frame_stream.py runtime_events.py runtime_recovery.py runtime_watchdog.py warbot_cli.py bot.py gui.py
       - name: Parse PowerShell helpers
         shell: pwsh
         run: |
@@ -36,6 +36,7 @@ jobs:
           [scriptblock]::Create((Get-Content -Raw scripts/audit_runtime_processes.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/verify_release.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/verify_preview.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/provision_scrcpy_server.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/run_and_report.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/upload_runtime_report.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/setup_dedicated_wsa_user.ps1)) | Out-Null
