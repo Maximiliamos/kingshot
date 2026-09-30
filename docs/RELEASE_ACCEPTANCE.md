@@ -29,6 +29,24 @@ PASS requires:
 The resulting heartbeat, screenshots and P0 diagnostics provide evidence for
 the release commit.
 
+## Current infrastructure evidence — PASS
+
+Real-host run on 2026-09-30, commit
+`5aacd64efdfb2b6d2b609f9a5a25cf93255bba04`:
+
+- local hosted-equivalent suite: **179 tests / OK**;
+- WSA backend ready on `127.0.0.1:58526`;
+- Android 13, 1920×1080 framebuffer;
+- network, Internet, audio and package manager all ready;
+- Kingshot stayed on PID 9507 for the full 120-second stability gate;
+- startup and final loading-logo checks both false;
+- dedicated-user process audit: **PASS**, no stale Python/CMD/conhost;
+- disabled historical GApps migration task is non-running.
+
+Therefore the one-command infrastructure gate is complete for this release
+candidate. Remaining acceptance is product-behavior evidence: interactive
+preview/input, full registration flow, recovery fault injection and soak.
+
 ## Full registration-flow acceptance
 
 Start TUGARIN BOTS with a clean explicitly approved game state and record one
