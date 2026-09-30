@@ -143,24 +143,63 @@ class WarBotCliTests(unittest.TestCase):
             "characters_created_cycle": 1,
             "last_stop_reason": "",
         }
+        with TemporaryDirectory() as td:
+            screenshot = Path(td) / "rename.png"
+            screenshot.write_bytes(b"evidence")
+            events = [
+                {
+                    "event": "mvp_flow_start",
+                    "expected_nickname": "Тугарин7",
+                    "next_nickname_before": 7,
+                    "characters_before": 6,
+                },
+                {"event": "tutorial_complete", "origin": "initial"},
+                {"event": "state3_confirmed", "target_state": 3},
+                {"event": "tutorial_complete", "origin": "new_character"},
+                {
+                    "event": "nickname_committed",
+                    "nickname": "Тугарин7",
+                    "evidence_screenshot": str(screenshot),
+                },
+            ]
+            with patch("bot.load_state", return_value=state), \
+                    patch("runtime_events.read_recent_events", return_value=events):
+                result = warbot_cli.collect_mvp_flow_evidence()
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["expected_nickname"], "Тугарин7")
+        self.assertTrue(result["checks"]["ordered_flow"])
+        self.assertTrue(result["checks"]["nickname_evidence_screenshot"])
+
+    def test_flow_evidence_rejects_missing_post_rename_screenshot(self):
+        state = {
+            "phase": "complete",
+            "step": "done",
+            "next_nickname": 2,
+            "characters_created": 1,
+            "characters_created_cycle": 1,
+            "last_stop_reason": "",
+        }
         events = [
             {
                 "event": "mvp_flow_start",
-                "expected_nickname": "Тугарин7",
-                "next_nickname_before": 7,
-                "characters_before": 6,
+                "expected_nickname": "Тугарин1",
+                "next_nickname_before": 1,
+                "characters_before": 0,
             },
             {"event": "tutorial_complete", "origin": "initial"},
             {"event": "state3_confirmed", "target_state": 3},
             {"event": "tutorial_complete", "origin": "new_character"},
-            {"event": "nickname_committed", "nickname": "Тугарин7"},
+            {
+                "event": "nickname_committed",
+                "nickname": "Тугарин1",
+                "evidence_screenshot": r"C:\missing\rename.png",
+            },
         ]
         with patch("bot.load_state", return_value=state), \
                 patch("runtime_events.read_recent_events", return_value=events):
             result = warbot_cli.collect_mvp_flow_evidence()
-        self.assertTrue(result["pass"])
-        self.assertEqual(result["expected_nickname"], "Тугарин7")
-        self.assertTrue(result["checks"]["ordered_flow"])
+        self.assertFalse(result["pass"])
+        self.assertFalse(result["checks"]["nickname_evidence_screenshot"])
 
     def test_clear_game_data_requires_explicit_yes(self):
         backend = MagicMock()
