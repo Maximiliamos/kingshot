@@ -21,7 +21,7 @@ That evidence was produced at commit `b565c8d`. The later console-window fixes
 were code/CI green but still require one final real-host smoke on the newest
 hardening HEAD.
 
-## Implemented on feature/tugarin-bots-v1-hardening
+## Implemented on feature/unified-android-backend
 
 ### P0 hardening
 
