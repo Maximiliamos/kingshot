@@ -44,7 +44,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 
 ## Текущая версия
 
-Интеграционная ветка: **feature/unified-android-backend** / Draft PR #6.
+Текущий hardening-релиз: **feature/tugarin-bots-v1-hardening** поверх интеграционного Draft PR #6. После зелёного CI и real-host gate изменения переходят в основную интеграционную ветку.
 
 На уровне приложения уже реализованы:
 
@@ -54,9 +54,16 @@ image-first подход для Unity-интерфейса как в Airtest.
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через Android transport;
-- интерактивный экран Android внутри GUI: мышь → касание/свайп, клавиатура → Android key/text;
+- один долгоживущий preview-worker вместо создания нового потока на каждый кадр;
+- FPS/latency preview telemetry;
+- интерактивный экран Android внутри GUI: tap/swipe/hold/wheel/right-click Back;
+- ASCII и Unicode clipboard/paste input (через закреплённый uiautomator2);
+- Android volume up/down/mute;
 - ручной ввод автоматически ставит автоматизацию на паузу, чтобы действия не конфликтовали;
 - read-only health probes сети, доступности Интернета и Android-аудиосервиса;
+- bounded recovery при потере capture/ADB или падении Kingshot;
+- structured events + runtime heartbeat;
+- atomic state, previous snapshot и fail-closed при повреждённом state.json;
 - точный выбор строки и Confirm государства №3;
 - обязательный initial/character tutorial state machine;
 - переименование без пробела: `Тугарин1`, `Тугарин2`, ...;
@@ -77,28 +84,29 @@ WSA installer выбирает пакет под фактическую верс
 
 ## Установка
 
+Для обычного пользователя рекомендуемый вход один:
+
+```bat
+install_tugarin_bots.cmd
+```
+
+Он проверяет Git/Python 3.12+, передаёт управление безопасному dedicated-user
+WSA setup и сохраняет существующие WSA-данные перед миграцией (если не указан
+явный skip).
+
+Для разработчика зависимости закреплены:
+
 ```bat
 python -m pip install -r requirements.txt
+python -m pip install -r requirements-android-optional.txt
 ```
 
-По умолчанию используется Android SDK в `C:\Android\Sdk`. Путь можно
-переопределить через `WAR_BOT_ANDROID_SDK`. Bootstrap проверяет Android
-Emulator/QEMU, Platform Tools и ARM64 Android 11 system image; отсутствующий
-system image устанавливается через `sdkmanager`.
+Основной runtime — WSA. Android Emulator/QEMU SDK больше не является
+обязательной частью production-установки; эти компоненты нужны только для
+архивных диагностических PoC.
 
-Для резервного распознавания подписей кнопок установи Tesseract с русским языком:
-
-```powershell
-winget install --id UB-Mannheim.TesseractOCR --exact
-```
-
-Затем помести официальный `rus.traineddata` в каталог `tessdata` установленного Tesseract.
-
-Шаблоны должны находиться в:
-
-```text
-C:\warbot\templates
-```
+Для резервного OCR подписей можно отдельно установить Tesseract с русским
+языком. OpenCV/template recognition остаётся основным путём для Unity UI.
 
 ## Чистая переустановка WSA в выделенный Windows-профиль
 
@@ -107,8 +115,7 @@ C:\warbot\templates
 
 ```powershell
 cd C:\warbot_git
-git pull --ff-only origin feature/unified-android-backend
-powershell -ExecutionPolicy Bypass -File .\scripts\setup_dedicated_wsa_user.ps1
+powershell -ExecutionPolicy Bypass -File .\install_tugarin_bots.ps1 -Branch feature/tugarin-bots-v1-hardening
 ```
 
 Скрипт:
@@ -142,9 +149,10 @@ run_gui.vbs
 pythonw gui.py
 ```
 
-GUI показывает кадр выбранного Android backend, текущую фазу `state.json`,
-журнал и статистику цикла. В настройках можно выбрать WSA, Native ARM64,
-обычный ADB или legacy scrcpy. Кнопки
+GUI показывает непрерывный preview выбранного Android backend, FPS/latency,
+runtime heartbeat, текущую фазу `state.json`, health и статистику цикла.
+WSA является production-режимом; Native ARM64/ADB/scrcpy оставлены для
+диагностики и совместимости. Кнопки
 паузы и остановки передают команды движку через `control.json`, поэтому GUI
 не нажимает кнопки игры самостоятельно.
 
@@ -215,14 +223,11 @@ python .\warbot_cli.py start-runtime
 python .\warbot_cli.py stop-runtime
 ```
 
-Опциональный системный UI-канал uiautomator2 устанавливается отдельно:
-
-```powershell
-python -m pip install -r requirements-android-optional.txt
-```
-
-Он нужен только для Android permission/settings dialogs. Интерфейс самой Unity
-игры по-прежнему обрабатывается OpenCV-шаблонами.
+Системный UI-канал uiautomator2 закреплён в
+`requirements-android-optional.txt` и production installer ставит его в
+dedicated venv. Он используется для Android permission/settings dialogs и
+Unicode clipboard input. Интерфейс самой Unity-игры по-прежнему
+обрабатывается OpenCV-шаблонами.
 
 ## Полный цикл
 
