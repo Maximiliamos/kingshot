@@ -354,9 +354,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_release.ps1
 ```
 
 Полный verifier последовательно проверяет hosted-equivalent suite, WSA +
-Kingshot 120-second gate, process audit, реальный `scrcpy-h264` preview,
-bounded recovery Kingshot/ADB, точный State #3 → tutorial → `Тугарин<N>`
-flow и многократный reset/soak. Любой этап fail-fast останавливает релиз.
+Kingshot 120-second gate, process audit, реальный `scrcpy-h264` preview, consoleless `pythonw` GUI
+с отрисованным кадром, Unicode/UI/audio channel, bounded recovery Kingshot/ADB,
+точный State #3 → tutorial → `Тугарин<N>` flow и многократный reset/soak. Любой этап fail-fast останавливает релиз.
 Полные критерии описаны в `docs/RELEASE_ACCEPTANCE.md`.
 
 ## Дальнейший план
