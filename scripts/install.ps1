@@ -48,6 +48,8 @@ foreach ($scriptName in @(
     "verify_mvp.ps1",
     "run_and_report.ps1",
     "upload_runtime_report.ps1",
+    "audit_runtime_processes.ps1",
+    "verify_release.ps1",
     "setup_dedicated_wsa_user.ps1",
     "stop_gapps_migration_task.ps1"
 )) {
