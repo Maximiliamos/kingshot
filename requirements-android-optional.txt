@@ -1,5 +1,4 @@
-# Optional helpers for system-level Android UI automation.
-# Core WAR BOT does not require these packages; Unity/game controls remain
-# OpenCV image-driven.
-adbutils>=2.12,<3
-uiautomator2>=3,<4
+# Structured Android system-UI / Unicode-input helpers.
+# Unity/game recognition remains OpenCV image-driven.
+adbutils==2.12.0
+uiautomator2==3.7.0
