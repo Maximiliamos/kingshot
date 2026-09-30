@@ -8,6 +8,7 @@ the same WSA instance and exposes a raw H.264 stream through an ADB forward.
 
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 import queue
@@ -64,6 +65,12 @@ class ScrcpyServerCapture:
                 "Pinned scrcpy-server is missing. Run "
                 "scripts/provision_scrcpy_server.ps1 first: "
                 f"{self.server_path}"
+            )
+        actual_sha = hashlib.sha256(self.server_path.read_bytes()).hexdigest()
+        if actual_sha.lower() != SCRCPY_SERVER_SHA256:
+            raise BackendError(
+                "scrcpy-server SHA-256 mismatch: "
+                f"expected={SCRCPY_SERVER_SHA256} actual={actual_sha}"
             )
 
         self.ffmpeg_path = (
@@ -217,6 +224,9 @@ class ScrcpyServerCapture:
             creationflags=WINDOWS_NO_WINDOW,
             bufsize=0,
         )
+        # Give app_process a brief head start to bind localabstract:scrcpy.
+        # The server then blocks waiting for the host TCP client.
+        time.sleep(0.20)
 
         # The raw_stream option deliberately removes scrcpy protocol headers,
         # so FFmpeg can consume the socket as ordinary H.264.
@@ -226,7 +236,7 @@ class ScrcpyServerCapture:
             "-loglevel", "error",
             "-fflags", "nobuffer+discardcorrupt",
             "-flags", "low_delay",
-            "-probesize", "32",
+            "-probesize", "32768",
             "-analyzeduration", "0",
             "-f", "h264",
             "-i", f"tcp://127.0.0.1:{port}?tcp_nodelay=1",
