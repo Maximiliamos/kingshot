@@ -487,6 +487,17 @@ function Invoke-Continue {
     [string]$head = Update-Repository
     [string]$venvPython = Ensure-PythonEnvironment
     [void](Ensure-PreviewCodec)
+    $scrcpyProvisioner = Join-Path $RepoRoot "scripts\provision_scrcpy_server.ps1"
+    if (-not (Test-Path -LiteralPath $scrcpyProvisioner -PathType Leaf)) {
+        throw "scrcpy provisioner is missing: $scrcpyProvisioner"
+    }
+    Write-SetupLog "Provisioning pinned scrcpy Android video server."
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scrcpyProvisioner 2>&1 |
+        ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) {
+        throw "scrcpy-server provisioning failed exit=$LASTEXITCODE"
+    }
+
     $venvScripts = Split-Path -Parent $venvPython
     $env:PATH = "$venvScripts;$env:PATH"
     $env:PYTHONIOENCODING = "utf-8"
