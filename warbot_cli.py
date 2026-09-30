@@ -24,7 +24,8 @@ def build_parser() -> argparse.ArgumentParser:
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "restart-game", "preview-smoke", "preview-probe",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
-            "recovery-smoke", "tap", "swipe", "ui-dump",
+            "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
+            "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -37,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--preview-seconds", type=float, default=10.0)
     parser.add_argument("--require-h264", action="store_true")
     parser.add_argument("--with-adb-reconnect", action="store_true")
+    parser.add_argument("--min-characters", type=int, default=2)
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument(
         "--clean-game",
@@ -410,6 +412,118 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
     return result
 
 
+def prepare_mvp_soak(backend) -> dict:
+    """Prepare repeated one-character cycles so reset/re-entry are exercised."""
+    import bot
+    from runtime_events import emit_event
+
+    backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+    if not getattr(backend, "package_installed", lambda: False)():
+        raise BackendError("Game is not installed; run bootstrap first.")
+
+    old = bot.load_state()
+    next_nickname = int(old.get("next_nickname", 1))
+    characters_before = int(old.get("characters_created", 0))
+    current_cycle = int(old.get("current_cycle", 1))
+
+    backend.stop_app()
+    clear_result = backend.clear_app_data()
+
+    fresh = dict(bot.DEFAULT_STATE)
+    fresh["next_nickname"] = next_nickname
+    fresh["pending_nickname"] = next_nickname
+    fresh["characters_created"] = characters_before
+    fresh["characters_created_cycle"] = 0
+    fresh["characters_per_cycle"] = 1
+    fresh["auto_reset_data"] = True
+    fresh["repeat_cycles"] = True
+    fresh["current_cycle"] = current_cycle
+    fresh["target_state"] = 3
+    fresh["tutorial_origin"] = "initial"
+    fresh["last_stop_reason"] = ""
+    bot.save_state(fresh)
+    Path(bot.CONTROL_FILE).write_text(
+        json.dumps({"paused": False, "stop": False}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    emit_event(
+        "mvp_soak_start",
+        next_nickname_before=next_nickname,
+        characters_before=characters_before,
+        current_cycle=current_cycle,
+    )
+    backend.launch_app()
+    return {
+        "prepared": True,
+        "clear_result": str(clear_result).strip(),
+        "next_nickname_before": next_nickname,
+        "characters_before": characters_before,
+        "characters_per_cycle": 1,
+        "repeat_cycles": True,
+    }
+
+
+def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
+    import bot
+    from runtime_events import read_recent_events
+
+    minimum = max(2, int(min_characters))
+    state = bot.load_state()
+    events = read_recent_events(limit=10000)
+    start_index = -1
+    for index, event in enumerate(events):
+        if event.get("event") == "mvp_soak_start":
+            start_index = index
+
+    result = {
+        "pass": False,
+        "min_characters": minimum,
+        "characters_delta": 0,
+        "nickname_commits": [],
+        "cycle_resets": 0,
+        "ordered_nicknames": False,
+        "no_stop_reason": not bool(state.get("last_stop_reason")),
+        "state": {
+            "phase": state.get("phase"),
+            "step": state.get("step"),
+            "next_nickname": state.get("next_nickname"),
+            "characters_created": state.get("characters_created"),
+            "current_cycle": state.get("current_cycle"),
+            "last_stop_reason": state.get("last_stop_reason"),
+        },
+    }
+    if start_index < 0:
+        result["error"] = "mvp_soak_start event not found"
+        return result
+
+    flow = events[start_index:]
+    start = flow[0]
+    before = int(start.get("characters_before", 0))
+    nickname_before = int(start.get("next_nickname_before", 1))
+    commits = [
+        str(e.get("nickname"))
+        for e in flow
+        if e.get("event") == "nickname_committed"
+    ]
+    resets = [e for e in flow if e.get("event") == "cycle_reset"]
+    delta = int(state.get("characters_created", 0)) - before
+    expected = [f"Тугарин{nickname_before + i}" for i in range(minimum)]
+
+    result["characters_delta"] = delta
+    result["nickname_commits"] = commits
+    result["cycle_resets"] = len(resets)
+    result["ordered_nicknames"] = commits[:minimum] == expected
+    result["pass"] = all((
+        delta >= minimum,
+        len(commits) >= minimum,
+        len(resets) >= minimum - 1,
+        result["ordered_nicknames"],
+        result["no_stop_reason"],
+    ))
+    return result
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     backend = create_backend(
@@ -651,6 +765,18 @@ def main(argv=None) -> int:
         pid = backend.wait_package_running(timeout=90)
         print(json.dumps({"restarted": True, "game_pid": pid}, ensure_ascii=False))
         return 0
+
+    if args.action == "prepare-mvp-soak":
+        if not args.yes:
+            raise BackendError("Refusing MVP soak preparation without --yes")
+        result = prepare_mvp_soak(backend)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.action == "soak-evidence":
+        result = collect_mvp_soak_evidence(args.min_characters)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["pass"] else 6
 
     if args.action == "recovery-smoke":
         result = run_recovery_smoke(
