@@ -19,7 +19,7 @@ class WsaInstallerTests(unittest.TestCase):
 
     def test_manifest_parsing_reads_complete_xml_documents(self):
         self.assertIn(
-            '[xml]$preflightManifest = Get-Content -LiteralPath $manifestPath -Raw',
+            '[xml]$preflightManifest = Get-Content -LiteralPath $packageManifestPath -Raw',
             self.source,
         )
         self.assertIn(
@@ -30,6 +30,12 @@ class WsaInstallerTests(unittest.TestCase):
             '[xml]$manifestXml = Get-Content -LiteralPath ".\\AppxManifest.xml" -Raw',
             self.source,
         )
+
+    def test_report_manifest_path_cannot_be_overwritten_by_package_preflight(self):
+        self.assertIn('$reportManifestPath = Join-Path $stage "manifest.json"', self.source)
+        self.assertIn('Set-Content -Encoding UTF8 $reportManifestPath', self.source)
+        self.assertIn('$packageManifestPath = Join-Path $installed.InstallLocation "AppxManifest.xml"', self.source)
+        self.assertNotIn('$manifestPath = Join-Path $stage "manifest.json"', self.source)
 
     def test_aumid_catalog_uses_installed_manifest_before_fallback(self):
         start = self.source.index("function Get-WsaApplicationCatalog")

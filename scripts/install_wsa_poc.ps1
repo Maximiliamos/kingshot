@@ -600,7 +600,7 @@ $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $stage = Join-Path $ReportsRoot ("wsa-p0-" + $stamp + "-" + $PID)
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 $p0StartedAt = Get-Date
-$manifestPath = Join-Path $stage "manifest.json"
+$reportManifestPath = Join-Path $stage "manifest.json"
 $consolePath = Join-Path $stage "console.txt"
 $latestLocalPath = Join-Path $ReportsRoot "LATEST-LOCAL.json"
 [ordered]@{
@@ -648,7 +648,7 @@ function Save-Manifest {
     foreach ($key in $Extra.Keys) {
         $payload[$key] = $Extra[$key]
     }
-    $payload | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 $manifestPath
+    $payload | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 $reportManifestPath
 }
 
 function Upload-Report {
@@ -1178,19 +1178,19 @@ try {
             Write-Log "WARNING: WSA install path is unusually long; WSABuilds documents long extracted paths as a cause of Settings/app startup crashes."
         }
 
-        $manifestPath = Join-Path $installed.InstallLocation "AppxManifest.xml"
-        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-            $manifestPath = (Get-ChildItem -LiteralPath $installed.InstallLocation -Filter AppxManifest.xml -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+        $packageManifestPath = Join-Path $installed.InstallLocation "AppxManifest.xml"
+        if (-not (Test-Path -LiteralPath $packageManifestPath -PathType Leaf)) {
+            $packageManifestPath = (Get-ChildItem -LiteralPath $installed.InstallLocation -Filter AppxManifest.xml -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
         }
-        if ($manifestPath) {
-            $packagePreflight.appx_manifest = $manifestPath
-            [xml]$preflightManifest = Get-Content -LiteralPath $manifestPath -Raw
+        if ($packageManifestPath) {
+            $packagePreflight.appx_manifest = $packageManifestPath
+            [xml]$preflightManifest = Get-Content -LiteralPath $packageManifestPath -Raw
             $targetFamilies = @($preflightManifest.Package.Dependencies.TargetDeviceFamily)
             $desktopTarget = $targetFamilies | Where-Object { $_.Name -eq "Windows.Desktop" } | Select-Object -First 1
             if ($desktopTarget) {
                 $packagePreflight.manifest_min_version = [string]$desktopTarget.MinVersion
             }
-            $manifestText = Get-Content -LiteralPath $manifestPath -Raw
+            $manifestText = Get-Content -LiteralPath $packageManifestPath -Raw
             $packagePreflight.manifest_has_custom_install = [bool]($manifestText -match "(?i)windows\.customInstall|customInstallActions")
         }
 
