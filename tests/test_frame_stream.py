@@ -71,6 +71,7 @@ class FrameStreamTests(unittest.TestCase):
             on_frame=on_frame,
             on_error=lambda error: self.fail(error),
             target_fps=30,
+            transport="adb-screencap",
         )
         stream.start()
         self.assertTrue(ready.wait(2.0))
