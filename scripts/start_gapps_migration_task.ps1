@@ -1,5 +1,5 @@
 param(
-    [string]$TargetUser = "TugarinBots",
+    [string]$TargetUser = "Программист1",
     [string]$RepoRoot = "C:\warbot_git"
 )
 

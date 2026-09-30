@@ -39,7 +39,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertLess(sid_check, evidence_creation)
         self.assertLess(sid_check, first_gate)
         self.assertIn("exit 91", SOURCE)
-        self.assertIn("S-1-5-21-1641294696-4270169483-3689275233-1008", SOURCE)
+        self.assertIn("S-1-5-21-1641294696-4270169483-3689275233-1007", SOURCE)
 
     def test_preflight_only_exits_before_any_gate(self):
         preflight = SOURCE.index("if ($PreflightOnly)")

@@ -12,7 +12,7 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         cls.source = SCRIPT.read_text(encoding="utf-8-sig")
 
     def test_default_target_is_dedicated_local_user(self):
-        self.assertIn('[string]$TargetUser = "TugarinBots"', self.source)
+        self.assertIn('[string]$TargetUser = "Программист1"', self.source)
         self.assertIn('New-LocalUser', self.source)
         self.assertIn('PasswordNeverExpires', self.source)
         self.assertIn('S-1-5-32-544', self.source)

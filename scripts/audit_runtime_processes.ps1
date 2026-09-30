@@ -1,6 +1,6 @@
 #requires -version 5.1
 param(
-    [string]$TargetUser = "TugarinBots",
+    [string]$TargetUser = "Программист1",
     [string]$Output = "",
     [switch]$AllowGuiProcesses
 )

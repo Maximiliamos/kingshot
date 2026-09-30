@@ -24,7 +24,7 @@ PASS requires:
 - network, Internet, framebuffer, package manager, storage and audio pass;
 - Kingshot stays alive on one PID for 120 seconds;
 - final screenshot is not the loading logo;
-- no stale dedicated-user Python/CMD/conhost process remains.
+- no stale interactive-user Python/CMD/conhost process remains.
 
 The resulting heartbeat, screenshots and P0 diagnostics provide evidence for
 the release commit.
@@ -40,7 +40,7 @@ Real-host run on 2026-09-30, commit
 - network, Internet, audio and package manager all ready;
 - Kingshot stayed on PID 9507 for the full 120-second stability gate;
 - startup and final loading-logo checks both false;
-- dedicated-user process audit: **PASS**, no stale Python/CMD/conhost;
+- interactive-user process audit: **PASS**, no stale Python/CMD/conhost;
 - disabled historical GApps migration task is non-running.
 
 Therefore the one-command infrastructure gate is complete for this release

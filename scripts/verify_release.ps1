@@ -2,7 +2,7 @@ param(
     [switch]$SkipUnitTests,
     [switch]$SkipDependencySync,
     [switch]$CleanGame,
-    [string]$TargetUser = "TugarinBots",
+    [string]$TargetUser = "Программист1",
     [string]$PythonExe = ""
 )
 

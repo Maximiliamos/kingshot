@@ -1,8 +1,8 @@
 param(
     [switch]$SkipInfrastructure,
     [switch]$PreflightOnly,
-    [string]$TargetUser = "TugarinBots",
-    [string]$ExpectedSid = "S-1-5-21-1641294696-4270169483-3689275233-1008",
+    [string]$TargetUser = "Программист1",
+    [string]$ExpectedSid = "S-1-5-21-1641294696-4270169483-3689275233-1007",
     [int]$FlowTimeoutMinutes = 45,
     [int]$SoakTimeoutMinutes = 90,
     [int]$SoakCharacters = 2
@@ -32,7 +32,7 @@ catch {
 if ($resolvedTargetSid -ne $ExpectedSid -or $currentSid -ne $ExpectedSid) {
     $identityError = (
         "MVP preflight refused before any gate: current={0} sid={1}; required={2} sid={3}. " +
-        "Run this script in the interactive TugarinBots session."
+        "Run this script in the interactive Программист1 session."
     ) -f $currentName, $currentSid, $targetAccount, $ExpectedSid
     Write-Host $identityError -ForegroundColor Red
     exit 91

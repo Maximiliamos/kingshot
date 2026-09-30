@@ -6,7 +6,7 @@ Get-ScheduledTask | Where-Object { $_.TaskName -like "TUGARIN BOTS*" } | ForEach
 }
 
 $targetProcesses = @(Get-Process -IncludeUserName | Where-Object {
-    $_.UserName -ieq "$env:COMPUTERNAME\TugarinBots" -and $_.ProcessName -in @(
+    $_.UserName -ieq "$env:COMPUTERNAME\Программист1" -and $_.ProcessName -in @(
         "powershell", "powershell_ise", "cmd", "adb", "conhost", "python", "pythonw"
     )
 })

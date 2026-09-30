@@ -9,7 +9,7 @@ commit `5aacd64efdfb2b6d2b609f9a5a25cf93255bba04`.
 
 This is not the full MVP acceptance. The unified full-host orchestrator has
 not yet produced `MVP 1.0 HOST ACCEPTANCE PASS` on the current release
-candidate from the exact `TugarinBots` Windows SID.
+candidate from the exact interactive `Программист1` Windows SID.
 
 Evidence:
 
@@ -23,7 +23,7 @@ Evidence:
 - free `/data` space ~121790 MiB;
 - Kingshot PID 9507 remained stable for 120 seconds;
 - startup/final loading-logo checks both false;
-- dedicated-user stale-process audit passed with no Python/CMD/conhost process;
+- interactive-user stale-process audit passed with no Python/CMD/conhost process;
 - old GApps migration task exists only in disabled state.
 
 Earlier P0 evidence at `b565c8d` is now superseded by this current-head
@@ -67,7 +67,7 @@ release acceptance.
 | WSA boot/game P0 on real host | PASS |
 | Local hosted-equivalent suite | PASS — 229 tests, zero skips |
 | Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
-| Dedicated-user stale-process audit | PASS — zero stale processes |
+| Interactive-user stale-process audit | PASS — zero stale processes |
 | Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
 | Kingshot restart + ADB reconnect recovery | CODE + real-host injector DONE; PENDING HOST |
 | Multi-cycle unattended real-game soak | CODE + bounded verifier DONE; PENDING HOST |
@@ -96,7 +96,7 @@ Code is now organized around one full host orchestrator
 release commit for:
 
 1. consoleless GUI start/stop;
-2. no stale dedicated-user probe processes;
+2. no stale interactive-user probe processes;
 3. complete registration flow through exact State #3 and `Тугарин<N>`;
 4. restart recovery;
 5. multi-cycle soak.

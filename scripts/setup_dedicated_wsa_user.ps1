@@ -2,7 +2,7 @@
 param(
     [ValidateSet("Prepare", "Continue")]
     [string]$Stage = "Prepare",
-    [string]$TargetUser = "TugarinBots",
+    [string]$TargetUser = "Программист1",
     [string]$RepoRoot = "C:\warbot_git",
     [string]$Branch = "feature/unified-android-backend",
     [switch]$NoLogoffPrompt,
@@ -152,7 +152,7 @@ function Grant-BootstrapAccess {
 
 function Stop-WsaProcesses {
     Write-SetupLog "Stopping WSA processes."
-    Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 3
 }
 
