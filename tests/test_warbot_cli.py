@@ -1,4 +1,5 @@
 import io
+import json
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -28,6 +29,50 @@ class WarBotCliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('"state": "device"', out.getvalue())
         self.assertIn('"ready": true', out.getvalue())
+
+    def test_preview_smoke_reports_transport_metrics(self):
+        backend = MagicMock()
+        backend.require_ready.return_value = DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+        )
+
+        class FakeCapture:
+            transport_name = "h264-screenrecord"
+
+            def __init__(self):
+                self.closed = False
+
+            def grab(self):
+                return (
+                    np.zeros((20, 10, 3), dtype=np.uint8),
+                    "fake",
+                    {"left": 0, "top": 0, "width": 10, "height": 20},
+                )
+
+            def close(self):
+                self.closed = True
+
+        capture = FakeCapture()
+        out = io.StringIO()
+        with patch("warbot_cli.create_backend", return_value=backend), \
+                patch("warbot_cli.create_preview_capture", return_value=capture), \
+                patch("warbot_cli.time.monotonic", side_effect=[0.0, 0.0, 0.01, 0.5, 0.5, 0.51, 1.0, 1.0, 1.01, 1.5, 1.5, 1.51, 2.1, 2.1]), \
+                redirect_stdout(out):
+            code = warbot_cli.main([
+                "preview-smoke", "--backend", "wsa",
+                "--preview-seconds", "2", "--require-h264",
+            ])
+
+        self.assertEqual(code, 0)
+        self.assertTrue(capture.closed)
+        payload = json.loads(out.getvalue())
+        self.assertTrue(payload["pass"])
+        self.assertTrue(payload["h264"])
+        self.assertEqual(payload["active_transport"], "h264-screenrecord")
+        self.assertGreaterEqual(payload["frames"], 3)
 
     def test_clear_game_data_requires_explicit_yes(self):
         backend = MagicMock()
