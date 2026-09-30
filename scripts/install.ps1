@@ -50,6 +50,7 @@ foreach ($scriptName in @(
     "upload_runtime_report.ps1",
     "audit_runtime_processes.ps1",
     "verify_release.ps1",
+    "verify_preview.ps1",
     "setup_dedicated_wsa_user.ps1",
     "stop_gapps_migration_task.ps1"
 )) {
