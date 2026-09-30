@@ -47,6 +47,20 @@ Therefore the one-command infrastructure gate is complete for this release
 candidate. Remaining acceptance is product-behavior evidence: interactive
 preview/input, full registration flow, recovery fault injection and soak.
 
+## H.264 preview acceptance
+
+After the infrastructure gate passes, validate the real low-latency preview
+transport on the same WSA host:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_preview.ps1
+```
+
+Default acceptance requires the active transport to remain
+`h264-screenrecord` for the smoke window and reports measured FPS plus average
+and p95 frame latency. Use `-AllowFallback` only for diagnostics; PNG
+`screencap` fallback is not considered a PASS for the H.264 release gate.
+
 ## Full registration-flow acceptance
 
 Start TUGARIN BOTS with a clean explicitly approved game state and record one
