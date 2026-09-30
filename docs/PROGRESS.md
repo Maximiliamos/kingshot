@@ -39,7 +39,7 @@ release acceptance.
 ### P1 application
 
 - WSA is the explicit production backend;
-- low-latency H.264 screenrecord→FFmpeg GUI transport with automatic PNG screencap fallback;
+- low-latency H.264 transport through pinned scrcpy-server v4.1 running inside WSA, unique ADB-forward socket per stream and FFmpeg decode; PNG screencap remains diagnostic fallback;
 - single continuous GUI frame worker;
 - FPS/latency transport metrics in the GUI;
 - click/swipe/hold/wheel/right-click input;
@@ -64,14 +64,16 @@ release acceptance.
 | Latest hosted Windows CI | PASS — 179 tests, zero skips |
 | Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
 | Dedicated-user stale-process audit | PASS — zero stale processes |
-| Full State #3 -> tutorial -> rename real-game cycle | PENDING HOST |
-| Multi-cycle unattended real-game soak | PENDING HOST |
-| True compressed low-latency video transport | CODE DONE; TARGET-HOST LATENCY/STABILITY ACCEPTANCE PENDING |
+| Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
+| Kingshot restart + ADB reconnect recovery | CODE + real-host injector DONE; PENDING HOST |
+| Multi-cycle unattended real-game soak | CODE + bounded verifier DONE; PENDING HOST |
+| True compressed low-latency video transport | screenrecord path REJECTED by host evidence; scrcpy-server replacement CODE DONE; PENDING HOST |
 
 ## Definition of product-ready 1.0
 
-Code may be merged when hosted CI is fully green. A 1.0 tag should additionally
-require real-host evidence for:
+Code is now organized around one full host orchestrator
+(`scripts/verify_mvp_full.ps1`). A 1.0 tag should require PASS on that exact
+release commit for:
 
 1. consoleless GUI start/stop;
 2. no stale dedicated-user probe processes;
