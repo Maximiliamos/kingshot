@@ -76,32 +76,45 @@ class WarBotCliTests(unittest.TestCase):
         self.assertEqual(payload["active_transport"], "h264-screenrecord")
         self.assertGreaterEqual(payload["frames"], 3)
 
-    def test_preview_probe_separates_encoder_and_decoder(self):
+    def test_preview_probe_uses_direct_scrcpy_transport(self):
         backend = MagicMock()
-        backend.adb_path = r"C:\\fake\\adb.exe"
-        backend.serial = "127.0.0.1:58526"
         backend.require_ready.return_value = DeviceHealth(
             backend="wsa",
-            serial=backend.serial,
+            serial="127.0.0.1:58526",
             state="device",
             boot_completed="1",
             android="13",
-            resolution="Physical size: 1280x720",
+            resolution="Physical size: 1920x1080",
         )
 
-        raw = b"\x00\x00\x00\x01" + (b"x" * 2048)
-        png = b"\x89PNG" + (b"y" * 128)
-        responses = [
-            SimpleNamespace(returncode=0, stdout=b"screenrecord help", stderr=b""),
-            SimpleNamespace(returncode=0, stdout=raw, stderr=b""),
-            SimpleNamespace(returncode=0, stdout=png, stderr=b""),
-            SimpleNamespace(returncode=0, stdout=raw, stderr=b""),
-            SimpleNamespace(returncode=0, stdout=png, stderr=b""),
-        ]
+        class FakeScrcpy:
+            def __init__(self, *args, **kwargs):
+                self.closed = False
 
+            def grab(self):
+                return (
+                    np.zeros((720, 1280, 3), dtype=np.uint8),
+                    "scrcpy-h264",
+                    {"left": 0, "top": 0, "width": 1920, "height": 1080},
+                )
+
+            def diagnostics(self):
+                return {"transport": "scrcpy-h264", "server_exit": None}
+
+            def close(self):
+                self.closed = True
+
+        fake_server = MagicMock()
+        fake_server.is_file.return_value = True
+        out = io.StringIO()
         with TemporaryDirectory() as td, \
-                patch("warbot_cli.subprocess.run", side_effect=responses), \
-                patch("warbot_cli.shutil.which", return_value=r"C:\\ffmpeg\\ffmpeg.exe"):
+                patch("warbot_cli.ScrcpyServerCapture", FakeScrcpy), \
+                patch("warbot_cli.default_server_path", return_value=fake_server), \
+                patch("warbot_cli.time.monotonic", side_effect=[
+                    0.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+                    0.7, 0.8, 0.9, 1.0, 1.1, 1.2
+                ]), \
+                redirect_stdout(out):
             old_cwd = os.getcwd()
             os.chdir(td)
             try:
@@ -109,11 +122,9 @@ class WarBotCliTests(unittest.TestCase):
             finally:
                 os.chdir(old_cwd)
 
-        self.assertTrue(report["any_encoder_ok"])
-        self.assertTrue(report["any_decoder_ok"])
-        self.assertEqual(len(report["probes"]), 2)
-        self.assertTrue(report["probes"][0]["encoder_ok"])
-        self.assertTrue(report["probes"][0]["decoder_ok"])
+        self.assertTrue(report["pass"])
+        self.assertGreaterEqual(report["frames"], 3)
+        self.assertEqual(report["diagnostics"]["transport"], "scrcpy-h264")
         self.assertIn("preview-h264-probe.json", report["report_path"])
 
     def test_clear_game_data_requires_explicit_yes(self):
