@@ -4,6 +4,7 @@ param(
     [string]$Stage = "Prepare",
     [string]$TargetUser = "TugarinBots",
     [string]$RepoRoot = "C:\warbot_git",
+    [string]$Branch = "feature/tugarin-bots-v1-hardening",
     [switch]$NoLogoffPrompt,
     [switch]$SkipDataBackup
 )
@@ -12,7 +13,6 @@ $ErrorActionPreference = "Stop"
 
 $WorkRoot = "C:\warbot_wsa"
 $TaskName = "TUGARIN BOTS - Continue WSA Setup"
-$Branch = "feature/unified-android-backend"
 $PackageName = "MicrosoftCorporationII.WindowsSubsystemForAndroid"
 $PackageFamily = "MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe"
 $LogPath = Join-Path $WorkRoot "dedicated-user-setup.log"
@@ -46,7 +46,8 @@ function Invoke-SelfElevated {
         "-File", $PSCommandPath,
         "-Stage", $Stage,
         "-TargetUser", $TargetUser,
-        "-RepoRoot", $RepoRoot
+        "-RepoRoot", $RepoRoot,
+        "-Branch", $Branch
     )
     if ($NoLogoffPrompt) { $args += "-NoLogoffPrompt" }
     if ($SkipDataBackup) { $args += "-SkipDataBackup" }
@@ -252,6 +253,7 @@ function Register-ContinuationTask {
         "-Stage", "Continue",
         "-TargetUser", (Quote-Arg $TargetUser),
         "-RepoRoot", (Quote-Arg $RepoRoot),
+        "-Branch", (Quote-Arg $Branch),
         "-NoLogoffPrompt"
     )
     $taskArgs = $argList -join " "
