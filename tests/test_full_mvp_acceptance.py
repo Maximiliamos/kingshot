@@ -40,6 +40,11 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn('-Overall "fail"', SOURCE)
         self.assertIn('-Overall "pass"', SOURCE)
 
+    def test_master_requires_clean_tracked_worktree(self):
+        self.assertIn("status --porcelain --untracked-files=no", SOURCE)
+        self.assertIn("Clean tracked worktree", SOURCE)
+        self.assertIn("exit 90", SOURCE)
+
     def test_destructive_gates_are_disclosed(self):
         self.assertIn("intentionally clear Kingshot app data", SOURCE)
         self.assertIn("nickname counter is preserved", SOURCE)
