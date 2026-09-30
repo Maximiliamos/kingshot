@@ -142,6 +142,8 @@ The orchestrator is fail-fast and runs:
 ```text
 verify_release.ps1
 → verify_preview.ps1 (scrcpy-h264 required)
+→ verify_gui.ps1 (pythonw + rendered scrcpy-h264 frame)
+→ verify_operator_io.ps1 (Unicode/UI hierarchy/audio)
 → verify_recovery.ps1 (stop Kingshot + ADB disconnect/reconnect)
 → verify_game_flow.ps1 (exact State #3 → tutorial → Тугарин<N>)
 → verify_soak.ps1 (minimum two one-character reset cycles)
