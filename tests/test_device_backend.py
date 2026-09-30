@@ -267,6 +267,32 @@ Current Networks:
         self.assertEqual(ui.value, "Тугарин1")
         keyevent.assert_called_once_with("KEYCODE_PASTE")
 
+    def test_unicode_clipboard_health_roundtrips_and_restores(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\fake\adb.exe",
+        )
+
+        class FakeUi:
+            def __init__(self):
+                self._clipboard = "before"
+
+            @property
+            def clipboard(self):
+                return self._clipboard
+
+            def set_clipboard(self, value):
+                self._clipboard = value
+
+        ui = FakeUi()
+        with patch.object(backend, "_uiautomator", return_value=ui):
+            result = backend.unicode_clipboard_health("ТугаринMVP")
+
+        self.assertTrue(result["ready"])
+        self.assertTrue(result["readable"])
+        self.assertTrue(result["roundtrip"])
+        self.assertEqual(ui.clipboard, "before")
+
     def test_audio_controls_route_to_android_keyevents(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
