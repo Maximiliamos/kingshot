@@ -207,6 +207,25 @@ class WarBotCliTests(unittest.TestCase):
         self.assertEqual(saved["phase"], "tutorial_new_character")
         self.assertEqual(saved["tutorial_origin"], "initial")
 
+    def test_restart_game_is_bounded_to_app_lifecycle(self):
+        backend = MagicMock()
+        backend.require_ready.return_value = DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+        )
+        backend.wait_package_running.return_value = "4242"
+        out = io.StringIO()
+        with patch("warbot_cli.create_backend", return_value=backend), redirect_stdout(out):
+            code = warbot_cli.main(["restart-game", "--backend", "wsa"])
+
+        self.assertEqual(code, 0)
+        backend.stop_app.assert_called_once()
+        backend.launch_app.assert_called_once()
+        backend.wait_package_running.assert_called_once_with(timeout=90)
+        self.assertIn('"game_pid": "4242"', out.getvalue())
+
     def test_tap_routes_coordinates_to_backend(self):
         backend = MagicMock()
         with patch("warbot_cli.create_backend", return_value=backend):
