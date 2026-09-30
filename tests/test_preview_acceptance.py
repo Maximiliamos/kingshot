@@ -16,7 +16,12 @@ class PreviewAcceptanceScriptTests(unittest.TestCase):
     def test_preview_gate_runs_probe_after_failure(self):
         self.assertIn("preview-probe", SOURCE)
         self.assertIn("preview-h264-probe.json", SOURCE)
-        self.assertIn("Collecting H.264 encoder/decoder diagnostics", SOURCE)
+        self.assertIn("Collecting scrcpy H.264 transport diagnostics", SOURCE)
+
+    def test_preview_gate_provisions_pinned_scrcpy_server(self):
+        self.assertIn("provision_scrcpy_server.ps1", SOURCE)
+        self.assertIn("scrcpy-server provisioning failed", SOURCE)
+        self.assertIn("scrcpy H.264 required", SOURCE)
 
     def test_preview_gate_uses_tugarin_venv(self):
         self.assertIn(r"C:\warbot_wsa\tugarin-venv\Scripts\python.exe", SOURCE)
