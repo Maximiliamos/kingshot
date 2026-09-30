@@ -27,7 +27,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
     def test_master_requires_final_current_user_cleanup(self):
         self.assertIn("Final current-user process cleanup", SOURCE)
         self.assertIn("audit_runtime_processes.ps1", SOURCE)
-        self.assertIn('" -TargetUser"', SOURCE.replace("\n", " "))
+        self.assertIn('"-TargetUser"', SOURCE)
         self.assertIn("$env:USERNAME", SOURCE)
         self.assertIn("mvp-final-process-audit.json", SOURCE)
 
