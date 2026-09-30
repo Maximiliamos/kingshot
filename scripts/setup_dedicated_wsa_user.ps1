@@ -272,12 +272,21 @@ function Remove-WsaRegistrations {
         }
     }
 
-    $provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Where-Object {
-        $_.DisplayName -eq $PackageName
-    })
-    foreach ($pkg in $provisioned) {
-        Write-SetupLog "Removing provisioned WSA package: $($pkg.PackageName)"
-        Remove-AppxProvisionedPackage -Online -PackageName $pkg.PackageName -ErrorAction Stop | Out-Null
+    try {
+        $provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop | Where-Object {
+            $_.DisplayName -eq $PackageName
+        })
+        foreach ($pkg in $provisioned) {
+            Write-SetupLog "Removing provisioned WSA package: $($pkg.PackageName)"
+            Remove-AppxProvisionedPackage -Online -PackageName $pkg.PackageName -ErrorAction Stop | Out-Null
+        }
+    }
+    catch {
+        # WSABuilds is registered with Add-AppxPackage -Register and is not a
+        # provisioned Windows image package. Some split-admin configurations
+        # deny DISM inventory even after UAC; per-user AppX verification below
+        # remains the authoritative cleanup gate.
+        Write-SetupLog "Provisioned-package inventory unavailable (non-fatal for unpackaged WSA): $($_.Exception.Message)"
     }
 
     Start-Sleep -Seconds 2
