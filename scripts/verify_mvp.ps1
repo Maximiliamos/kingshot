@@ -2,12 +2,29 @@ param(
     # Compatibility switch for the legacy native-QEMU report workflow.
     # WSA userdata is never wiped implicitly.
     [switch]$WipeRuntime,
-    [switch]$CleanGame
+    [switch]$CleanGame,
+    [string]$PythonExe = ""
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
+
+if (-not $PythonExe) {
+    $dedicatedPython = "C:\warbot_wsa\tugarin-venv\Scripts\python.exe"
+    if (Test-Path -LiteralPath $dedicatedPython -PathType Leaf) {
+        $PythonExe = $dedicatedPython
+    }
+    else {
+        $resolvedPython = Get-Command python.exe -ErrorAction SilentlyContinue
+        if (-not $resolvedPython) { $resolvedPython = Get-Command python -ErrorAction Stop }
+        $PythonExe = [string]$resolvedPython.Source
+    }
+}
+if (-not (Test-Path -LiteralPath $PythonExe -PathType Leaf)) {
+    throw "Python interpreter does not exist: $PythonExe"
+}
+Write-Host "MVP Python: $PythonExe"
 
 New-Item -ItemType Directory -Force -Path (Join-Path $Root "debug") | Out-Null
 $frame = Join-Path $Root "debug\bootstrap-frame.png"
@@ -24,7 +41,7 @@ if ($CleanGame) { $args += "--clean-game" }
 Write-Host "=== TUGARIN BOTS MVP VERIFY ==="
 Write-Host "1/3 WSA Android + game bootstrap"
 
-& python @args
+& $PythonExe @args
 $bootstrapExit = $LASTEXITCODE
 if ($bootstrapExit -ne 0) {
     Write-Host ""
@@ -35,7 +52,7 @@ if ($bootstrapExit -ne 0) {
 
 Write-Host ""
 Write-Host "2/3 WSA device status"
-& python .\warbot_cli.py status --backend wsa --serial 127.0.0.1:58526
+& $PythonExe .\warbot_cli.py status --backend wsa --serial 127.0.0.1:58526
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ""
