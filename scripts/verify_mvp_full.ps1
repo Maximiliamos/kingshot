@@ -71,6 +71,34 @@ Write-Host "=== TUGARIN BOTS MVP 1.0 FULL HOST ACCEPTANCE ==="
 Write-Host "Repository: $Root"
 $head = (& git -C $Root rev-parse HEAD | Out-String).Trim()
 Write-Host "HEAD: $head"
+
+$trackedChanges = (& git -C $Root status --porcelain --untracked-files=no | Out-String).Trim()
+if ($trackedChanges) {
+    $GateResults.Add([ordered]@{
+        name = "Clean tracked worktree"
+        script = "git status --porcelain --untracked-files=no"
+        pass = $false
+        exit_code = 90
+        started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        detail = $trackedChanges
+    })
+    Save-AcceptanceEvidence -Overall "fail" -FailedGate "Clean tracked worktree" -ExitCode 90
+    Write-Host ""
+    Write-Host "MVP 1.0 HOST ACCEPTANCE FAIL: tracked worktree is dirty."
+    Write-Host $trackedChanges
+    Write-Host "Evidence: $EvidencePath"
+    exit 90
+}
+
+$GateResults.Add([ordered]@{
+    name = "Clean tracked worktree"
+    script = "git status --porcelain --untracked-files=no"
+    pass = $true
+    exit_code = 0
+    started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+    finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+})
 Save-AcceptanceEvidence
 Write-Host ""
 Write-Host "IMPORTANT: game-flow and soak gates intentionally clear Kingshot app data."
