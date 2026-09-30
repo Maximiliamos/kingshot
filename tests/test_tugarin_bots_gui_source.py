@@ -1,6 +1,10 @@
 import unittest
 from pathlib import Path
 
+import numpy as np
+
+from gui import WarBotWindow
+
 
 ROOT = Path(__file__).resolve().parents[1]
 GUI = ROOT / "gui.py"
@@ -78,9 +82,32 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("self._stop_frame_stream()", self.gui)
 
     def test_gui_maps_cropped_viewport_back_to_framebuffer_coordinates(self):
-        self.assertIn("def _crop_for_render(frame, rect):", self.gui)
-        self.assertIn("rect.get(\"left\", 0)", self.gui)
+        self.assertIn("def _crop_for_render(frame, rect, android_viewport=None):", self.gui)
         self.assertIn("self._device_left + round", self.gui)
+
+        frame = np.zeros((720, 1280, 3), dtype=np.uint8)
+        frame[:, 437:843] = 255
+        phone, viewport = WarBotWindow._crop_for_render(
+            frame,
+            {"left": 100, "top": 50, "width": 1280, "height": 720},
+            {"left": 83, "top": 135, "width": 480, "height": 720},
+        )
+        self.assertGreater(phone.size, 0)
+        self.assertEqual(
+            viewport,
+            {"left": 83, "top": 135, "width": 480, "height": 720},
+        )
+
+    def test_bot_shared_portrait_uses_measured_android_viewport(self):
+        phone = np.zeros((1080, 608, 3), dtype=np.uint8)
+        viewport = WarBotWindow._shared_phone_viewport(
+            phone,
+            {"left": 83, "top": 0, "width": 608, "height": 1080},
+        )
+        self.assertEqual(
+            viewport,
+            {"left": 83, "top": 0, "width": 608, "height": 1080},
+        )
 
     def test_wsa_prefers_exact_visible_game_window_capture(self):
         bot_source = (ROOT / "bot.py").read_text(encoding="utf-8-sig")

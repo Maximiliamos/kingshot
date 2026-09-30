@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -241,6 +242,9 @@ class WarBotWindow(QMainWindow):
         self.frame_stream = None
         self.frame_stream_signature = None
         self.last_bot_frame_mtime = 0.0
+        self.android_frame_width = 0
+        self.android_frame_height = 0
+        self.android_content_rect = None
         self.capture_ready.connect(self._render_capture)
         self.capture_failed.connect(self._capture_failed)
         self.stream_failed.connect(self._stream_failed)
@@ -928,6 +932,14 @@ class WarBotWindow(QMainWindow):
                 health["google_services"] = all(
                     f"package:{name}" in packages for name in required_google
                 )
+                try:
+                    android_frame = backend.frame()
+                    left, top, width, height = bot.detect_content_rect(android_frame)
+                    health["android_content_rect"] = {
+                        "left": left, "top": top, "width": width, "height": height,
+                    }
+                except Exception:
+                    health["android_content_rect"] = None
                 latest_p0 = read_json(r"C:\warbot_wsa\reports\LATEST-LOCAL.json", {})
                 health["p0_state"] = str(latest_p0.get("state", "—"))
                 self.health_ready.emit(health)
@@ -957,6 +969,12 @@ class WarBotWindow(QMainWindow):
         self.adb_auth_value.setText("авторизован" if health.get("adb_authorized") else "нет")
         self.google_services_value.setText("готовы" if health.get("google_services") else "нет")
         self.p0_value.setText(str(health.get("p0_state", "—")))
+        size = self._parse_android_size(health.get("resolution", ""))
+        if size:
+            self.android_frame_width, self.android_frame_height = size
+        content_rect = health.get("android_content_rect")
+        if isinstance(content_rect, dict) and content_rect.get("width") and content_rect.get("height"):
+            self.android_content_rect = dict(content_rect)
         if ready:
             self.device_status.setToolTip(
                 "Android готов; сеть/интернет/аудио контролируются TUGARIN BOTS."
@@ -1048,9 +1066,19 @@ class WarBotWindow(QMainWindow):
         )
 
     @staticmethod
-    def _crop_for_render(frame, rect):
+    def _parse_android_size(value):
+        match = re.search(r"(\d+)\s*x\s*(\d+)", str(value or ""))
+        if not match:
+            return None
+        width, height = int(match.group(1)), int(match.group(2))
+        return (width, height) if width > 0 and height > 0 else None
+
+    @staticmethod
+    def _crop_for_render(frame, rect, android_viewport=None):
         left, top, width, height = bot.detect_content_rect(frame)
         phone, _, _ = bot.crop_phone(frame)
+        if android_viewport:
+            return phone, dict(android_viewport)
         scale_x = rect["width"] / max(1, frame.shape[1])
         scale_y = rect["height"] / max(1, frame.shape[0])
         viewport = dict(rect)
@@ -1061,6 +1089,18 @@ class WarBotWindow(QMainWindow):
             height=round(height * scale_y),
         )
         return phone, viewport
+
+    @staticmethod
+    def _shared_phone_viewport(phone, android_viewport=None):
+        phone_height, phone_width = phone.shape[:2]
+        if android_viewport:
+            return dict(android_viewport)
+        return {
+            "left": 0,
+            "top": 0,
+            "width": phone_width,
+            "height": phone_height,
+        }
 
     def refresh_capture(self):
         mode = str(self.backend_mode.currentData() or "wsa")
@@ -1080,10 +1120,14 @@ class WarBotWindow(QMainWindow):
                     phone = cv2.imread(live_path)
                     if phone is not None:
                         self.last_bot_frame_mtime = modified
+                        viewport = self._shared_phone_viewport(
+                            phone,
+                            self.android_content_rect,
+                        )
                         self._render_capture(
                             phone,
                             f"bot-shared:{serial}",
-                            {"width": phone.shape[1], "height": phone.shape[0]},
+                            viewport,
                         )
                         self.stream_value.setText("bot-shared-jpeg · 2.0 FPS")
             except OSError:
@@ -1134,6 +1178,20 @@ class WarBotWindow(QMainWindow):
         self._stop_frame_stream()
         try:
             backend = create_backend(mode, serial=serial, adb_path=adb_path)
+            health = backend.health()
+            android_size = self._parse_android_size(health.resolution)
+            if android_size:
+                self.android_frame_width, self.android_frame_height = android_size
+            android_viewport = None
+            try:
+                android_frame = backend.frame()
+                left, top, width, height = bot.detect_content_rect(android_frame)
+                android_viewport = {
+                    "left": left, "top": top, "width": width, "height": height,
+                }
+                self.android_content_rect = dict(android_viewport)
+            except Exception:
+                android_viewport = self.android_content_rect
             capture = None
             if mode == "wsa":
                 candidate = None
@@ -1148,7 +1206,7 @@ class WarBotWindow(QMainWindow):
                 capture = create_preview_capture(backend)
 
             def on_frame(frame, title, rect, metrics):
-                phone, viewport = self._crop_for_render(frame, rect)
+                phone, viewport = self._crop_for_render(frame, rect, android_viewport)
                 self.capture_ready.emit(phone, title, viewport)
                 self.stream_metrics_ready.emit(metrics.to_dict())
 
