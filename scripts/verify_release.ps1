@@ -28,11 +28,23 @@ function Resolve-ReleasePython {
 
     $systemPython = Get-Command python.exe -ErrorAction SilentlyContinue
     if (-not $systemPython) { $systemPython = Get-Command python -ErrorAction SilentlyContinue }
-    if ($systemPython) {
-        return [string]$systemPython.Source
+    if (-not $systemPython) {
+        throw "No Python interpreter found. Expected dedicated runtime at C:\warbot_wsa\tugarin-venv\Scripts\python.exe."
     }
 
-    throw "No Python interpreter found. Expected dedicated runtime at C:\warbot_wsa\tugarin-venv\Scripts\python.exe."
+    # Never mutate the user's global Python just because the production venv is
+    # missing. Build an isolated verifier environment instead.
+    $releaseVenvRoot = "C:\warbot_wsa\release-venv"
+    $releaseVenvPython = Join-Path $releaseVenvRoot "Scripts\python.exe"
+    if (-not (Test-Path -LiteralPath $releaseVenvPython -PathType Leaf)) {
+        Write-Host "Dedicated production venv not found; creating isolated release venv at $releaseVenvRoot"
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $releaseVenvRoot) | Out-Null
+        & $systemPython.Source -m venv $releaseVenvRoot
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $releaseVenvPython -PathType Leaf)) {
+            throw "Could not create isolated release venv with $($systemPython.Source)."
+        }
+    }
+    return (Resolve-Path -LiteralPath $releaseVenvPython).Path
 }
 
 function Assert-PythonRuntime {
