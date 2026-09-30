@@ -633,6 +633,20 @@ try {
     Write-SetupLog "Dedicated-user setup start stage=$Stage target=$TargetUser current=$([Security.Principal.WindowsIdentity]::GetCurrent().Name)."
 
     if (-not (Test-IsAdmin)) {
+        if ($Stage -eq "Continue") {
+            $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $target = Get-LocalUser -Name $TargetUser -ErrorAction Stop
+            if ($identity.User.Value -eq $target.SID.Value) {
+                Update-HandoffState -State "WAITING_FOR_TARGET_USER_TOKEN_REFRESH" -Extra @{
+                    stage = $Stage
+                    current_user = $identity.Name
+                    current_sid = $identity.User.Value
+                    reason = "Sign out and sign back in so the new local Administrators membership is present in the interactive token."
+                }
+                Write-SetupLog "Continue is waiting for a fresh $TargetUser logon token; refusing elevation through a different administrator SID."
+                exit 92
+            }
+        }
         Write-SetupLog "Requesting administrator elevation for stage $Stage."
         $code = Invoke-SelfElevated
         exit $code
