@@ -11,6 +11,7 @@ import sys
 import time
 
 import cv2
+import numpy as np
 
 from device_backend import BackendError, NativeArm64Backend, WsaBackend, create_backend
 from frame_stream import create_preview_capture
@@ -38,6 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--game-stability-seconds", type=int, default=45)
     parser.add_argument("--preview-seconds", type=float, default=10.0)
     parser.add_argument("--require-h264", action="store_true")
+    parser.add_argument("--require-fast", action="store_true")
+    parser.add_argument("--min-preview-fps", type=float, default=15.0)
     parser.add_argument("--with-adb-reconnect", action="store_true")
     parser.add_argument("--min-characters", type=int, default=2)
     parser.add_argument("--wipe", action="store_true")
@@ -597,7 +600,15 @@ def main(argv=None) -> int:
 
     if args.action == "preview-smoke":
         backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
-        capture = create_preview_capture(backend)
+        capture = None
+        if isinstance(backend, WsaBackend):
+            try:
+                import bot
+                capture = bot.WsaGameWindowCapture()
+            except Exception:
+                capture = None
+        if capture is None:
+            capture = create_preview_capture(backend)
         duration = max(2.0, float(args.preview_seconds))
         started = time.monotonic()
         deadline = started + duration
@@ -605,14 +616,35 @@ def main(argv=None) -> int:
         latencies = []
         transports = []
         last_shape = None
+        black_frames = 0
+        frozen_frames = 0
+        capture_errors = 0
+        previous_frame = None
+        source_start = None
+        if args.require_fast and isinstance(backend, WsaBackend):
+            source_start = backend.frame()
         try:
             while time.monotonic() < deadline:
                 before = time.monotonic()
-                frame, _, _ = capture.grab()
+                try:
+                    frame, _, _ = capture.grab()
+                except Exception:
+                    capture_errors += 1
+                    if frames == 0 and isinstance(backend, WsaBackend):
+                        capture.close()
+                        capture = create_preview_capture(backend)
+                        frame, _, _ = capture.grab()
+                    else:
+                        raise
                 elapsed_ms = (time.monotonic() - before) * 1000.0
                 if frame is None or getattr(frame, "size", 0) == 0:
                     raise BackendError("Preview returned an empty frame")
                 frames += 1
+                if float(frame.mean()) < 2.0 or float(np.count_nonzero(frame)) / float(frame.size) < 0.01:
+                    black_frames += 1
+                if previous_frame is not None and frame.shape == previous_frame.shape and np.array_equal(frame, previous_frame):
+                    frozen_frames += 1
+                previous_frame = frame.copy()
                 latencies.append(elapsed_ms)
                 transport = str(getattr(capture, "transport_name", "unknown"))
                 if not transports or transports[-1] != transport:
@@ -622,6 +654,11 @@ def main(argv=None) -> int:
             capture.close()
 
         elapsed = max(0.001, time.monotonic() - started)
+        source_changed = False
+        if source_start is not None:
+            source_end = backend.frame()
+            if source_end is not None and source_end.shape == source_start.shape:
+                source_changed = not np.array_equal(source_start, source_end)
         ordered = sorted(latencies)
         p95_latency = None
         avg_latency = None
@@ -634,17 +671,35 @@ def main(argv=None) -> int:
             avg_latency = round(sum(latencies) / len(latencies), 3)
 
         active_transport = transports[-1] if transports else "unknown"
+        fast_transport = active_transport in {"wsa-window", "scrcpy-h264", "h264-screenrecord"}
+        fps = frames / elapsed
+        window_changed = frozen_frames < max(3, frames - 1)
+        stale_stream = bool(source_changed and not window_changed)
+        visual_ok = black_frames == 0 and not stale_stream
+        passed = frames >= 3
+        if args.require_fast:
+            passed = bool(
+                passed and fast_transport and fps >= float(args.min_preview_fps)
+                and visual_ok and capture_errors <= 1
+            )
         result = {
-            "pass": frames >= 3,
+            "pass": passed,
             "seconds": round(elapsed, 3),
             "frames": frames,
-            "fps": round(frames / elapsed, 3),
+            "fps": round(fps, 3),
             "avg_latency_ms": avg_latency,
             "p95_latency_ms": p95_latency,
             "active_transport": active_transport,
             "transport_history": transports,
             "frame_shape": last_shape,
             "h264": active_transport in {"scrcpy-h264", "h264-screenrecord"},
+            "fast_transport": fast_transport,
+            "black_frames": black_frames,
+            "frozen_frames": frozen_frames,
+            "capture_errors": capture_errors,
+            "source_changed": source_changed,
+            "window_changed": window_changed,
+            "stale_stream": stale_stream,
         }
         print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
         if frames < 3:
@@ -653,6 +708,12 @@ def main(argv=None) -> int:
             raise BackendError(
                 "H.264 preview was required but preview fell back to "
                 f"{active_transport}. See JSON metrics above."
+            )
+        if args.require_fast and not result["pass"]:
+            raise BackendError(
+                "Production preview gate failed: transport="
+                f"{active_transport} fps={result['fps']} black={black_frames} "
+                f"frozen={frozen_frames} stale={stale_stream} errors={capture_errors}."
             )
         return 0
 

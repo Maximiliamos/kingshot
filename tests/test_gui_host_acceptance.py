@@ -16,9 +16,10 @@ class GuiHostAcceptanceTests(unittest.TestCase):
         self.assertIn("finish_host_smoke", GUI)
         self.assertIn("app.exit(0 if report", GUI)
 
-    def test_gui_smoke_requires_rendered_scrcpy_frame(self):
+    def test_gui_smoke_requires_rendered_fast_frame(self):
         self.assertIn('"has_rendered_frame"', GUI)
-        self.assertIn('"scrcpy-h264" in stream_text', GUI)
+        self.assertIn('("wsa-window", "scrcpy-h264")', GUI)
+        self.assertIn('"fast_transport"', GUI)
         self.assertIn("gui-host-smoke.json", SOURCE)
 
 

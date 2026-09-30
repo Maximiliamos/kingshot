@@ -1310,10 +1310,13 @@ def main():
             has_frame = bool(pixmap is not None and not pixmap.isNull())
             stream_text = window.stream_value.text()
             status_text = window.device_status.text()
-            scrcpy_h264 = "scrcpy-h264" in stream_text
+            fast_transport = any(
+                name in stream_text for name in ("wsa-window", "scrcpy-h264")
+            )
             report = {
-                "pass": bool(has_frame and scrcpy_h264),
+                "pass": bool(has_frame and fast_transport),
                 "has_rendered_frame": has_frame,
+                "fast_transport": fast_transport,
                 "stream": stream_text,
                 "device_status": status_text,
                 "frame_stream_running": bool(

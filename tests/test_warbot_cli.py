@@ -127,6 +127,11 @@ class WarBotCliTests(unittest.TestCase):
         self.assertEqual(report["diagnostics"]["transport"], "scrcpy-h264")
         self.assertIn("preview-h264-probe.json", report["report_path"])
 
+    def test_static_window_is_not_stale_when_android_source_is_also_static(self):
+        source = Path(warbot_cli.__file__).read_text(encoding="utf-8")
+        self.assertIn("stale_stream = bool(source_changed and not window_changed)", source)
+        self.assertIn('"stale_stream": stale_stream', source)
+
     def test_prepare_mvp_flow_requires_explicit_yes(self):
         backend = MagicMock()
         with patch("warbot_cli.create_backend", return_value=backend):

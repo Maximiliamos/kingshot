@@ -1,5 +1,5 @@
 param(
-    [double]$PreviewSeconds = 10,
+    [double]$PreviewSeconds = 15,
     [switch]$AllowFallback,
     [string]$PythonExe = ""
 )
@@ -36,7 +36,7 @@ $env:PYTHONIOENCODING = "utf-8"
 Write-Host "=== TUGARIN BOTS PREVIEW ACCEPTANCE ==="
 Write-Host "Python: $PythonExe"
 Write-Host "Duration: $PreviewSeconds sec"
-Write-Host "Expected transport: $(if ($AllowFallback) { 'scrcpy H.264 or fallback' } else { 'scrcpy H.264 required' })"
+Write-Host "Expected transport: $(if ($AllowFallback) { 'any diagnostic transport' } else { 'wsa-window or proven scrcpy H.264, >=15 FPS' })"
 
 $args = @(
     ".\warbot_cli.py", "preview-smoke",
@@ -44,7 +44,7 @@ $args = @(
     "--serial", "127.0.0.1:58526",
     "--preview-seconds", ([string]$PreviewSeconds)
 )
-if (-not $AllowFallback) { $args += "--require-h264" }
+if (-not $AllowFallback) { $args += @("--require-fast", "--min-preview-fps", "15") }
 
 & $PythonExe @args
 $code = [int]$LASTEXITCODE
@@ -52,7 +52,7 @@ if ($code -ne 0) {
     Write-Host ""
     Write-Host "PREVIEW HOST GATE FAIL"
     Write-Host ""
-    Write-Host "Collecting scrcpy H.264 transport diagnostics..."
+    Write-Host "Collecting optional scrcpy H.264 transport diagnostics..."
     $probeArgs = @(
         ".\warbot_cli.py", "preview-probe",
         "--backend", "wsa",
