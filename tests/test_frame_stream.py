@@ -2,6 +2,7 @@ import queue
 import threading
 import time
 import unittest
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 
@@ -106,6 +107,17 @@ class FrameStreamTests(unittest.TestCase):
         self.assertIsNone(capture.active)
         self.assertEqual(capture.transport_name, "preview-starting")
         capture.close()
+
+    def test_auto_preview_prefers_scrcpy_h264(self):
+        backend = MagicMock()
+        preferred = FakeCapture()
+        preferred.transport_name = "scrcpy-h264"
+        capture = AutoPreviewCapture(backend)
+        with patch("frame_stream.ScrcpyServerCapture", return_value=preferred):
+            capture._ensure_active()
+        self.assertEqual(capture.transport_name, "scrcpy-h264")
+        capture.close()
+        self.assertTrue(preferred.closed)
 
     def test_continuous_stream_emits_frames_and_metrics(self):
         capture = FakeCapture()
