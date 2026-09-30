@@ -4,7 +4,7 @@ param(
     [string]$Stage = "Prepare",
     [string]$TargetUser = "TugarinBots",
     [string]$RepoRoot = "C:\warbot_git",
-    [string]$Branch = "feature/tugarin-bots-v1-hardening",
+    [string]$Branch = "feature/unified-android-backend",
     [switch]$NoLogoffPrompt,
     [switch]$SkipDataBackup
 )
