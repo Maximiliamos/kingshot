@@ -9,6 +9,7 @@ transport and continues to use DeviceBackend frames.
 from __future__ import annotations
 
 import os
+import queue
 import re
 import shutil
 import subprocess
@@ -64,6 +65,7 @@ class H264ScreenrecordCapture:
         max_width: int = 1280,
         max_height: int = 720,
         input_fps: int = 60,
+        frame_timeout: float = 2.5,
     ):
         self.backend = backend
         self.ffmpeg_path = (
@@ -81,6 +83,7 @@ class H264ScreenrecordCapture:
         self.adb_path = str(adb_path)
         self.bit_rate = max(500_000, int(bit_rate))
         self.input_fps = max(1, int(input_fps))
+        self.frame_timeout = max(0.25, float(frame_timeout))
         self.max_width = max(320, int(max_width))
         self.max_height = max(240, int(max_height))
 
@@ -106,6 +109,10 @@ class H264ScreenrecordCapture:
 
         self._adb_process = None
         self._ffmpeg_process = None
+        self._reader_thread = None
+        self._reader_stop = threading.Event()
+        self._frame_queue = queue.Queue(maxsize=2)
+        self._reader_error = None
         self._closed = False
         self._start_pipeline()
 
@@ -185,6 +192,16 @@ class H264ScreenrecordCapture:
             self._stop_pipeline()
             raise BackendError("FFmpeg did not expose decoded-video stdout.")
 
+        self._reader_stop.clear()
+        self._reader_error = None
+        self._frame_queue = queue.Queue(maxsize=2)
+        self._reader_thread = threading.Thread(
+            target=self._reader_loop,
+            name="tugarin-h264-reader",
+            daemon=True,
+        )
+        self._reader_thread.start()
+
     @staticmethod
     def _read_exact(stream, size: int) -> bytes:
         chunks = bytearray()
@@ -195,19 +212,49 @@ class H264ScreenrecordCapture:
             chunks.extend(chunk)
         return bytes(chunks)
 
-    def _read_frame(self) -> np.ndarray:
+    def _reader_loop(self) -> None:
         process = self._ffmpeg_process
         if process is None or process.stdout is None:
-            raise BackendError("H.264 decoder pipeline is not running.")
+            self._reader_error = "H.264 decoder pipeline is not running."
+            return
+
         frame_bytes = self.width * self.height * 3
-        raw = self._read_exact(process.stdout, frame_bytes)
-        if len(raw) != frame_bytes:
-            raise BackendError(
-                f"H.264 decoder stream ended mid-frame: {len(raw)}/{frame_bytes} bytes"
+        try:
+            while not self._reader_stop.is_set():
+                raw = self._read_exact(process.stdout, frame_bytes)
+                if len(raw) != frame_bytes:
+                    self._reader_error = (
+                        "H.264 decoder stream ended mid-frame: "
+                        f"{len(raw)}/{frame_bytes} bytes"
+                    )
+                    return
+                frame = np.frombuffer(raw, dtype=np.uint8).reshape(
+                    (self.height, self.width, 3)
+                ).copy()
+                try:
+                    self._frame_queue.put_nowait(frame)
+                except queue.Full:
+                    try:
+                        self._frame_queue.get_nowait()
+                    except queue.Empty:
+                        pass
+                    try:
+                        self._frame_queue.put_nowait(frame)
+                    except queue.Full:
+                        pass
+        except Exception as exc:
+            self._reader_error = f"H.264 reader failed: {exc}"
+
+    def _read_frame(self) -> np.ndarray:
+        if self._ffmpeg_process is None:
+            raise BackendError("H.264 decoder pipeline is not running.")
+        try:
+            return self._frame_queue.get(timeout=self.frame_timeout)
+        except queue.Empty as exc:
+            detail = self._reader_error or (
+                f"no decoded frame within {self.frame_timeout:.2f}s"
             )
-        return np.frombuffer(raw, dtype=np.uint8).reshape(
-            (self.height, self.width, 3)
-        ).copy()
+            raise BackendError(f"H.264 preview stalled: {detail}") from exc
 
     def grab(self):
         try:
@@ -230,6 +277,7 @@ class H264ScreenrecordCapture:
         )
 
     def _stop_pipeline(self) -> None:
+        self._reader_stop.set()
         for process in (self._ffmpeg_process, self._adb_process):
             if process is None:
                 continue
@@ -243,6 +291,10 @@ class H264ScreenrecordCapture:
                         process.wait(timeout=1.0)
             except (OSError, subprocess.SubprocessError):
                 pass
+        reader = self._reader_thread
+        if reader and reader.is_alive() and reader is not threading.current_thread():
+            reader.join(timeout=1.0)
+        self._reader_thread = None
         self._ffmpeg_process = None
         self._adb_process = None
 
