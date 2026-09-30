@@ -37,8 +37,10 @@ The complete MVP path is now one fail-fast command:
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 ```
 
-It runs infrastructure, low-latency preview, real recovery fault injection,
-one exact State #3 → `Тугарин<N>` cycle, then a bounded multi-cycle soak.
+It first verifies a clean tracked Git worktree, then runs infrastructure,
+low-latency preview, real GUI/operator I/O, recovery fault injection, one exact
+State #3 → `Тугарин<N>` cycle, and a bounded multi-cycle soak. The complete
+result is persisted to `debug/mvp-full-acceptance.json`.
 
 ## 1.0 release gates
 
