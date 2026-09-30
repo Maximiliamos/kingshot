@@ -125,6 +125,15 @@ class DeviceBackend(ABC):
             )
         self.shell(["input", "text", value])
 
+    def volume_up(self) -> None:
+        self.keyevent("KEYCODE_VOLUME_UP")
+
+    def volume_down(self) -> None:
+        self.keyevent("KEYCODE_VOLUME_DOWN")
+
+    def volume_mute(self) -> None:
+        self.keyevent("KEYCODE_VOLUME_MUTE")
+
     def launch_app(self) -> str:
         return self.shell(
             ["am", "start", "-W", "-n", f"{self.package}/{self.activity}"],
@@ -481,6 +490,26 @@ class AdbDeviceBackend(DeviceBackend):
         else:
             cmd = ["shell", *[str(x) for x in args]]
         return self._run(cmd, timeout=timeout, check=True, text=True).stdout
+
+    def input_text(self, value: str) -> None:
+        if value.isascii():
+            super().input_text(value)
+            return
+
+        # ADB's `input text` is not Unicode-safe. For manual Cyrillic input,
+        # use Android clipboard + paste through the optional structured UI
+        # channel. If it is unavailable we fail closed rather than garbling text.
+        device = self._uiautomator()
+        if device is None:
+            raise BackendError(
+                "Unicode input requires optional uiautomator2 support; "
+                "install requirements-android-optional.txt"
+            )
+        try:
+            device.set_clipboard(value)
+            self.keyevent("KEYCODE_PASTE")
+        except Exception as exc:
+            raise BackendError(f"Unicode clipboard input failed: {exc}") from exc
 
     def install_apks(self, paths: Iterable[str | os.PathLike[str]]) -> str:
         files = [Path(path) for path in paths]
