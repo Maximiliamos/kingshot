@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import runtime_events
+import bot
 from runtime_recovery import RecoveryController
 
 
@@ -41,6 +42,29 @@ class RuntimeHardeningTests(unittest.TestCase):
         self.assertEqual(items[-1]["event"], "state_transition")
         self.assertEqual(items[-1]["phase"], "tutorial")
         self.assertIn("ts", items[-1])
+
+    def test_corrupt_state_is_preserved_and_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp) / "state.json"
+            state.write_text("{broken", encoding="utf-8")
+            previous = Path(tmp) / "state.previous.json"
+            with patch.object(bot, "ROOT", tmp), \
+                 patch.object(bot, "STATE_FILE", str(state)), \
+                 patch.object(bot, "STATE_PREVIOUS_FILE", str(previous)):
+                with self.assertRaises(RuntimeError):
+                    bot.load_state()
+            self.assertTrue(list(Path(tmp).glob("state.corrupt.*.json")))
+
+    def test_state_save_keeps_previous_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp) / "state.json"
+            previous = Path(tmp) / "state.previous.json"
+            state.write_text('{"next_nickname": 4}', encoding="utf-8")
+            with patch.object(bot, "STATE_FILE", str(state)), \
+                 patch.object(bot, "STATE_PREVIOUS_FILE", str(previous)):
+                bot.save_state({"next_nickname": 5})
+            self.assertIn('"next_nickname": 4', previous.read_text(encoding="utf-8"))
+            self.assertIn('"next_nickname": 5', state.read_text(encoding="utf-8"))
 
     def test_recovery_restarts_dead_game_only_after_threshold(self):
         backend = FakeBackend(FakeHealth(ready=True, package_running=False))
