@@ -1,17 +1,30 @@
-"""Continuous framebuffer transport for the GUI.
+"""Continuous framebuffer transports for TUGARIN BOTS.
 
-This removes Qt-timer-driven one-thread-per-frame polling. The current stable
-transport is ADB screencap through BackendCapture; the stream abstraction keeps
-video transport independent so a lower-latency decoder can replace it without
-changing the GUI or automation layers.
+The GUI prefers a low-latency raw H.264 Android screenrecord stream decoded by
+FFmpeg. If FFmpeg or screenrecord is unavailable, preview falls back to the
+proven ADB PNG screencap path. Automation remains independent from this GUI
+transport and continues to use DeviceBackend frames.
 """
 
 from __future__ import annotations
 
+import os
+import re
+import shutil
+import subprocess
 import threading
 import time
 from dataclasses import dataclass
-from typing import Callable, Any
+from typing import Any, Callable
+
+import numpy as np
+
+from device_backend import BackendCapture, BackendError
+
+
+WINDOWS_NO_WINDOW = (
+    getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+)
 
 
 @dataclass(frozen=True)
@@ -32,6 +45,221 @@ class StreamMetrics:
         }
 
 
+class H264ScreenrecordCapture:
+    """Decode Android's continuous H.264 screenrecord stream through FFmpeg.
+
+    Android screenrecord supports raw H.264 output to stdout. The encoder has a
+    finite recording window on many Android builds, so a short/ended stream is
+    transparently restarted on the next frame request.
+    """
+
+    transport_name = "h264-screenrecord"
+
+    def __init__(
+        self,
+        backend,
+        *,
+        ffmpeg_path: str | None = None,
+        bit_rate: int = 8_000_000,
+    ):
+        self.backend = backend
+        self.ffmpeg_path = (
+            ffmpeg_path
+            or os.environ.get("TUGARIN_FFMPEG")
+            or shutil.which("ffmpeg.exe")
+            or shutil.which("ffmpeg")
+        )
+        if not self.ffmpeg_path:
+            raise BackendError("FFmpeg is unavailable; use ADB screencap fallback.")
+
+        adb_path = getattr(backend, "adb_path", None)
+        if not adb_path:
+            raise BackendError("H.264 preview requires an ADB-backed DeviceBackend.")
+        self.adb_path = str(adb_path)
+        self.bit_rate = max(500_000, int(bit_rate))
+
+        health = backend.health()
+        if not health.ready:
+            raise BackendError("Android is not ready for H.264 preview.")
+        match = re.search(r"(\d+)\s*x\s*(\d+)", health.resolution or "")
+        if not match:
+            raise BackendError(
+                f"Could not determine Android framebuffer size: {health.resolution!r}"
+            )
+        self.width = int(match.group(1))
+        self.height = int(match.group(2))
+        if self.width <= 0 or self.height <= 0:
+            raise BackendError("Android framebuffer dimensions are invalid.")
+
+        self._adb_process = None
+        self._ffmpeg_process = None
+        self._closed = False
+        self._start_pipeline()
+
+    def _start_pipeline(self) -> None:
+        self._stop_pipeline()
+        if self._closed:
+            raise BackendError("H.264 preview is closed.")
+
+        adb_cmd = [
+            self.adb_path,
+            "-s", self.backend.serial,
+            "exec-out",
+            "screenrecord",
+            "--output-format=h264",
+            "--bit-rate", str(self.bit_rate),
+            "--size", f"{self.width}x{self.height}",
+            "-",
+        ]
+        self._adb_process = subprocess.Popen(
+            adb_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            creationflags=WINDOWS_NO_WINDOW,
+            bufsize=0,
+        )
+        if self._adb_process.stdout is None:
+            self._stop_pipeline()
+            raise BackendError("ADB screenrecord did not expose stdout.")
+
+        ffmpeg_cmd = [
+            str(self.ffmpeg_path),
+            "-hide_banner",
+            "-loglevel", "error",
+            "-fflags", "nobuffer",
+            "-flags", "low_delay",
+            "-probesize", "32",
+            "-analyzeduration", "0",
+            "-f", "h264",
+            "-i", "pipe:0",
+            "-an",
+            "-f", "rawvideo",
+            "-pix_fmt", "bgr24",
+            "pipe:1",
+        ]
+        self._ffmpeg_process = subprocess.Popen(
+            ffmpeg_cmd,
+            stdin=self._adb_process.stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            creationflags=WINDOWS_NO_WINDOW,
+            bufsize=0,
+        )
+        # FFmpeg now owns the read end; the parent must not retain a duplicate.
+        self._adb_process.stdout.close()
+        if self._ffmpeg_process.stdout is None:
+            self._stop_pipeline()
+            raise BackendError("FFmpeg did not expose decoded-video stdout.")
+
+    @staticmethod
+    def _read_exact(stream, size: int) -> bytes:
+        chunks = bytearray()
+        while len(chunks) < size:
+            chunk = stream.read(size - len(chunks))
+            if not chunk:
+                break
+            chunks.extend(chunk)
+        return bytes(chunks)
+
+    def _read_frame(self) -> np.ndarray:
+        process = self._ffmpeg_process
+        if process is None or process.stdout is None:
+            raise BackendError("H.264 decoder pipeline is not running.")
+        frame_bytes = self.width * self.height * 3
+        raw = self._read_exact(process.stdout, frame_bytes)
+        if len(raw) != frame_bytes:
+            raise BackendError(
+                f"H.264 decoder stream ended mid-frame: {len(raw)}/{frame_bytes} bytes"
+            )
+        return np.frombuffer(raw, dtype=np.uint8).reshape(
+            (self.height, self.width, 3)
+        ).copy()
+
+    def grab(self):
+        try:
+            frame = self._read_frame()
+        except BackendError:
+            # screenrecord commonly has a finite recording cap. Restart once;
+            # if the runtime/codec is genuinely broken, FallbackCapture will
+            # demote the transport to PNG screencap.
+            self._start_pipeline()
+            frame = self._read_frame()
+        return (
+            frame,
+            f"h264:{self.backend.serial}",
+            {"left": 0, "top": 0, "width": self.width, "height": self.height},
+        )
+
+    def _stop_pipeline(self) -> None:
+        for process in (self._ffmpeg_process, self._adb_process):
+            if process is None:
+                continue
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=1.0)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=1.0)
+            except (OSError, subprocess.SubprocessError):
+                pass
+        self._ffmpeg_process = None
+        self._adb_process = None
+
+    def close(self) -> None:
+        self._closed = True
+        self._stop_pipeline()
+
+
+class FallbackCapture:
+    """Use a preferred capture until it fails, then permanently demote."""
+
+    def __init__(self, preferred, fallback):
+        self.preferred = preferred
+        self.fallback = fallback
+        self.active = preferred
+
+    @property
+    def transport_name(self) -> str:
+        return getattr(
+            self.active,
+            "transport_name",
+            "adb-screencap" if isinstance(self.active, BackendCapture) else "preview",
+        )
+
+    def grab(self):
+        try:
+            return self.active.grab()
+        except Exception:
+            if self.active is self.fallback:
+                raise
+            try:
+                self.preferred.close()
+            except Exception:
+                pass
+            self.active = self.fallback
+            return self.active.grab()
+
+    def close(self) -> None:
+        for capture in (self.preferred, self.fallback):
+            try:
+                capture.close()
+            except Exception:
+                pass
+
+
+def create_preview_capture(backend):
+    """Prefer continuous H.264; safely fall back to BackendCapture."""
+
+    fallback = BackendCapture(backend)
+    try:
+        preferred = H264ScreenrecordCapture(backend)
+    except Exception:
+        return fallback
+    return FallbackCapture(preferred, fallback)
+
+
 class ContinuousFrameStream:
     def __init__(
         self,
@@ -39,8 +267,8 @@ class ContinuousFrameStream:
         *,
         on_frame: Callable[[object, str, dict, StreamMetrics], None],
         on_error: Callable[[str], None],
-        target_fps: float = 4.0,
-        transport: str = "adb-screencap",
+        target_fps: float = 30.0,
+        transport: str = "preview",
     ):
         self.capture = capture
         self.on_frame = on_frame
@@ -71,19 +299,21 @@ class ContinuousFrameStream:
 
     def stop(self, timeout: float = 2.0) -> None:
         self._stop.set()
-        thread = self._thread
-        if thread and thread.is_alive() and thread is not threading.current_thread():
-            thread.join(timeout=max(0.0, float(timeout)))
+        # Close first so a decoder blocked in read() is released before join.
         try:
             self.capture.close()
         except Exception:
             pass
+        thread = self._thread
+        if thread and thread.is_alive() and thread is not threading.current_thread():
+            thread.join(timeout=max(0.0, float(timeout)))
         self._thread = None
 
     def _metrics(self, latency_ms: float) -> StreamMetrics:
         elapsed = max(0.001, time.monotonic() - self._started_at)
+        transport = getattr(self.capture, "transport_name", self.transport)
         return StreamMetrics(
-            transport=self.transport,
+            transport=str(transport),
             fps=self._frames / elapsed,
             latency_ms=float(latency_ms),
             frames=self._frames,
