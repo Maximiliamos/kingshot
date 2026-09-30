@@ -42,10 +42,16 @@ class ReleaseWorkflowTests(unittest.TestCase):
     def test_copy_installer_ships_hardening_modules(self):
         for name in (
             "frame_stream.py",
+            "scrcpy_transport.py",
             "runtime_events.py",
             "runtime_recovery.py",
             "runtime_watchdog.py",
             "run_gui.vbs",
+            "verify_mvp_full.ps1",
+            "verify_game_flow.ps1",
+            "verify_recovery.ps1",
+            "verify_soak.ps1",
+            "provision_scrcpy_server.ps1",
         ):
             self.assertIn(name, INSTALL)
 
