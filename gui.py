@@ -34,6 +34,16 @@ PHASE_NAMES = {
 }
 
 
+def consoleless_python(path):
+    """Prefer pythonw.exe so a GUI child never allocates a console window."""
+    value = os.path.abspath(str(path or sys.executable))
+    if os.name == "nt" and os.path.basename(value).lower() == "python.exe":
+        candidate = os.path.join(os.path.dirname(value), "pythonw.exe")
+        if os.path.isfile(candidate):
+            return candidate
+    return value
+
+
 def atomic_json(path, value):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as stream:
@@ -411,7 +421,7 @@ class WarBotWindow(QMainWindow):
         self.backend_mode.currentIndexChanged.connect(self.backend_changed)
         self.adb_path = QLineEdit(os.environ.get("WAR_BOT_ADB", r"C:\Android\Sdk\platform-tools\adb.exe"))
         self.window_title = QLineEdit(bot.SCRCPY_VIDEO_TITLE)
-        self.python_path = QLineEdit(sys.executable)
+        self.python_path = QLineEdit(consoleless_python(sys.executable))
         grid.addWidget(QLabel("Backend"), 0, 0)
         grid.addWidget(self.backend_mode, 0, 1)
         grid.addWidget(QLabel("ADB serial"), 1, 0)
@@ -508,7 +518,7 @@ class WarBotWindow(QMainWindow):
         env.insert("WAR_BOT_SCRCPY_TITLE", self.window_title.text().strip())
         self.process.setProcessEnvironment(env)
         self.process.setWorkingDirectory(ROOT)
-        self.process.start(self.python_path.text().strip(), [os.path.join(ROOT, "bot.py")])
+        self.process.start(consoleless_python(self.python_path.text().strip()), [os.path.join(ROOT, "bot.py")])
         self.start_button.setEnabled(False)
 
     def start_bot(self):
@@ -553,7 +563,7 @@ class WarBotWindow(QMainWindow):
         self.runtime_process.setProcessEnvironment(env)
         self.runtime_process.setWorkingDirectory(ROOT)
         self.runtime_process.start(
-            self.python_path.text().strip(),
+            consoleless_python(self.python_path.text().strip()),
             [os.path.join(ROOT, "native_arm64_poc.py"), "start"],
         )
 
@@ -564,7 +574,7 @@ class WarBotWindow(QMainWindow):
             )
             return
         QProcess.startDetached(
-            self.python_path.text().strip(),
+            consoleless_python(self.python_path.text().strip()),
             [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
             ROOT,
         )
@@ -599,7 +609,7 @@ class WarBotWindow(QMainWindow):
         env.insert("PYTHONIOENCODING", "utf-8")
         self.device_process.setProcessEnvironment(env)
         self.device_process.start(
-            self.python_path.text().strip(),
+            consoleless_python(self.python_path.text().strip()),
             self._device_cli_args(action, extra),
         )
         return True
@@ -756,7 +766,7 @@ class WarBotWindow(QMainWindow):
                 self.device_process.kill()
             # Stop only the TUGARIN BOTS runtime identified by native_arm64_poc.
             QProcess.startDetached(
-                self.python_path.text().strip(),
+                consoleless_python(self.python_path.text().strip()),
                 [os.path.join(ROOT, "native_arm64_poc.py"), "stop"],
                 ROOT,
             )

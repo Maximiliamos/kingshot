@@ -245,6 +245,8 @@ function Register-ContinuationTask {
     $account = "$env:COMPUTERNAME\$TargetUser"
     $argList = @(
         "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle", "Hidden",
         "-ExecutionPolicy", "Bypass",
         "-File", (Quote-Arg $PSCommandPath),
         "-Stage", "Continue",
@@ -256,7 +258,7 @@ function Register-ContinuationTask {
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $taskArgs -WorkingDirectory $RepoRoot
     $trigger = New-ScheduledTaskTrigger -AtLogOn -User $account
     $principal = New-ScheduledTaskPrincipal -UserId $account -LogonType Interactive -RunLevel Highest
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -Hidden
     $params = @{
         TaskName = $TaskName
         Action = $action
@@ -493,20 +495,12 @@ function Invoke-Continue {
         Write-SetupLog "WARNING: could not remove continuation task: $($_.Exception.Message)"
     }
 
-    Write-SetupLog "P0 passed. Launching TUGARIN BOTS through the interactive Explorer shell."
-    try {
-        Start-Process explorer.exe -ArgumentList @($shortcutPath) -ErrorAction Stop | Out-Null
-    }
-    catch {
-        $pythonw = Join-Path (Split-Path -Parent $venvPython) "pythonw.exe"
-        $guiPython = if (Test-Path -LiteralPath $pythonw -PathType Leaf) { $pythonw } else { $venvPython }
-        Start-Process -FilePath $guiPython -WorkingDirectory $RepoRoot -ArgumentList @((Join-Path $RepoRoot "gui.py"))
-    }
+    Write-SetupLog "P0 passed. GUI shortcut is ready; automatic GUI launch is intentionally disabled."
 
     Write-Host ""
     Write-Host "TUGARIN BOTS setup completed."
     Write-Host "P0 state: WSA_GAME_PASS"
-    Write-Host "GUI launched; desktop shortcut created."
+    Write-Host "GUI was not auto-launched; use the desktop shortcut when needed."
 }
 
 New-Item -ItemType Directory -Force -Path $WorkRoot | Out-Null

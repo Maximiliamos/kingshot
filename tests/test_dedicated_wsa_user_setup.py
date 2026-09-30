@@ -63,15 +63,21 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('[string]$head = Update-Repository', self.source)
         self.assertIn('[string]$venvPython = Ensure-PythonEnvironment', self.source)
 
-    def test_gui_launch_is_fail_closed_on_p0(self):
+    def test_gui_is_never_auto_launched_and_shortcut_is_fail_closed_on_p0(self):
         p0_check = self.source.index('if ($p0Exit -ne 0)')
         shortcut = self.source.index('$shortcutPath = Create-GuiShortcut', p0_check)
-        launch = self.source.index('Start-Process explorer.exe', shortcut)
         self.assertLess(p0_check, shortcut)
-        self.assertLess(shortcut, launch)
         self.assertIn('P0_FAILED', self.source)
         self.assertIn('WSA_GAME_PASS', self.source)
         self.assertIn('GUI is intentionally not launched', self.source)
+        self.assertIn('automatic GUI launch is intentionally disabled', self.source)
+        self.assertNotIn('Start-Process explorer.exe -ArgumentList @($shortcutPath)', self.source)
+
+    def test_continuation_task_is_consoleless(self):
+        self.assertIn('"-WindowStyle", "Hidden"', self.source)
+        self.assertIn('"-NonInteractive"', self.source)
+        self.assertIn('New-ScheduledTaskSettingsSet', self.source)
+        self.assertIn('-Hidden', self.source)
 
     def test_no_plaintext_password_persistence(self):
         self.assertIn('Read-Host "Password for $TargetUser" -AsSecureString', self.source)

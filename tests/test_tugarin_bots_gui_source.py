@@ -39,6 +39,11 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("Google Services", self.gui)
         self.assertIn("P0 manifest", self.gui)
 
+    def test_gui_children_prefer_consoleless_python(self):
+        self.assertIn("def consoleless_python(path):", self.gui)
+        self.assertIn('"pythonw.exe"', self.gui)
+        self.assertNotIn("self.process.start(self.python_path.text().strip()", self.gui)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -120,7 +120,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup_dedicated_wsa_user.ps1
 - ставит продолжение через Task Scheduler на вход `TugarinBots`;
 - после первого входа автоматически обновляет репозиторий, создаёт отдельный Python venv,
   заново устанавливает/регистрирует WSA, запускает строгий P0;
-- GUI стартует и ярлык создаётся только после `WSA_GAME_PASS`.
+- ярлык GUI создаётся только после `WSA_GAME_PASS`; GUI намеренно не запускается автоматически.
 
 Пароль нового пользователя вводится через SecureString и не сохраняется скриптом.
 Автоматический Windows logon намеренно не включается.
@@ -130,13 +130,16 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup_dedicated_wsa_user.ps1
 Запустить MVP GUI:
 
 ```bat
-run_gui.bat
+run_gui.vbs
 ```
 
-Или напрямую:
+`run_gui.vbs` и созданный установщиком ярлык используют `pythonw.exe` и не
+создают консольное окно. `run_gui.bat` оставлен только как совместимый wrapper.
+
+Или напрямую без консоли:
 
 ```bat
-python gui.py
+pythonw gui.py
 ```
 
 GUI показывает кадр выбранного Android backend, текущую фазу `state.json`,
