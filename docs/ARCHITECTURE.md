@@ -131,7 +131,8 @@ The following code is retained for diagnostics/history but is not production:
 - `emulator_poc.py`;
 - `bluestacks_poc.py`;
 - `native_arm64_poc.py`;
-- legacy scrcpy desktop-window capture.
+- legacy scrcpy desktop-window capture (diagnostics only);
+- production WSA-internal scrcpy-server H.264 transport (no external scrcpy window).
 
 These paths should be moved out of the normal operator surface after the final
 WSA host acceptance and repository consolidation.
