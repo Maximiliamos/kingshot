@@ -15,7 +15,7 @@ if (-not $Output) {
 }
 
 $account = "$env:COMPUTERNAME\$TargetUser"
-$processNames = @("python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb")
+$processNames = @("python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb", "ffmpeg")
 $processes = @()
 
 try {
@@ -26,11 +26,18 @@ try {
                 $_.ProcessName.ToLowerInvariant() -in $processNames
             } |
             ForEach-Object {
+                $commandLine = ""
+                try {
+                    $cim = Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)" -ErrorAction Stop
+                    $commandLine = [string]$cim.CommandLine
+                }
+                catch {}
                 [ordered]@{
                     name = $_.ProcessName
                     pid = $_.Id
                     user = $_.UserName
                     session_id = $_.SessionId
+                    command_line = $commandLine
                 }
             }
     )
@@ -56,13 +63,23 @@ try {
 }
 catch {}
 
-# adb.exe and the PowerShell process executing this audit may legitimately exist.
-# Record them, but fail only on stale GUI/Python/CMD/conhost processes.
+# ADB server and the PowerShell process executing this audit may legitimately
+# exist. Fail on GUI/Python/console/FFmpeg leftovers and specifically on an ADB
+# shell that still hosts our scrcpy Android server.
 $stale = @(
     $processes | Where-Object {
-        $_.name.ToLowerInvariant() -in @(
-            "python", "pythonw", "cmd", "conhost"
-        )
+        $name = $_.name.ToLowerInvariant()
+        if ($name -in @("python", "pythonw", "cmd", "conhost", "ffmpeg")) {
+            return $true
+        }
+        if ($name -eq "adb") {
+            $line = [string]$_.command_line
+            return (
+                $line -match "tugarin-scrcpy-server" -or
+                $line -match "com\.genymobile\.scrcpy\.Server"
+            )
+        }
+        return $false
     }
 )
 
@@ -84,7 +101,7 @@ $result | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $Output
 $result | ConvertTo-Json -Depth 8 | Write-Host
 
 if (-not $pass) {
-    Write-Error "Dedicated-user stale Python/console processes remain after GUI/setup should be closed."
+    Write-Error "Dedicated-user stale Python/console/video transport processes remain after GUI/setup should be closed."
     exit 21
 }
 exit 0
