@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
 import sys
 import time
 
@@ -23,7 +24,7 @@ def build_parser() -> argparse.ArgumentParser:
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "restart-game", "preview-smoke", "preview-probe",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
-            "tap", "swipe", "ui-dump",
+            "recovery-smoke", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -35,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--game-stability-seconds", type=int, default=45)
     parser.add_argument("--preview-seconds", type=float, default=10.0)
     parser.add_argument("--require-h264", action="store_true")
+    parser.add_argument("--with-adb-reconnect", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument(
         "--clean-game",
@@ -316,6 +318,98 @@ def collect_mvp_flow_evidence() -> dict:
     }
 
 
+def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
+    """Real-host recovery smoke with no game UI clicks."""
+    from runtime_recovery import RecoveryController
+
+    health = backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+    if not getattr(backend, "package_installed", lambda: False)():
+        raise BackendError("Kingshot is not installed")
+    if not health.package_running:
+        backend.launch_app()
+        backend.wait_package_running(timeout=90)
+
+    capture = create_preview_capture(backend)
+    result = {
+        "pass": False,
+        "baseline_frame": False,
+        "game_restart_action": "",
+        "frame_after_restart": False,
+        "adb_reconnect_requested": bool(with_adb_reconnect),
+        "adb_reconnect": not with_adb_reconnect,
+        "frame_after_adb_reconnect": not with_adb_reconnect,
+    }
+    try:
+        frame, _, _ = capture.grab()
+        result["baseline_frame"] = bool(frame is not None and getattr(frame, "size", 0) > 0)
+    finally:
+        capture.close()
+
+    backend.stop_app()
+    controller = RecoveryController(max_game_restarts=1)
+    decision = controller.probe_runtime(backend)
+    result["game_restart_action"] = decision.action
+    if decision.terminal or decision.action != "game_restarted":
+        raise BackendError(
+            f"Recovery did not restart stopped Kingshot: {decision.action} {decision.detail}"
+        )
+
+    capture = create_preview_capture(backend)
+    try:
+        frame, _, _ = capture.grab()
+        result["frame_after_restart"] = bool(
+            frame is not None and getattr(frame, "size", 0) > 0
+        )
+    finally:
+        capture.close()
+
+    if with_adb_reconnect:
+        adb_path = str(getattr(backend, "adb_path", "") or "")
+        if not adb_path:
+            raise BackendError("ADB reconnect smoke requires adb_path")
+        subprocess.run(
+            [adb_path, "disconnect", backend.serial],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=15,
+            check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        time.sleep(1.0)
+        backend.connect()
+        deadline = time.monotonic() + 30.0
+        ready = False
+        while time.monotonic() < deadline:
+            if backend.health().ready:
+                ready = True
+                break
+            time.sleep(1.0)
+            backend.connect()
+        result["adb_reconnect"] = ready
+        if not ready:
+            raise BackendError("ADB did not recover within 30 seconds")
+
+        capture = create_preview_capture(backend)
+        try:
+            frame, _, _ = capture.grab()
+            result["frame_after_adb_reconnect"] = bool(
+                frame is not None and getattr(frame, "size", 0) > 0
+            )
+        finally:
+            capture.close()
+
+    result["pass"] = all((
+        result["baseline_frame"],
+        result["game_restart_action"] == "game_restarted",
+        result["frame_after_restart"],
+        result["adb_reconnect"],
+        result["frame_after_adb_reconnect"],
+    ))
+    return result
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     backend = create_backend(
@@ -557,6 +651,14 @@ def main(argv=None) -> int:
         pid = backend.wait_package_running(timeout=90)
         print(json.dumps({"restarted": True, "game_pid": pid}, ensure_ascii=False))
         return 0
+
+    if args.action == "recovery-smoke":
+        result = run_recovery_smoke(
+            backend,
+            with_adb_reconnect=bool(args.with_adb_reconnect),
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["pass"] else 5
 
     if args.action == "prepare-mvp-flow":
         if not args.yes:
