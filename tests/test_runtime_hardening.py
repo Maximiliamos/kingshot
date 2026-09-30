@@ -43,6 +43,17 @@ class RuntimeHardeningTests(unittest.TestCase):
         self.assertEqual(items[-1]["phase"], "tutorial")
         self.assertIn("ts", items[-1])
 
+    def test_control_file_accepts_windows_powershell_utf8_bom(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            control = Path(tmp) / "control.json"
+            control.write_bytes(
+                b"\xef\xbb\xbf" + b'{"paused": false, "stop": true}'
+            )
+            with patch.object(bot, "CONTROL_FILE", str(control)):
+                value = bot.load_control()
+        self.assertFalse(value["paused"])
+        self.assertTrue(value["stop"])
+
     def test_corrupt_state_is_preserved_and_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp) / "state.json"
