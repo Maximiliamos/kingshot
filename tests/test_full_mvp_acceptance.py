@@ -11,6 +11,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         for name in (
             "verify_release.ps1",
             "verify_preview.ps1",
+            "verify_gui.ps1",
             "verify_operator_io.ps1",
             "verify_recovery.ps1",
             "verify_game_flow.ps1",
