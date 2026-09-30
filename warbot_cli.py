@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
             "restart-game", "preview-smoke", "preview-probe",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
             "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
-            "tap", "swipe", "ui-dump",
+            "operator-io-smoke", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -777,6 +777,28 @@ def main(argv=None) -> int:
         result = collect_mvp_soak_evidence(args.min_characters)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result["pass"] else 6
+
+    if args.action == "operator-io-smoke":
+        health = backend.require_ready(
+            native_arm64=isinstance(backend, NativeArm64Backend)
+        )
+        clipboard = backend.unicode_clipboard_health("ТугаринMVP")
+        hierarchy = backend.ui_dump()
+        result = {
+            "pass": bool(
+                health.ready
+                and health.audio_service_ready
+                and clipboard.get("ready")
+                and bool(hierarchy.strip())
+            ),
+            "backend": health.backend,
+            "serial": health.serial,
+            "audio_service_ready": health.audio_service_ready,
+            "unicode_clipboard": clipboard,
+            "ui_hierarchy_bytes": len(hierarchy.encode("utf-8")),
+        }
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["pass"] else 7
 
     if args.action == "recovery-smoke":
         result = run_recovery_smoke(
