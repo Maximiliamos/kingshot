@@ -55,7 +55,7 @@ jobs:
           $exitCode = $LASTEXITCODE
           $output | ForEach-Object { Write-Host $_ }
           if ($exitCode -ne 0) {
-            $tail = (($output | Select-Object -Last 100) -join "`n")
+            $tail = (($output | Select-Object -Last 30) -join "`n")
             $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
             Write-Output "::error title=Python unittest failure::$escaped"
             exit $exitCode
