@@ -193,8 +193,8 @@ class TutorialVisionTests(unittest.TestCase):
         hit = bot.match_tutorial_hand(phone)
 
         self.assertIsNotNone(hit)
-        self.assertEqual(hit["variant"], "tutorial_hand_building.png")
         self.assertGreaterEqual(hit["score"], 0.99)
+        self.assertEqual(hit["loc"], (x, y))
 
     def test_roof_hand_variant_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
