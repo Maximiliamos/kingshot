@@ -110,7 +110,20 @@ function Invoke-PackagedApplication {
 function Get-WsaApplicationCatalog {
     param([Parameter(Mandatory = $true)]$Package)
 
-    $manifest = Get-AppxPackageManifest -Package $Package.PackageFullName -ErrorAction Stop
+    $manifestPath = Join-Path ([string]$Package.InstallLocation) "AppxManifest.xml"
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+        $manifestPath = (
+            Get-ChildItem -LiteralPath ([string]$Package.InstallLocation) -Filter AppxManifest.xml -File -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1 -ExpandProperty FullName
+        )
+    }
+    if (-not $manifestPath) {
+        throw "WSA AppxManifest.xml was not found for AUMID discovery."
+    }
+
+    # Windows PowerShell Get-Content returns an array unless -Raw is used.
+    # Parse one complete XML document so preflight/AUMID discovery is stable.
+    [xml]$manifest = Get-Content -LiteralPath $manifestPath -Raw -ErrorAction Stop
     $apps = @()
     foreach ($app in @($manifest.Package.Applications.Application)) {
         if ($null -eq $app) { continue }
@@ -125,7 +138,6 @@ function Get-WsaApplicationCatalog {
     }
     return $apps
 }
-
 function Save-WsaUserContextDiagnostics {
     param([Parameter(Mandatory = $true)][string]$ReportStage)
 
@@ -964,7 +976,7 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
         Write-Log "Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge)."
         Push-Location $packageDir
         try {
-            [xml]$manifestXml = Get-Content -LiteralPath ".\AppxManifest.xml"
+            [xml]$manifestXml = Get-Content -LiteralPath ".\AppxManifest.xml" -Raw
             $packageName = [string]$manifestXml.Package.Identity.Name
             $processorArchitecture = [string]$manifestXml.Package.Identity.ProcessorArchitecture
             $dependencies = @($manifestXml.Package.Dependencies.PackageDependency)
@@ -1172,7 +1184,7 @@ try {
         }
         if ($manifestPath) {
             $packagePreflight.appx_manifest = $manifestPath
-            [xml]$preflightManifest = Get-Content -LiteralPath $manifestPath
+            [xml]$preflightManifest = Get-Content -LiteralPath $manifestPath -Raw
             $targetFamilies = @($preflightManifest.Package.Dependencies.TargetDeviceFamily)
             $desktopTarget = $targetFamilies | Where-Object { $_.Name -eq "Windows.Desktop" } | Select-Object -First 1
             if ($desktopTarget) {
