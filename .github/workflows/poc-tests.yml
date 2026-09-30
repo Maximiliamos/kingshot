@@ -30,6 +30,7 @@ jobs:
       - name: Parse PowerShell helpers
         shell: pwsh
         run: |
+          [scriptblock]::Create((Get-Content -Raw install_tugarin_bots.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/install.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/install_wsa_poc.ps1)) | Out-Null
           [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp.ps1)) | Out-Null
