@@ -249,7 +249,7 @@ function Enable-DeveloperModeFallback {
         # WSA holds settings.dat open while its SettingsApp/runtime is alive.
         # Stop the same WSA processes that will be restarted below *before*
         # copying the backup, otherwise this reversible repair can never run.
-        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 3
         Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force
 
@@ -365,7 +365,7 @@ function Ensure-WsaAdbPortReservation {
     }
 
     Write-Log "WSA ADB port $Port is not reserved; applying the official WSABuilds 10061 prevention before WSA starts."
-    Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
 
     $result = ""
@@ -877,7 +877,7 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
                 flavor_after = $WsaFlavor
             } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $migrationBackup "migration.json")
             Write-Log "Backed up existing WSA userdata metadata to $migrationBackup."
-            Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+            Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
             Remove-AppxPackage -Package $existing.PackageFullName -ErrorAction Stop
             $existing = $null
             $needsPackageInstall = $true
@@ -1010,7 +1010,7 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
             # Do not launch the nested WsaClient.exe directly. It depends on
             # package identity / root DLL search paths and can show a false
             # gfxstream_backend.dll "missing" dialog when invoked as a plain exe.
-            Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService" -Force -ErrorAction SilentlyContinue
+            Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
 
             Add-AppxPackage -ForceApplicationShutdown -ForceUpdateFromAnyVersion -Register ".\AppxManifest.xml" -ErrorAction Stop
@@ -1705,7 +1705,7 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     elseif (-not $runtimeRecycled -and $elapsed -ge 120) {
         $runtimeRecycled = $true
         Write-Log "All non-destructive startup routes were exhausted; performing the single allowed WSA recycle."
-        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 4
         if (Invoke-WsaPackagedWake) {
             $packagedActivationSucceeded = $true
@@ -1762,7 +1762,7 @@ if (-not $onlineSerial) {
 
     if ($developerFallbackBackup -and (Test-Path $developerFallbackBackup)) {
         $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat"
-        Stop-Process -Name "WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         try {
             Copy-Item -LiteralPath $developerFallbackBackup -Destination $settingsPath -Force

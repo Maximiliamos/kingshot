@@ -130,7 +130,7 @@ class WsaInstallerTests(unittest.TestCase):
         fallback_end = self.source.index('function Get-Sha256', fallback_start)
         fallback = self.source[fallback_start:fallback_end]
         self.assertLess(
-            fallback.index('Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","vmmemWSA"'),
+            fallback.index('Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA"'),
             fallback.index('Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force'),
         )
 
@@ -191,6 +191,10 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("CheckNetIsolation.exe LoopbackExempt -a", self.source)
         self.assertIn("loopback-exempt-before.txt", self.source)
         self.assertIn("loopback-exempt-after.txt", self.source)
+
+    def test_wsa_shutdown_includes_crash_uploader_that_locks_settings(self):
+        self.assertIn('"WsaService","WSACrashUploader","vmmemWSA"', self.source)
+        self.assertNotIn('"WsaService","vmmemWSA"', self.source)
 
     def test_p0_discovers_hns_mdns_and_guest_5555(self):
         self.assertIn("function Get-WsaEndpointCandidates", self.source)
