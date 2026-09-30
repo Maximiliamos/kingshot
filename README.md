@@ -335,6 +335,20 @@ WSA installer и verifier сохраняют отчёты в `runtime-reports`; 
 fallback дополнительно формирует `C:\warbot_arm64_runtime\zygote-crash.txt`
 и `boot-diagnostic.json`.
 
+## Проверка релиза
+
+Для финальной проверки конкретного commit на целевом Windows/WSA ПК после
+закрытия GUI используется единый gate:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_release.ps1
+```
+
+Он повторяет test suite, выполняет реальный WSA + Kingshot 120-second gate и
+проверяет отсутствие оставшихся dedicated-user Python/CMD/conhost процессов.
+Полные критерии игрового flow/soak описаны в
+`docs/RELEASE_ACCEPTANCE.md`.
+
 ## Дальнейший план
 
 Актуальный план разработки, включая низколатентное видео, передачу игрового звука, клавиатуру и сетевую готовность, находится в `docs/TUGARIN_BOTS_ROADMAP.md`.
