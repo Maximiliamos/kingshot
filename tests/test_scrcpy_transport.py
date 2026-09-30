@@ -16,6 +16,13 @@ SOURCE = (ROOT / "scrcpy_transport.py").read_text(encoding="utf-8")
 
 
 class ScrcpyTransportTests(unittest.TestCase):
+    def test_default_profile_is_bounded_for_wsa_gameplay(self):
+        source = SOURCE
+        self.assertIn("max_size: int = 960", source)
+        self.assertIn("bit_rate: int = 2_000_000", source)
+        self.assertIn("max_fps: int = 15", source)
+        self.assertIn("queue.Queue(maxsize=1)", source)
+
     def test_pinned_official_server_identity(self):
         self.assertEqual(SCRCPY_VERSION, "4.1")
         self.assertEqual(

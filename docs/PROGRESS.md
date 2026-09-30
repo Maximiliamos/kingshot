@@ -4,8 +4,12 @@ Updated: 2026-09-30
 
 ## Proven on the real Windows host
 
-Latest release-candidate host acceptance: **PASS** on 2026-09-30 at
+Latest infrastructure host acceptance: **PASS** on 2026-09-30 at
 commit `5aacd64efdfb2b6d2b609f9a5a25cf93255bba04`.
+
+This is not the full MVP acceptance. The unified full-host orchestrator has
+not yet produced `MVP 1.0 HOST ACCEPTANCE PASS` on the current release
+candidate from the exact `TugarinBots` Windows SID.
 
 Evidence:
 
@@ -39,7 +43,7 @@ release acceptance.
 ### P1 application
 
 - WSA is the explicit production backend;
-- low-latency H.264 transport through pinned scrcpy-server v4.1 running inside WSA, unique ADB-forward socket per stream and FFmpeg decode; PNG screencap remains diagnostic fallback;
+- pinned scrcpy-server v4.1 bootstrap inside WSA, unique ADB-forward socket per stream and FFmpeg decode; on the current host the encoder starts but emits no H.264 frames, so PNG screencap remains the active bounded fallback;
 - single continuous GUI frame worker;
 - FPS/latency transport metrics in the GUI;
 - click/swipe/hold/wheel/right-click input;
@@ -61,13 +65,29 @@ release acceptance.
 | Gate | State |
 |---|---|
 | WSA boot/game P0 on real host | PASS |
-| Latest hosted Windows CI | PASS — 218 tests, zero skips |
+| Local hosted-equivalent suite | PASS — 229 tests, zero skips |
 | Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
 | Dedicated-user stale-process audit | PASS — zero stale processes |
 | Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
 | Kingshot restart + ADB reconnect recovery | CODE + real-host injector DONE; PENDING HOST |
 | Multi-cycle unattended real-game soak | CODE + bounded verifier DONE; PENDING HOST |
-| True compressed low-latency video transport | screenrecord path REJECTED by host evidence; scrcpy-server replacement CODE DONE; PENDING HOST |
+| True compressed low-latency video transport | FAIL/PENDING — scrcpy encoder starts but emitted zero frames on the real host; PNG fallback active |
+
+## Current-host findings on 2026-09-30
+
+- a black GUI framebuffer was traced to Android power state `Asleep/OFF` and
+  Kingshot not running, not to a decoder failure;
+- waking Android, enabling stay-awake and starting the declared activity
+  produced a real Kingshot framebuffer and PID;
+- the 1280x720 PNG fallback measured roughly 350 ms per capture while the game
+  was loading; it is explicitly capped at 2 FPS to avoid saturating WSA;
+- GUI and bot no longer run two independent capture/decode pipelines: while
+  automation owns capture, GUI consumes the bot's replaceable JPEG mailbox;
+- expensive runtime health probes are reduced from every 5-10 seconds to a
+  bounded 15/60-second cadence;
+- full acceptance now rejects the wrong Windows SID before evidence creation,
+  stamps one run id through child evidence, and requires exact post-rename OCR
+  before advancing the persistent nickname counter.
 
 ## Definition of product-ready 1.0
 

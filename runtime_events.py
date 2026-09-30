@@ -21,9 +21,11 @@ _LOCK = threading.Lock()
 
 
 def emit_event(event: str, **payload: Any) -> dict[str, Any]:
+    acceptance_run_id = os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", "").strip()
     record = {
         "ts": datetime.now(timezone.utc).isoformat(),
         "event": str(event),
+        **({"run_id": acceptance_run_id} if acceptance_run_id else {}),
         **payload,
     }
     os.makedirs(LOG_DIR, exist_ok=True)

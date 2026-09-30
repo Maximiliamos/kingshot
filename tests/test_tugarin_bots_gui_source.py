@@ -58,6 +58,12 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn('"pythonw.exe"', self.gui)
         self.assertNotIn("self.process.start(self.python_path.text().strip()", self.gui)
 
+    def test_gui_does_not_start_a_second_video_pipeline_while_bot_runs(self):
+        self.assertIn("bot-shared-jpeg", self.gui)
+        self.assertIn("LIVE_FRAME_FILE", (ROOT / "bot.py").read_text(encoding="utf-8-sig"))
+        self.assertIn("if bot_pid() is not None", self.gui)
+        self.assertIn("self._stop_frame_stream()", self.gui)
+
 
 if __name__ == "__main__":
     unittest.main()

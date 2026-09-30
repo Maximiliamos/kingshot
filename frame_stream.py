@@ -467,6 +467,12 @@ class ContinuousFrameStream:
                 backoff = min(2.0, backoff * 1.5)
                 continue
 
-            delay = frame_interval - (time.monotonic() - started)
+            # PNG screencap starts a new adb process and asks Android to encode
+            # a full PNG.  Polling it at the H.264 target rate only steals CPU
+            # from Kingshot; keep the degraded fallback explicitly bounded.
+            effective_interval = frame_interval
+            if getattr(self.capture, "transport_name", "") == "adb-screencap":
+                effective_interval = max(effective_interval, 0.5)
+            delay = effective_interval - (time.monotonic() - started)
             if delay > 0 and self._stop.wait(delay):
                 break

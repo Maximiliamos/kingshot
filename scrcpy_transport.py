@@ -54,10 +54,10 @@ class ScrcpyServerCapture:
         *,
         server_path: str | os.PathLike[str] | None = None,
         ffmpeg_path: str | None = None,
-        max_size: int = 1280,
-        bit_rate: int = 4_000_000,
-        max_fps: int = 30,
-        frame_timeout: float = 3.0,
+        max_size: int = 960,
+        bit_rate: int = 2_000_000,
+        max_fps: int = 15,
+        frame_timeout: float = 1.5,
     ):
         self.backend = backend
         self.server_path = Path(server_path or default_server_path())
@@ -117,8 +117,9 @@ class ScrcpyServerCapture:
         self._reader_thread = None
         self._stderr_threads: list[threading.Thread] = []
         self._reader_stop = threading.Event()
-        self._frame_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=2)
+        self._frame_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=1)
         self._server_stderr = ""
+        self._server_stdout = ""
         self._ffmpeg_stderr = ""
         self._reader_error = ""
         self._closed = False
@@ -168,8 +169,8 @@ class ScrcpyServerCapture:
             )
         return result
 
-    def _drain_stderr(self, process, attribute: str) -> None:
-        stream = getattr(process, "stderr", None)
+    def _drain_process_stream(self, process, attribute: str, stream_name: str) -> None:
+        stream = getattr(process, stream_name, None)
         if stream is None:
             return
         chunks: list[str] = []
@@ -223,7 +224,7 @@ class ScrcpyServerCapture:
         )
         self._server_process = subprocess.Popen(
             [self.adb_path, "-s", self.serial, "shell", server_cmd],
-            stdout=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             creationflags=WINDOWS_NO_WINDOW,
             bufsize=0,
@@ -263,18 +264,20 @@ class ScrcpyServerCapture:
             raise BackendError("FFmpeg did not expose scrcpy decoded-video stdout.")
 
         self._reader_stop.clear()
-        self._frame_queue = queue.Queue(maxsize=2)
+        self._frame_queue = queue.Queue(maxsize=1)
         self._reader_error = ""
         self._server_stderr = ""
+        self._server_stdout = ""
         self._ffmpeg_stderr = ""
 
-        for process, attr, name in (
-            (self._server_process, "_server_stderr", "tugarin-scrcpy-server-stderr"),
-            (self._ffmpeg_process, "_ffmpeg_stderr", "tugarin-scrcpy-ffmpeg-stderr"),
+        for process, attr, name, stream_name in (
+            (self._server_process, "_server_stdout", "tugarin-scrcpy-server-stdout", "stdout"),
+            (self._server_process, "_server_stderr", "tugarin-scrcpy-server-stderr", "stderr"),
+            (self._ffmpeg_process, "_ffmpeg_stderr", "tugarin-scrcpy-ffmpeg-stderr", "stderr"),
         ):
             thread = threading.Thread(
-                target=self._drain_stderr,
-                args=(process, attr),
+                target=self._drain_process_stream,
+                args=(process, attr, stream_name),
                 name=name,
                 daemon=True,
             )
@@ -341,6 +344,8 @@ class ScrcpyServerCapture:
             details.append(f"ffmpeg_exit={self._ffmpeg_process.returncode}")
         if self._server_stderr.strip():
             details.append("server_stderr=" + self._server_stderr.strip()[-2000:])
+        if self._server_stdout.strip():
+            details.append("server_stdout=" + self._server_stdout.strip()[-2000:])
         if self._ffmpeg_stderr.strip():
             details.append("ffmpeg_stderr=" + self._ffmpeg_stderr.strip()[-2000:])
         return " | ".join(details) or "no frame arrived before timeout"
@@ -354,12 +359,10 @@ class ScrcpyServerCapture:
             ) from exc
 
     def grab(self):
-        try:
-            frame = self._read_frame()
-        except BackendError:
-            # One bounded restart covers the adb-forward/server startup race.
-            self._start_pipeline()
-            frame = self._read_frame()
+        # Fail once and let FallbackCapture demote.  Restarting a WSA codec
+        # that is known to produce no frames doubles the black-screen delay
+        # and briefly runs another encoder while Kingshot is starting.
+        frame = self._read_frame()
         return (
             frame,
             f"scrcpy-h264:{self.serial}",
@@ -391,6 +394,7 @@ class ScrcpyServerCapture:
             ),
             "reader_error": self._reader_error,
             "server_stderr": self._server_stderr[-4000:],
+            "server_stdout": self._server_stdout[-4000:],
             "ffmpeg_stderr": self._ffmpeg_stderr[-4000:],
         }
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -235,9 +236,12 @@ def collect_mvp_flow_evidence() -> dict:
 
     state = bot.load_state()
     events = read_recent_events(limit=5000)
+    expected_run_id = os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", "").strip()
     start_index = -1
     for index, event in enumerate(events):
-        if event.get("event") == "mvp_flow_start":
+        if event.get("event") == "mvp_flow_start" and (
+            not expected_run_id or event.get("run_id") == expected_run_id
+        ):
             start_index = index
 
     checks = {
@@ -247,6 +251,7 @@ def collect_mvp_flow_evidence() -> dict:
         "character_tutorial_complete": False,
         "nickname_committed": False,
         "nickname_evidence_screenshot": False,
+        "nickname_ocr_confirmed": False,
         "ordered_flow": False,
         "final_phase_complete": state.get("phase") == "complete",
         "final_step_done": state.get("step") == "done",
@@ -257,7 +262,10 @@ def collect_mvp_flow_evidence() -> dict:
     expected_nickname = ""
     evidence_events = []
     if start_index >= 0:
-        flow = events[start_index:]
+        flow = [
+            event for event in events[start_index:]
+            if not expected_run_id or event.get("run_id") == expected_run_id
+        ]
         start = flow[0]
         expected_nickname = str(start.get("expected_nickname", ""))
         characters_before = int(start.get("characters_before", 0))
@@ -281,6 +289,9 @@ def collect_mvp_flow_evidence() -> dict:
                 evidence_path = str(event.get("evidence_screenshot", "") or "")
                 checks["nickname_evidence_screenshot"] = bool(
                     evidence_path and Path(evidence_path).is_file()
+                )
+                checks["nickname_ocr_confirmed"] = (
+                    not expected_run_id or bool(event.get("nickname_ocr_confirmed"))
                 )
 
             if kind in {
@@ -311,6 +322,8 @@ def collect_mvp_flow_evidence() -> dict:
     passed = all(checks.values())
     return {
         "pass": passed,
+        "run_id": expected_run_id,
+        "head": os.environ.get("TUGARIN_ACCEPTANCE_HEAD", "").strip(),
         "expected_nickname": expected_nickname,
         "checks": checks,
         "state": {
@@ -476,13 +489,18 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
     minimum = max(2, int(min_characters))
     state = bot.load_state()
     events = read_recent_events(limit=10000)
+    expected_run_id = os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", "").strip()
     start_index = -1
     for index, event in enumerate(events):
-        if event.get("event") == "mvp_soak_start":
+        if event.get("event") == "mvp_soak_start" and (
+            not expected_run_id or event.get("run_id") == expected_run_id
+        ):
             start_index = index
 
     result = {
         "pass": False,
+        "run_id": expected_run_id,
+        "head": os.environ.get("TUGARIN_ACCEPTANCE_HEAD", "").strip(),
         "min_characters": minimum,
         "characters_delta": 0,
         "nickname_commits": [],
@@ -503,7 +521,10 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
         result["error"] = "mvp_soak_start event not found"
         return result
 
-    flow = events[start_index:]
+    flow = [
+        event for event in events[start_index:]
+        if not expected_run_id or event.get("run_id") == expected_run_id
+    ]
     start = flow[0]
     before = int(start.get("characters_before", 0))
     nickname_before = int(start.get("next_nickname_before", 1))
@@ -518,6 +539,9 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
     valid_screenshots = [
         path for path in screenshots if path and Path(path).is_file()
     ]
+    ocr_confirmed = [
+        bool(e.get("nickname_ocr_confirmed")) for e in commit_events
+    ]
     resets = [e for e in flow if e.get("event") == "cycle_reset"]
     delta = int(state.get("characters_created", 0)) - before
     expected = [f"Тугарин{nickname_before + i}" for i in range(minimum)]
@@ -531,6 +555,7 @@ def collect_mvp_soak_evidence(min_characters: int = 2) -> dict:
         delta >= minimum,
         len(commits) >= minimum,
         len(valid_screenshots) >= minimum,
+        (not expected_run_id or sum(ocr_confirmed[:minimum]) == minimum),
         len(resets) >= minimum - 1,
         result["ordered_nicknames"],
         result["no_stop_reason"],

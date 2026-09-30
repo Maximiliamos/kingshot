@@ -41,6 +41,25 @@ class FullCycleTests(unittest.TestCase):
 
         self.assertTrue(result)
         tap_match.assert_called_once_with(phone, confirm)
+        begin.assert_not_called()
+        self.assertEqual(state["step"], "state_confirm_applied")
+
+    def test_state3_is_committed_only_after_tutorial_postcondition(self):
+        state = dict(bot.DEFAULT_STATE)
+        state.update({"phase": "create_character", "step": "state_confirm_applied"})
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        tutorial = {"loc": (10, 10), "w": 40, "h": 20, "score": 0.99}
+        with patch("bot.match", side_effect=[None, tutorial]), \
+                patch("bot.emit_event") as emit, \
+                patch("bot.begin_tutorial") as begin:
+            result = bot.handle_create_step(phone, state)
+        self.assertTrue(result)
+        emit.assert_called_once()
+        self.assertEqual(emit.call_args.args[0], "state3_confirmed")
+        self.assertEqual(
+            emit.call_args.kwargs["postcondition"],
+            "new_character_tutorial_visible",
+        )
         begin.assert_called_once_with(state, "new_character")
 
     def test_rename_limit_enters_reset_cycle(self):
@@ -56,7 +75,10 @@ class FullCycleTests(unittest.TestCase):
             "auto_reset_data": True,
         })
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
-        with patch("bot.match", return_value=None),                 patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
+        ocr = [{"text": "Тугарин7", "normalized": "тугарин7", "loc": (0, 0), "w": 20, "h": 10, "score": 99}]
+        with patch("bot.match", return_value=None), \
+                patch("bot.ocr_lines", return_value=ocr), \
+                patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
             result = bot.handle_rename_governor(phone, state)
 
         self.assertFalse(result)
@@ -80,11 +102,34 @@ class FullCycleTests(unittest.TestCase):
             "repeat_cycles": False,
         })
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        ocr = [{"text": "Тугарин4", "normalized": "тугарин4", "loc": (0, 0), "w": 20, "h": 10, "score": 99}]
         with patch("bot.match", return_value=None), \
+                patch("bot.ocr_lines", return_value=ocr), \
                 patch("bot.set_phase", side_effect=lambda s, phase, step: s.update(phase=phase, step=step)):
             bot.handle_rename_governor(phone, state)
         self.assertEqual(state["phase"], "complete")
         self.assertEqual(state["step"], "done")
+
+    def test_rename_does_not_commit_when_exact_name_is_not_visible(self):
+        state = dict(bot.DEFAULT_STATE)
+        state.update({
+            "phase": "rename_governor", "step": "rename_verify",
+            "pending_nickname": 9, "next_nickname": 9,
+            "characters_created": 8,
+        })
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        wrong = [{"text": "Игрок", "normalized": "игрок", "loc": (0, 0), "w": 20, "h": 10, "score": 99}]
+        with patch("bot.match", return_value=None), \
+                patch("bot.ocr_lines", return_value=wrong), \
+                patch("bot.emit_event") as emit:
+            result = bot.handle_rename_governor(phone, state)
+        self.assertFalse(result)
+        self.assertEqual(state["next_nickname"], 9)
+        self.assertEqual(state["characters_created"], 8)
+        self.assertFalse(any(
+            call.args and call.args[0] == "nickname_committed"
+            for call in emit.call_args_list
+        ))
 
     def test_cycle_reset_preserves_pc_nickname_counter(self):
         state = dict(bot.DEFAULT_STATE)

@@ -9,6 +9,7 @@ import csv
 import io
 import atexit
 import shutil
+import hashlib
 import msvcrt
 from difflib import SequenceMatcher
 from datetime import datetime
@@ -46,6 +47,7 @@ STATE_PREVIOUS_FILE = os.path.join(ROOT, "state.previous.json")
 CONTROL_FILE = os.path.join(ROOT, "control.json")
 PID_FILE = os.path.join(ROOT, "bot.pid")
 LOCK_FILE = os.path.join(ROOT, "bot.lock")
+LIVE_FRAME_FILE = os.path.join(DEBUG_DIR, "bot-live-frame.jpg")
 INSTANCE_LOCK = None
 
 PHONE_W = 1060
@@ -78,7 +80,7 @@ TEMPLATE_CACHE = {}
 LAST_OCR_AT = 0.0
 WATCHDOG_SECONDS = 75.0
 GOVERNOR_CONFIRM_SECONDS = 1.5
-RUNTIME_PROBE_INTERVAL = 5.0
+RUNTIME_PROBE_INTERVAL = 15.0
 
 user32 = ctypes.windll.user32
 # MSS uses physical pixels. Ask Windows for client-window coordinates in the
@@ -261,6 +263,26 @@ def save_img(path, img):
     if not ok:
         log(f"Не удалось сохранить {path}")
     return ok
+
+
+def publish_live_frame(img):
+    """Publish one replaceable GUI frame without creating a second encoder."""
+    ok, encoded = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 72])
+    if not ok:
+        return False
+    tmp = LIVE_FRAME_FILE + ".tmp"
+    try:
+        with open(tmp, "wb") as stream:
+            stream.write(encoded.tobytes())
+        os.replace(tmp, LIVE_FRAME_FILE)
+        return True
+    except OSError:
+        try:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        except OSError:
+            pass
+        return False
 
 
 def load_state():
@@ -1220,16 +1242,39 @@ def handle_create_step(phone, state):
             "Подтверждены и диалог «Государство №3», и его конкретная кнопка "
             "подтверждения. Создаю персонажа."
         )
+        tap_match(phone, confirm)
+        state["state3_modal_score"] = round(float(modal["score"]), 4)
+        state["state3_confirm_score"] = round(float(confirm["score"]), 4)
+        set_step(state, "state_confirm_applied")
+        return True
+
+    if step == "state_confirm_applied":
+        # Do not claim State #3 merely because the tap was sent.  Require the
+        # confirmation modal to disappear and the new-character tutorial UI
+        # to become visible.
+        if match(phone, tpl("state3_modal.png"), 0.86):
+            return False
+        tutorial_visible = False
+        for template_name, threshold in (
+            ("tutorial_skip.png", 0.86),
+            ("tutorial_skip_core.png", 0.86),
+            ("tutorial_hand_target.png", 0.90),
+        ):
+            if match(phone, tpl(template_name), threshold):
+                tutorial_visible = True
+                break
+        if not tutorial_visible:
+            return False
         try:
             emit_event(
                 "state3_confirmed",
                 target_state=3,
-                modal_score=round(float(modal["score"]), 4),
-                confirm_score=round(float(confirm["score"]), 4),
+                modal_score=state.get("state3_modal_score"),
+                confirm_score=state.get("state3_confirm_score"),
+                postcondition="new_character_tutorial_visible",
             )
         except Exception:
             pass
-        tap_match(phone, confirm)
         begin_tutorial(state, "new_character")
         return True
 
@@ -1309,11 +1354,34 @@ def handle_rename_governor(phone, state):
             return False
         committed_number = int(state.get("pending_nickname", 1))
         committed_nickname = f"Тугарин{committed_number}"
+        now_mono = time.monotonic()
+        if now_mono - float(state.get("rename_ocr_checked_at", 0.0)) < 1.5:
+            return False
+        state["rename_ocr_checked_at"] = now_mono
+        expected_text = norm_text(committed_nickname)
+        confirmed_line = next(
+            (line for line in ocr_lines(phone) if line.get("normalized") == expected_text),
+            None,
+        )
+        if confirmed_line is None:
+            log(f"Проверка имени: «{committed_nickname}» ещё не подтверждено OCR.")
+            return False
         evidence_path = os.path.join(
             DEBUG_DIR,
             f"rename_committed_{committed_number}_{fs()}.png",
         )
         save_img(evidence_path, phone)
+        x, y = confirmed_line["loc"]
+        crop = phone[y:y + confirmed_line["h"], x:x + confirmed_line["w"]]
+        crop_path = os.path.join(
+            DEBUG_DIR,
+            f"rename_committed_{committed_number}_{fs()}_name.png",
+        )
+        save_img(crop_path, crop)
+        with open(evidence_path, "rb") as stream:
+            evidence_sha256 = hashlib.sha256(stream.read()).hexdigest()
+        with open(crop_path, "rb") as stream:
+            crop_sha256 = hashlib.sha256(stream.read()).hexdigest()
         state["next_nickname"] = committed_number + 1
         state["characters_created"] = int(state.get("characters_created", 0)) + 1
         try:
@@ -1322,6 +1390,11 @@ def handle_rename_governor(phone, state):
                 nickname=committed_nickname,
                 characters_created=int(state["characters_created"]),
                 evidence_screenshot=evidence_path,
+                evidence_screenshot_sha256=evidence_sha256,
+                evidence_name_crop=crop_path,
+                evidence_name_crop_sha256=crop_sha256,
+                nickname_ocr_text=confirmed_line["text"],
+                nickname_ocr_confirmed=True,
             )
         except Exception:
             pass
@@ -1651,6 +1724,7 @@ def main():
     heartbeat = RuntimeHeartbeat()
     backend = get_device_backend()
     last_runtime_probe = 0.0
+    last_live_frame_at = 0.0
     heartbeat.write(
         state=state,
         backend=backend.backend_name,
@@ -1782,6 +1856,9 @@ def main():
             )
             sync_input_geometry(frame, rect)
             phone, left, right = crop_phone(frame)
+            if now_mono - last_live_frame_at >= 0.5:
+                publish_live_frame(phone)
+                last_live_frame_at = now_mono
 
             if not stream_ok(frame, left, right):
                 if time.time() - warn_at > 5:

@@ -24,12 +24,28 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("exit $code", SOURCE)
         self.assertIn("MVP 1.0 HOST ACCEPTANCE PASS", SOURCE)
 
-    def test_master_requires_final_current_user_cleanup(self):
-        self.assertIn("Final current-user process cleanup", SOURCE)
+    def test_master_requires_final_dedicated_user_cleanup(self):
+        self.assertIn("Final dedicated-user process audit", SOURCE)
         self.assertIn("audit_runtime_processes.ps1", SOURCE)
         self.assertIn('"-TargetUser"', SOURCE)
-        self.assertIn("$env:USERNAME", SOURCE)
+        self.assertIn('"-TargetUser", $TargetUser', SOURCE)
+        self.assertNotIn('"-TargetUser", [string]$env:USERNAME', SOURCE)
         self.assertIn("mvp-final-process-audit.json", SOURCE)
+
+    def test_wrong_windows_sid_fails_before_evidence_or_destructive_gates(self):
+        sid_check = SOURCE.index("$currentSid -ne $ExpectedSid")
+        evidence_creation = SOURCE.index("$EvidencePath =")
+        first_gate = SOURCE.index('Run-Gate -Name "Infrastructure')
+        self.assertLess(sid_check, evidence_creation)
+        self.assertLess(sid_check, first_gate)
+        self.assertIn("exit 91", SOURCE)
+        self.assertIn("S-1-5-21-1641294696-4270169483-3689275233-1008", SOURCE)
+
+    def test_preflight_only_exits_before_any_gate(self):
+        preflight = SOURCE.index("if ($PreflightOnly)")
+        first_gate = SOURCE.index('Run-Gate -Name "Infrastructure')
+        self.assertLess(preflight, first_gate)
+        self.assertIn("MVP PRECHECK PASS", SOURCE)
 
     def test_master_persists_machine_readable_evidence(self):
         self.assertIn("mvp-full-acceptance.json", SOURCE)

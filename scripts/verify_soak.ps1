@@ -123,8 +123,11 @@ if ($targetReached -and -not $process.HasExited) {
     }
 }
 
+$forcedTermination = $false
 if (-not $process.HasExited) {
+    $forcedTermination = $true
     Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+    try { $process.WaitForExit(5000) } catch {}
 }
 
 if (-not $targetReached) {
@@ -133,6 +136,14 @@ if (-not $targetReached) {
     if (Test-Path $stdout) { Get-Content $stdout -Tail 100 }
     if (Test-Path $stderr) { Get-Content $stderr -Tail 100 }
     exit 42
+}
+
+$process.Refresh()
+if ($forcedTermination -or [int]$process.ExitCode -ne 0) {
+    Write-Host "MVP SOAK FAIL: bot did not stop cleanly (forced=$forcedTermination exit=$($process.ExitCode))."
+    if (Test-Path $stdout) { Get-Content $stdout -Tail 100 }
+    if (Test-Path $stderr) { Get-Content $stderr -Tail 100 }
+    exit 43
 }
 
 $evidenceText = & $PythonExe .\warbot_cli.py soak-evidence --backend wsa --serial 127.0.0.1:58526 --min-characters $MinCharacters

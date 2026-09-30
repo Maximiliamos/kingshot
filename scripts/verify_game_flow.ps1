@@ -125,6 +125,12 @@ if (Test-Path $stderr) {
     }
 }
 
+$process.Refresh()
+if ([int]$process.ExitCode -ne 0) {
+    Write-Host "MVP GAME FLOW FAIL: bot exited with code $($process.ExitCode)."
+    exit 33
+}
+
 $evidenceText = & $PythonExe .\warbot_cli.py flow-evidence --backend wsa --serial 127.0.0.1:58526
 $evidenceCode = [int]$LASTEXITCODE
 $evidenceText | Set-Content -LiteralPath $evidence -Encoding UTF8

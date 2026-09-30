@@ -201,6 +201,26 @@ class WarBotCliTests(unittest.TestCase):
         self.assertFalse(result["pass"])
         self.assertFalse(result["checks"]["nickname_evidence_screenshot"])
 
+    def test_flow_evidence_rejects_events_from_another_acceptance_run(self):
+        state = {
+            "phase": "complete", "step": "done", "next_nickname": 2,
+            "characters_created": 1, "characters_created_cycle": 1,
+            "last_stop_reason": "",
+        }
+        events = [
+            {"event": "mvp_flow_start", "run_id": "old", "expected_nickname": "Тугарин1", "next_nickname_before": 1, "characters_before": 0},
+            {"event": "tutorial_complete", "run_id": "old", "origin": "initial"},
+            {"event": "state3_confirmed", "run_id": "old", "target_state": 3},
+            {"event": "tutorial_complete", "run_id": "old", "origin": "new_character"},
+            {"event": "nickname_committed", "run_id": "old", "nickname": "Тугарин1", "evidence_screenshot": __file__},
+        ]
+        with patch.dict(os.environ, {"TUGARIN_ACCEPTANCE_RUN_ID": "current"}), \
+                patch("bot.load_state", return_value=state), \
+                patch("runtime_events.read_recent_events", return_value=events):
+            result = warbot_cli.collect_mvp_flow_evidence()
+        self.assertFalse(result["pass"])
+        self.assertEqual(result["run_id"], "current")
+
     def test_soak_evidence_requires_ordered_nicknames_and_screenshots(self):
         state = {
             "phase": "tutorial_initial",

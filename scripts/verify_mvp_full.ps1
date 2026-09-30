@@ -1,5 +1,8 @@
 param(
     [switch]$SkipInfrastructure,
+    [switch]$PreflightOnly,
+    [string]$TargetUser = "TugarinBots",
+    [string]$ExpectedSid = "S-1-5-21-1641294696-4270169483-3689275233-1008",
     [int]$FlowTimeoutMinutes = 45,
     [int]$SoakTimeoutMinutes = 90,
     [int]$SoakCharacters = 2
@@ -9,10 +12,43 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
+# This check must remain before evidence creation and before every gate.  WSA
+# AppX registration and runtime belong to one Windows SID; running the
+# destructive flow from a different account could clear the dedicated user's
+# game while auditing the wrong process/session context.
+$currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$currentSid = [string]$currentIdentity.User.Value
+$currentName = [string]$currentIdentity.Name
+$targetAccount = "$env:COMPUTERNAME\$TargetUser"
+try {
+    $resolvedTargetSid = [string]([Security.Principal.NTAccount]$targetAccount).Translate(
+        [Security.Principal.SecurityIdentifier]
+    ).Value
+}
+catch {
+    Write-Host "MVP preflight: cannot resolve dedicated account $targetAccount." -ForegroundColor Red
+    exit 91
+}
+if ($resolvedTargetSid -ne $ExpectedSid -or $currentSid -ne $ExpectedSid) {
+    $identityError = (
+        "MVP preflight refused before any gate: current={0} sid={1}; required={2} sid={3}. " +
+        "Run this script in the interactive TugarinBots session."
+    ) -f $currentName, $currentSid, $targetAccount, $ExpectedSid
+    Write-Host $identityError -ForegroundColor Red
+    exit 91
+}
+
+Write-Host "SID preflight PASS: $currentName ($currentSid)"
+if ($PreflightOnly) {
+    Write-Host "MVP PRECHECK PASS (non-destructive; no acceptance gates executed)."
+    exit 0
+}
+
 $EvidencePath = Join-Path $Root "debug\mvp-full-acceptance.json"
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $EvidencePath) | Out-Null
 $GateResults = [System.Collections.Generic.List[object]]::new()
 $StartedAt = [DateTimeOffset]::UtcNow
+$RunId = [Guid]::NewGuid().ToString("N")
 
 function Save-AcceptanceEvidence {
     param(
@@ -25,6 +61,9 @@ function Save-AcceptanceEvidence {
         product = "TUGARIN BOTS"
         overall = $Overall
         head = $head
+        run_id = $RunId
+        windows_user = $currentName
+        windows_sid = $currentSid
         started_at_utc = $StartedAt.ToString("o")
         finished_at_utc = if ($Overall -eq "running") { $null } else { [DateTimeOffset]::UtcNow.ToString("o") }
         failed_gate = $FailedGate
@@ -34,6 +73,14 @@ function Save-AcceptanceEvidence {
     $tmp = "$EvidencePath.tmp"
     $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $tmp -Encoding UTF8
     Move-Item -LiteralPath $tmp -Destination $EvidencePath -Force
+}
+
+function Invoke-FinalProcessAudit {
+    param([string]$Suffix = "final")
+    $auditPath = Join-Path $Root "debug\mvp-$Suffix-process-audit.json"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "scripts\audit_runtime_processes.ps1") `
+        -TargetUser $TargetUser -Output $auditPath
+    return [int]$LASTEXITCODE
 }
 
 function Run-Gate {
@@ -58,6 +105,18 @@ function Run-Gate {
         finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
     })
     if ($code -ne 0) {
+        # Every failure path still records whether a GUI/bot/video process was
+        # left behind.  The audit is evidence-only and never kills an unrelated
+        # process belonging to the dedicated account.
+        $cleanupCode = Invoke-FinalProcessAudit -Suffix "failure"
+        $GateResults.Add([ordered]@{
+            name = "Failure-path process audit"
+            script = "audit_runtime_processes.ps1"
+            pass = ($cleanupCode -eq 0)
+            exit_code = $cleanupCode
+            started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+            finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        })
         Save-AcceptanceEvidence -Overall "fail" -FailedGate $Name -ExitCode $code
         Write-Host ""
         Write-Host "MVP 1.0 HOST ACCEPTANCE FAIL at: $Name (exit=$code)"
@@ -70,7 +129,10 @@ function Run-Gate {
 Write-Host "=== TUGARIN BOTS MVP 1.0 FULL HOST ACCEPTANCE ==="
 Write-Host "Repository: $Root"
 $head = (& git -C $Root rev-parse HEAD | Out-String).Trim()
+$env:TUGARIN_ACCEPTANCE_RUN_ID = $RunId
+$env:TUGARIN_ACCEPTANCE_HEAD = $head
 Write-Host "HEAD: $head"
+Write-Host "Acceptance run: $RunId"
 
 $trackedChanges = (& git -C $Root status --porcelain --untracked-files=no | Out-String).Trim()
 if ($trackedChanges) {
@@ -118,8 +180,8 @@ Run-Gate -Name "Multi-cycle soak" -Script (Join-Path $Root "scripts\verify_soak.
     "-MinCharacters", [string][Math]::Max(2, $SoakCharacters)
 )
 
-Run-Gate -Name "Final current-user process cleanup" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
-    "-TargetUser", [string]$env:USERNAME,
+Run-Gate -Name "Final dedicated-user process audit" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
+    "-TargetUser", $TargetUser,
     "-Output", (Join-Path $Root "debug\mvp-final-process-audit.json")
 )
 

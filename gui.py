@@ -236,6 +236,7 @@ class WarBotWindow(QMainWindow):
         self.capture_busy = False
         self.frame_stream = None
         self.frame_stream_signature = None
+        self.last_bot_frame_mtime = 0.0
         self.capture_ready.connect(self._render_capture)
         self.capture_failed.connect(self._capture_failed)
         self.stream_failed.connect(self._stream_failed)
@@ -890,7 +891,7 @@ class WarBotWindow(QMainWindow):
         self.refresh_log_file()
 
     def refresh_runtime_health(self):
-        if self.health_busy or (time.monotonic() - self.last_health_probe_at) < 10.0:
+        if self.health_busy or (time.monotonic() - self.last_health_probe_at) < 60.0:
             return
         mode = str(self.backend_mode.currentData() or "wsa")
         if mode == "scrcpy":
@@ -1045,6 +1046,28 @@ class WarBotWindow(QMainWindow):
         adb_path = self.adb_path.text().strip()
         signature = (mode, serial, adb_path, self.window_title.text().strip())
 
+        # The bot owns the Android video transport while it is running.  The
+        # GUI consumes its replaceable 2 FPS JPEG mailbox instead of starting
+        # a second MediaCodec encoder and FFmpeg decoder inside WSA.
+        if bot_pid() is not None and mode != "scrcpy":
+            self._stop_frame_stream()
+            live_path = getattr(bot, "LIVE_FRAME_FILE", "")
+            try:
+                modified = os.path.getmtime(live_path)
+                if modified > self.last_bot_frame_mtime:
+                    phone = cv2.imread(live_path)
+                    if phone is not None:
+                        self.last_bot_frame_mtime = modified
+                        self._render_capture(
+                            phone,
+                            f"bot-shared:{serial}",
+                            {"width": phone.shape[1], "height": phone.shape[0]},
+                        )
+                        self.stream_value.setText("bot-shared-jpeg · 2.0 FPS")
+            except OSError:
+                pass
+            return
+
         # Legacy desktop-window capture remains diagnostics-only.
         if mode == "scrcpy":
             self._stop_frame_stream()
@@ -1094,7 +1117,7 @@ class WarBotWindow(QMainWindow):
                 capture,
                 on_frame=on_frame,
                 on_error=lambda error: self.stream_failed.emit(error),
-                target_fps=30.0,
+                target_fps=15.0,
                 transport="preview",
             )
             self.frame_stream = stream
