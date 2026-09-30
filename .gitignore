@@ -10,6 +10,7 @@ bot.lock
 logs/
 unknown/
 debug/
+runtime-tools/
 
 # Captures / local diagnostics
 fullscreen.png
