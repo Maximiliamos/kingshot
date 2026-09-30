@@ -511,6 +511,55 @@ class AdbDeviceBackend(DeviceBackend):
         except Exception as exc:
             raise BackendError(f"Unicode clipboard input failed: {exc}") from exc
 
+    def unicode_clipboard_health(self, value: str = "ТугаринMVP") -> dict:
+        """Verify the Unicode system-UI channel without pasting into the game."""
+        device = self._uiautomator()
+        if device is None:
+            raise BackendError(
+                "Unicode clipboard health requires requirements-android-optional.txt"
+            )
+
+        old_value = None
+        can_restore = False
+        try:
+            try:
+                old_value = device.clipboard
+                can_restore = True
+            except Exception:
+                old_value = None
+
+            device.set_clipboard(str(value))
+            readback = None
+            readable = False
+            try:
+                readback = device.clipboard
+                readable = True
+            except Exception:
+                # Some Android/uiautomator2 combinations expose set-only
+                # clipboard access. A successful Cyrillic set still proves the
+                # channel used by manual input is available.
+                readback = None
+
+            if readable and readback != str(value):
+                raise BackendError(
+                    f"Unicode clipboard roundtrip mismatch: {readback!r}"
+                )
+            return {
+                "ready": True,
+                "readable": readable,
+                "roundtrip": (readback == str(value)) if readable else None,
+            }
+        except BackendError:
+            raise
+        except Exception as exc:
+            raise BackendError(f"Unicode clipboard health failed: {exc}") from exc
+        finally:
+            if can_restore:
+                try:
+                    device.set_clipboard(old_value or "")
+                except Exception:
+                    pass
+
     def install_apks(self, paths: Iterable[str | os.PathLike[str]]) -> str:
         files = [Path(path) for path in paths]
         missing = [str(path) for path in files if not path.is_file()]
