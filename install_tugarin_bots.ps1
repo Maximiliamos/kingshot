@@ -1,7 +1,7 @@
 #requires -version 5.1
 param(
     [string]$TargetUser = "TugarinBots",
-    [string]$Branch = "feature/tugarin-bots-v1-hardening",
+    [string]$Branch = "feature/unified-android-backend",
     [switch]$NoLogoffPrompt,
     [switch]$SkipDataBackup
 )
