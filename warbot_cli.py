@@ -170,25 +170,33 @@ def main(argv=None) -> int:
             capture.close()
 
         elapsed = max(0.001, time.monotonic() - started)
-        if frames < 3:
-            raise BackendError(f"Preview smoke produced too few frames: {frames}")
-
         ordered = sorted(latencies)
-        p95_index = min(len(ordered) - 1, max(0, int(round((len(ordered) - 1) * 0.95))))
+        p95_latency = None
+        avg_latency = None
+        if ordered:
+            p95_index = min(
+                len(ordered) - 1,
+                max(0, int(round((len(ordered) - 1) * 0.95))),
+            )
+            p95_latency = round(ordered[p95_index], 3)
+            avg_latency = round(sum(latencies) / len(latencies), 3)
+
         active_transport = transports[-1] if transports else "unknown"
         result = {
-            "pass": True,
+            "pass": frames >= 3,
             "seconds": round(elapsed, 3),
             "frames": frames,
             "fps": round(frames / elapsed, 3),
-            "avg_latency_ms": round(sum(latencies) / len(latencies), 3),
-            "p95_latency_ms": round(ordered[p95_index], 3),
+            "avg_latency_ms": avg_latency,
+            "p95_latency_ms": p95_latency,
             "active_transport": active_transport,
             "transport_history": transports,
             "frame_shape": last_shape,
             "h264": active_transport == "h264-screenrecord",
         }
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
+        if frames < 3:
+            raise BackendError(f"Preview smoke produced too few frames: {frames}")
         if args.require_h264 and not result["h264"]:
             raise BackendError(
                 "H.264 preview was required but preview fell back to "
