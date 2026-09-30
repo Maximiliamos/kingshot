@@ -194,6 +194,63 @@ function Backup-WsaProfileData {
     return $backupRoot
 }
 
+function Remove-WsaRegistrationInUserSession {
+    param(
+        [Parameter(Mandatory = $true)][string]$Sid,
+        [Parameter(Mandatory = $true)][string]$PackageFullName
+    )
+
+    $sidObject = New-Object Security.Principal.SecurityIdentifier($Sid)
+    $account = $sidObject.Translate([Security.Principal.NTAccount]).Value
+    $taskName = "TUGARIN BOTS - Remove WSA $($Sid.Split('-')[-1])"
+    $scriptPath = Join-Path $WorkRoot "remove-wsa-current-user.ps1"
+    $resultPath = Join-Path $WorkRoot "remove-wsa-current-user-result.json"
+    $escapedPackage = $PackageFullName.Replace("'", "''")
+    $escapedResult = $resultPath.Replace("'", "''")
+    $body = @"
+`$ErrorActionPreference = 'Stop'
+try {
+    Remove-AppxPackage -Package '$escapedPackage' -ErrorAction Stop
+    @{ pass = `$true; user = [Security.Principal.WindowsIdentity]::GetCurrent().Name; at = (Get-Date).ToString('o') } |
+        ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath '$escapedResult'
+    exit 0
+}
+catch {
+    @{ pass = `$false; user = [Security.Principal.WindowsIdentity]::GetCurrent().Name; error = `$_.Exception.Message; at = (Get-Date).ToString('o') } |
+        ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath '$escapedResult'
+    exit 1
+}
+"@
+    Set-Content -LiteralPath $scriptPath -Value $body -Encoding UTF8
+    Remove-Item -LiteralPath $resultPath -Force -ErrorAction SilentlyContinue
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument (
+        '-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $scriptPath + '"'
+    )
+    $principal = New-ScheduledTaskPrincipal -UserId $account -LogonType Interactive -RunLevel Highest
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 3) -MultipleInstances IgnoreNew
+    try {
+        Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings -Force | Out-Null
+        Start-ScheduledTask -TaskName $taskName
+        $deadline = (Get-Date).AddMinutes(2)
+        do {
+            Start-Sleep -Seconds 2
+            $task = Get-ScheduledTask -TaskName $taskName -ErrorAction Stop
+        } while ($task.State -eq 'Running' -and (Get-Date) -lt $deadline)
+        if (-not (Test-Path -LiteralPath $resultPath -PathType Leaf)) {
+            throw "Per-user WSA removal did not produce a result for $account."
+        }
+        $result = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+        if (-not $result.pass) {
+            throw "Per-user WSA removal failed for ${account}: $($result.error)"
+        }
+        Write-SetupLog "Removed WSA registration in user session $account ($Sid)."
+    }
+    finally {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+    }
+}
+
 function Remove-WsaRegistrations {
     $packages = @(Get-AppxPackage -AllUsers -Name $PackageName -ErrorAction SilentlyContinue)
     $inventory = Join-Path $WorkRoot "wsa-registration-before-clean.txt"
@@ -202,7 +259,17 @@ function Remove-WsaRegistrations {
 
     foreach ($pkg in $packages) {
         Write-SetupLog "Removing WSA registration for all users: $($pkg.PackageFullName)"
-        Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction Stop
+        try {
+            Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction Stop
+        }
+        catch {
+            Write-SetupLog "All-users removal failed; using same-SID removal for unpackaged registrations: $($_.Exception.Message)"
+            foreach ($userInfo in @($pkg.PackageUserInformation)) {
+                $text = [string]$userInfo
+                if ($text -notmatch '^(S-1-[0-9-]+).*:\s*Installed') { continue }
+                Remove-WsaRegistrationInUserSession -Sid $Matches[1] -PackageFullName $pkg.PackageFullName
+            }
+        }
     }
 
     $provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Where-Object {
