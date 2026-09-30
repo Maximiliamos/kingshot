@@ -1,0 +1,25 @@
+﻿[2026-09-30T19:04:13.8506945+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T19:04:15.1290251+03:00] Selected WSABuilds LTS 8 NoGApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T19:04:15.1974389+03:00] Windows developer package registration is enabled.
+[2026-09-30T19:04:25.7641925+03:00] WSA archive already downloaded and SHA-256 matches.
+[2026-09-30T19:04:26.6374870+03:00] Extracting WSA archive.
+[2026-09-30T19:04:32.1351000+03:00] Registering Windows Subsystem for Android (non-interactive, skipping optional MakePri localization merge).
+[2026-09-30T19:04:32.1988816+03:00] Dependency Microsoft.UI.Xaml.2.8 already satisfies minimum 8.2208.12001.0.
+[2026-09-30T19:04:32.2135238+03:00] Dependency Microsoft.VCLibs.140.00.UWPDesktop already satisfies minimum 14.0.33728.0.
+[2026-09-30T19:04:32.2297542+03:00] Dependency Microsoft.VCLibs.140.00 already satisfies minimum 14.0.33519.0.
+[2026-09-30T19:04:35.7206186+03:00] WSA AppX registration completed.
+[2026-09-30T19:04:38.4766980+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T19:04:38.5990208+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T19:04:38.6992671+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T19:04:40.5705123+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T19:04:41.3937323+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=26920).
+[2026-09-30T19:04:41.4813882+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=29148).
+[2026-09-30T19:05:15.8702607+03:00] WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation.
+[2026-09-30T19:05:15.8979809+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=26920).
+[2026-09-30T19:05:15.9489784+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=13816).
+[2026-09-30T19:05:38.2137380+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch.
+[2026-09-30T19:05:38.2257407+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-09-30T19:05:41.2823680+03:00] Developer-mode fallback could not be applied safely: Процесс не может получить доступ к файлу "C:\Users\Программист1\AppData\Local\Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe\Settings\settings.dat", так как этот файл используется другим процессом.
+[2026-09-30T19:06:52.9135884+03:00] All non-destructive startup routes were exhausted; performing the single allowed WSA recycle.
+[2026-09-30T19:06:57.3194394+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20000).
+[2026-09-30T19:06:57.3508325+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=23560).

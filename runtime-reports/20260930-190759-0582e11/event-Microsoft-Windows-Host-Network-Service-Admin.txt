@@ -1,0 +1,79 @@
+﻿
+
+TimeCreated      : 30.09.2026 19:06:58
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Attach":-  
+                    ИД конечной точки = "{061d84fb-83ee-456e-b207-67ab65f2d6ce}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:06:58
+Id               : 1053
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-GuestNetworkService-Create :- 
+                    ИД GuestNetworkService = "{854b9ba5-1ad1-4257-90b9-09653d945b2c}".
+                    Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:06:58
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Create":-  
+                    ИД конечной точки = "{061d84fb-83ee-456e-b207-67ab65f2d6ce}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:05:21
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Attach":-  
+                    ИД конечной точки = "{63ff65d8-6108-46d2-8318-c57c41723c8b}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:05:21
+Id               : 1053
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-GuestNetworkService-Create :- 
+                    ИД GuestNetworkService = "{bf3c3995-bd25-42ea-adba-a0b1d8e2b95c}".
+                    Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:05:21
+Id               : 1016
+LevelDisplayName : Сведения
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : HNS-Endpoint-Create":-  
+                    ИД конечной точки = "{63ff65d8-6108-46d2-8318-c57c41723c8b}".
+                     Тип сети = '{87e92d53-d351-42e8-b1da-463b728434bc}'.
+                     Тип сети = "ICS".
+                     Код результата = "0x0".
+
+TimeCreated      : 30.09.2026 19:04:40
+Id               : 1006
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : Службе HNS не удалось подключить порт коммутатора виртуальной машины. Ошибка = "0x80070002", ИД комм
+                   утатора = "F4B2D878-851C-49B7-A838-0C1E5AA86E22", ИД порта = 'EAFFB32C-9715-4971-B026-1445865C1A2F' 
+                   и имя сетевого адаптера = "869F1FA5-2104-4615-A49C-A3EEC7F6AA10--FD666FEC-660E-540F-9BFD-97D60679DD0
+                   2". 
+
+TimeCreated      : 30.09.2026 19:04:40
+Id               : 1006
+LevelDisplayName : Ошибка
+ProviderName     : Microsoft-Windows-Host-Network-Service
+Message          : Службе HNS не удалось подключить порт коммутатора виртуальной машины. Ошибка = "0x80070002", ИД комм
+                   утатора = "ABC22D9E-BE3D-4BFA-AEFA-BB6319D20347", ИД порта = '30EE8D20-61D8-4BA9-A8A4-6C823FDAB78B' 
+                   и имя сетевого адаптера = "7AACEED3-2632-47FD-8715-837A3B73284A--7D57AA76-1AA6-5C8F-82F0-E4F0819422B
+                   9". 
+
+
+
+
