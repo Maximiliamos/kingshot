@@ -22,6 +22,14 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("audit_runtime_processes.ps1", RELEASE)
         self.assertIn("RELEASE HOST GATE PASS", RELEASE)
 
+    def test_release_gate_prefers_dedicated_python_and_syncs_dependencies(self):
+        self.assertIn(r"C:\\warbot_wsa\\tugarin-venv\\Scripts\\python.exe", RELEASE)
+        self.assertIn("requirements.txt", RELEASE)
+        self.assertIn("Runtime imports: OK", RELEASE)
+        self.assertIn("& $ReleasePython -m unittest", RELEASE)
+        self.assertIn('"-PythonExe", $ReleasePython', RELEASE)
+        self.assertNotIn("& python -m unittest", RELEASE)
+
     def test_copy_installer_ships_hardening_modules(self):
         for name in (
             "frame_stream.py",
