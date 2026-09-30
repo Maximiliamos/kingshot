@@ -8,6 +8,7 @@ import subprocess
 import csv
 import io
 import atexit
+import shutil
 import msvcrt
 from difflib import SequenceMatcher
 from datetime import datetime
@@ -17,6 +18,8 @@ import mss
 import numpy as np
 
 from device_backend import BackendCapture, BackendError, create_backend
+from runtime_events import emit_event
+from runtime_recovery import RecoveryController
 
 
 WINDOWS_NO_WINDOW = (
@@ -37,6 +40,7 @@ LOG_DIR = os.path.join(ROOT, "logs")
 UNKNOWN_DIR = os.path.join(ROOT, "unknown")
 DEBUG_DIR = os.path.join(ROOT, "debug")
 STATE_FILE = os.path.join(ROOT, "state.json")
+STATE_PREVIOUS_FILE = os.path.join(ROOT, "state.previous.json")
 CONTROL_FILE = os.path.join(ROOT, "control.json")
 PID_FILE = os.path.join(ROOT, "bot.pid")
 LOCK_FILE = os.path.join(ROOT, "bot.lock")
@@ -238,6 +242,11 @@ def log(msg):
             f.write(line + "\n")
     except Exception:
         pass
+    try:
+        emit_event("log", message=str(msg))
+    except Exception:
+        # Event telemetry must never become a control-path dependency.
+        pass
 
 
 def save_img(path, img):
@@ -267,8 +276,18 @@ def load_state():
             log("Миграция состояния: tutorial_scroll -> tutorial_intro")
 
         return s
-    except Exception:
-        return dict(DEFAULT_STATE)
+    except Exception as exc:
+        # A corrupt state file is not equivalent to a fresh install. Starting
+        # again from DEFAULT_STATE could duplicate destructive/game actions.
+        # Preserve the evidence and fail closed for operator review.
+        corrupt = os.path.join(ROOT, f"state.corrupt.{fs()}.json")
+        try:
+            shutil.copy2(STATE_FILE, corrupt)
+        except OSError:
+            corrupt = STATE_FILE
+        raise RuntimeError(
+            f"state.json is unreadable; preserved as {corrupt}: {exc}"
+        ) from exc
 
 
 def save_state(s):
@@ -276,6 +295,11 @@ def save_state(s):
     tmp = STATE_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(s, f, ensure_ascii=False, indent=2)
+    if os.path.isfile(STATE_FILE):
+        try:
+            shutil.copy2(STATE_FILE, STATE_PREVIOUS_FILE)
+        except OSError:
+            pass
     os.replace(tmp, STATE_FILE)
 
 
@@ -325,17 +349,39 @@ def acquire_instance_lock():
 
 
 def set_step(s, step):
+    previous = s.get("step", "")
     s["step"] = step
     s["step_started_at"] = time.time()
     save_state(s)
+    try:
+        emit_event(
+            "state_transition",
+            phase=s.get("phase", ""),
+            from_step=previous,
+            to_step=step,
+        )
+    except Exception:
+        pass
     log(f"STEP -> {step}")
 
 
 def set_phase(s, phase, step):
+    previous_phase = s.get("phase", "")
+    previous_step = s.get("step", "")
     s["phase"] = phase
     s["step"] = step
     s["step_started_at"] = time.time()
     save_state(s)
+    try:
+        emit_event(
+            "state_transition",
+            from_phase=previous_phase,
+            from_step=previous_step,
+            to_phase=phase,
+            to_step=step,
+        )
+    except Exception:
+        pass
     log(f"PHASE -> {phase}; STEP -> {step}")
 
 
@@ -1433,6 +1479,38 @@ def save_scrcpy_capture():
         capture.close()
 
 
+def handle_capture_failure(recovery, state, error):
+    """Apply one bounded recovery decision after a capture/ADB failure."""
+    try:
+        decision = recovery.capture_failed(get_device_backend(), str(error))
+    except Exception as recovery_error:
+        decision_detail = f"Recovery probe failed: {recovery_error}"
+        state["last_stop_reason"] = decision_detail
+        save_state(state)
+        log("STOP: " + decision_detail)
+        try:
+            emit_event("recovery", action="stop", terminal=True, detail=decision_detail)
+        except Exception:
+            pass
+        return False
+
+    try:
+        emit_event(
+            "recovery",
+            action=decision.action,
+            terminal=decision.terminal,
+            detail=decision.detail,
+        )
+    except Exception:
+        pass
+    log(f"Recovery: {decision.action}: {decision.detail}")
+    if decision.terminal:
+        state["last_stop_reason"] = decision.detail
+        save_state(state)
+        return False
+    return True
+
+
 def main():
     global DRY_RUN
     ensure_dirs()
@@ -1487,6 +1565,7 @@ def main():
     warn_at = 0.0
     capture = None
     pause_reported = False
+    recovery = RecoveryController()
 
     try:
         while True:
@@ -1531,19 +1610,24 @@ def main():
                     frame, title, rect = capture.grab()
                     log(f"Захват Android: {title} {rect['width']}x{rect['height']}")
                 except Exception as e:
-                    log(f"Захват Android не открылся: {e}; повтор через 2 сек.")
+                    log(f"Захват Android не открылся: {e}.")
                     if capture is not None:
                         capture.close()
                     capture = None
+                    if not handle_capture_failure(recovery, state, e):
+                        break
                     time.sleep(2)
                     continue
 
             try:
                 frame, _, _ = capture.grab()
+                recovery.capture_succeeded()
             except Exception as e:
                 log(f"Захват Android: {e}. Пересоздаю захват.")
                 capture.close()
                 capture = None
+                if not handle_capture_failure(recovery, state, e):
+                    break
                 time.sleep(2)
                 continue
             sync_input_geometry(frame)
@@ -1643,7 +1727,7 @@ def main():
             except Exception:
                 pass
 
-    log("WAR BOT v4 остановлен.")
+    log("TUGARIN BOTS остановлен.")
 
 
 if __name__ == "__main__":
@@ -1657,4 +1741,3 @@ if __name__ == "__main__":
         log(f"КРИТИЧЕСКАЯ ОШИБКА: {e}")
         print("Бот остановлен.")
         print("Причина:", e)
-        input("Нажми Enter для выхода...")
