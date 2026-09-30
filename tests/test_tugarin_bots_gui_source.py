@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GUI = ROOT / "gui.py"
 BACKEND = ROOT / "device_backend.py"
+BOT = ROOT / "bot.py"
 
 
 class TugarinBotsGuiSourceTests(unittest.TestCase):
@@ -12,6 +13,13 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.gui = GUI.read_text(encoding="utf-8-sig")
         cls.backend = BACKEND.read_text(encoding="utf-8-sig")
+        cls.bot = BOT.read_text(encoding="utf-8-sig")
+
+    def test_fresh_install_handles_only_explicit_notification_permission(self):
+        self.assertIn("handle_known_notification_permission()", self.bot)
+        self.assertIn("com.android.permissioncontroller:id/permission_allow_button", self.bot)
+        self.assertIn("permission_message", self.bot)
+        self.assertIn("def ui_click_resource", self.backend)
 
     def test_product_brand_is_visible_in_gui(self):
         self.assertIn("TUGARIN BOTS — Центр управления", self.gui)

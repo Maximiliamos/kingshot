@@ -1,5 +1,6 @@
 import unittest
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -169,6 +170,13 @@ class FullCycleTests(unittest.TestCase):
         with patch("bot.ocr_lines", return_value=lines):
             reason = bot.detect_stop_reason(phone)
         self.assertIn("ограничение", reason.lower())
+
+    def test_mobile_only_account_restriction_is_stop_only(self):
+        self.assertIn("создайтеперсонажавмобильнойверсии", bot.STOP_OCR_PHRASES)
+        self.assertIn("передвходомсэтойплатформы", bot.STOP_OCR_PHRASES)
+        source = Path(bot.__file__).read_text(encoding="utf-8")
+        self.assertIn('emit_event(\n                        "account_restriction"', source)
+        self.assertIn('state["last_stop_reason"] = stop_reason', source)
 
 
 if __name__ == "__main__":

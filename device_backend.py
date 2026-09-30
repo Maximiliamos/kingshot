@@ -667,6 +667,17 @@ class AdbDeviceBackend(DeviceBackend):
         selector.click()
         return True
 
+    def ui_click_resource(self, resource_id: str, timeout: float = 2.0) -> bool:
+        """Click one explicit Android system-control resource id."""
+        device = self._uiautomator()
+        if device is None:
+            return False
+        selector = device(resourceId=resource_id)
+        if not selector.wait(timeout=timeout):
+            return False
+        selector.click()
+        return True
+
 
 class NativeArm64Backend(AdbDeviceBackend):
     backend_name = "native_arm64"

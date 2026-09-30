@@ -25,7 +25,8 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("MVP 1.0 HOST ACCEPTANCE PASS", SOURCE)
 
     def test_master_requires_final_dedicated_user_cleanup(self):
-        self.assertIn("Final dedicated-user process audit", SOURCE)
+        self.assertIn("Final production-user process audit", SOURCE)
+        self.assertIn("Production fast preview (WSA window or H.264)", SOURCE)
         self.assertIn("audit_runtime_processes.ps1", SOURCE)
         self.assertIn('"-TargetUser"', SOURCE)
         self.assertIn('"-TargetUser", $TargetUser', SOURCE)

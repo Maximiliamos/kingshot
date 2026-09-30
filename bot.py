@@ -559,6 +559,8 @@ STOP_OCR_PHRASES = (
     "попробуйтепозже",
     "слишкомчасто",
     "ограничениеаккаунта",
+    "создайтеперсонажавмобильнойверсии",
+    "передвходомсэтойплатформы",
 )
 
 
@@ -624,6 +626,28 @@ def adb_check():
         f"ANDROID OK: backend={health.backend} serial={health.serial} "
         f"android={health.android} abi={health.abi}"
     )
+
+
+def handle_known_notification_permission():
+    """Dismiss only Kingshot's explicit Android notification permission dialog."""
+    backend = get_device_backend()
+    try:
+        hierarchy = backend.ui_dump()
+    except Exception:
+        return False
+    allow_id = "com.android.permissioncontroller:id/permission_allow_button"
+    if (
+        'package="com.android.permissioncontroller"' not in hierarchy
+        or allow_id not in hierarchy
+        or "permission_message" not in hierarchy
+    ):
+        return False
+    if not backend.ui_click_resource(allow_id, timeout=2.0):
+        return False
+    log("Android: подтверждён явный системный запрос уведомлений Kingshot.")
+    emit_event("android_permission", permission="notifications", action="allow")
+    time.sleep(1.0)
+    return True
 
 
 def tap(x, y):
@@ -1766,6 +1790,7 @@ def main():
     log(f"TUGARIN BOTS v4 | phase={state['phase']} step={state['step']}")
     adb_check()
     ensure_game_running()
+    handle_known_notification_permission()
 
     if BACKEND_NAME == "scrcpy":
         print("Legacy diagnostics: откройте ровно одно окно scrcpy.")
@@ -1781,6 +1806,7 @@ def main():
     last_unknown_at = 0.0
     unknown_since = None
     warn_at = 0.0
+    last_stop_scan = 0.0
     capture = None
     pause_reported = False
     recovery = RecoveryController()
@@ -1930,6 +1956,26 @@ def main():
                 unknown_since = None
                 time.sleep(0.7)
                 continue
+
+            if now_mono - last_stop_scan >= 2.0:
+                last_stop_scan = now_mono
+                stop_reason = detect_stop_reason(phone)
+                if stop_reason:
+                    out = os.path.join(
+                        DEBUG_DIR,
+                        f"account_restriction_{fs()}_{state['phase']}_{state['step']}.png",
+                    )
+                    save_img(out, phone)
+                    state["last_stop_reason"] = stop_reason
+                    save_state(state)
+                    emit_event(
+                        "account_restriction",
+                        terminal=True,
+                        detail=stop_reason,
+                        evidence_screenshot=out,
+                    )
+                    log("STOP: " + stop_reason + f" Evidence: {out}")
+                    break
 
             gate_status = gate.observe(phone)
             if gate_status == "changed" and state.get("skip_locked", False):

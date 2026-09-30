@@ -170,7 +170,7 @@ if (-not $SkipInfrastructure) {
     Run-Gate -Name "Infrastructure / WSA / Kingshot / process audit" -Script (Join-Path $Root "scripts\verify_release.ps1")
 }
 
-Run-Gate -Name "Low-latency scrcpy H.264 preview" -Script (Join-Path $Root "scripts\verify_preview.ps1")
+Run-Gate -Name "Production fast preview (WSA window or H.264)" -Script (Join-Path $Root "scripts\verify_preview.ps1")
 Run-Gate -Name "Consoleless GUI render" -Script (Join-Path $Root "scripts\verify_gui.ps1")
 Run-Gate -Name "Operator Unicode/UI/audio channel" -Script (Join-Path $Root "scripts\verify_operator_io.ps1")
 Run-Gate -Name "Bounded game + ADB recovery" -Script (Join-Path $Root "scripts\verify_recovery.ps1")
@@ -180,7 +180,7 @@ Run-Gate -Name "Multi-cycle soak" -Script (Join-Path $Root "scripts\verify_soak.
     "-MinCharacters", [string][Math]::Max(2, $SoakCharacters)
 )
 
-Run-Gate -Name "Final dedicated-user process audit" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
+Run-Gate -Name "Final production-user process audit" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
     "-TargetUser", $TargetUser,
     "-Output", (Join-Path $Root "debug\mvp-final-process-audit.json")
 )
