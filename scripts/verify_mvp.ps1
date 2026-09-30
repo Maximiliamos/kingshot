@@ -21,7 +21,7 @@ $args = @(
 )
 if ($CleanGame) { $args += "--clean-game" }
 
-Write-Host "=== WAR BOT MVP VERIFY ==="
+Write-Host "=== TUGARIN BOTS MVP VERIFY ==="
 Write-Host "1/3 WSA Android + game bootstrap"
 
 & python @args
