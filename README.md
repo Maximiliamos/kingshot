@@ -44,7 +44,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 
 ## Текущая версия
 
-Текущий hardening-релиз: **feature/tugarin-bots-v1-hardening** поверх интеграционного Draft PR #6. После зелёного CI и real-host gate изменения переходят в основную интеграционную ветку.
+Актуальная интеграционная ветка: **feature/unified-android-backend** / Draft PR #6. WSA является production runtime; выпуск в `main` остаётся gated реальным release acceptance.
 
 На уровне приложения уже реализованы:
 
@@ -116,7 +116,7 @@ python -m pip install -r requirements-android-optional.txt
 
 ```powershell
 cd C:\warbot_git
-powershell -ExecutionPolicy Bypass -File .\install_tugarin_bots.ps1 -Branch feature/tugarin-bots-v1-hardening
+powershell -ExecutionPolicy Bypass -File .\install_tugarin_bots.ps1 -Branch feature/unified-android-backend
 ```
 
 Скрипт:
