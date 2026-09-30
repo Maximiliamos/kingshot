@@ -54,7 +54,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через Android transport;
-- low-latency H.264 preview: pinned `scrcpy-server 4.1` запускается **внутри WSA** как Android shell-процесс, поток идёт через ADB-forward в FFmpeg; внешний scrcpy-клиент/окно не используется; PNG `screencap` остаётся аварийным fallback;
+- production fast preview захватывает только client area окна Kingshot в той же сессии (`wsa-window`); pinned `scrcpy-server 4.1` остаётся диагностическим transport, PNG `screencap` — аварийным fallback;
 - один долгоживущий preview-worker вместо создания нового потока на каждый кадр;
 - FPS/latency preview telemetry;
 - интерактивный экран Android внутри GUI: tap/swipe/hold/wheel/right-click Back;
@@ -175,12 +175,10 @@ python C:\warbot\bot.py
 python C:\warbot\bot.py --dry-run
 ```
 
-Внешний scrcpy-клиент и его окно для целевого режима не требуются. Production
-preview и vision используют закреплённый `scrcpy-server v4.1`, который
-TUGARIN BOTS проверяет по SHA-256, отправляет через ADB и запускает **внутри
-того же WSA**. Сервер отдаёт raw H.264 через локальный ADB-forward; FFmpeg
-декодирует его непосредственно во встроенный GUI. Управление по-прежнему
-отправляется нашим `DeviceBackend` в тот же WSA serial `127.0.0.1:58526`.
+Production preview использует client-area реального окна Kingshot в той же
+Windows-сессии `Программист1`. Это transport `wsa-window`; рамки, taskbar и
+соседние окна не захватываются. Управление отправляется `DeviceBackend` в WSA
+serial `127.0.0.1:58526`.
 
 Если H.264 транспорт не поднимается, интерфейс может диагностически перейти на
 PNG `adb exec-out screencap -p`, но такой fallback не считается PASS
@@ -336,7 +334,7 @@ python .\warbot_cli.py bootstrap --output bootstrap-frame.png
 ```
 
 PASS полного MVP-gate означает: clean tracked worktree, готовый WSA/ADB,
-стабильный Kingshot, реальный `scrcpy-h264` preview, consoleless GUI render,
+стабильный Kingshot, production fast preview, consoleless GUI render,
 Unicode/UI/audio channel, recovery после остановки игры и ADB reconnect,
 точный State #3 → tutorial → `Тугарин<N>` flow с post-rename screenshot
 evidence и успешный multi-cycle soak. Итог сохраняется в
@@ -356,7 +354,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_release.ps1
 ```
 
 Полный verifier последовательно проверяет hosted-equivalent suite, WSA +
-Kingshot 120-second gate, process audit, реальный `scrcpy-h264` preview, consoleless `pythonw` GUI
+Kingshot 120-second gate, process audit, реальный `wsa-window`/H.264 fast preview, consoleless `pythonw` GUI
 с отрисованным кадром, Unicode/UI/audio channel, bounded recovery Kingshot/ADB,
 точный State #3 → tutorial → `Тугарин<N>` flow и многократный reset/soak. Любой этап fail-fast останавливает релиз.
 Полные критерии описаны в `docs/RELEASE_ACCEPTANCE.md`.

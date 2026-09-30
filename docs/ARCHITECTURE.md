@@ -53,12 +53,12 @@ Automation consumes frames through the backend contract. The GUI uses
 `ContinuousFrameStream`, a single long-lived preview worker, instead of
 creating a new worker for every Qt timer tick.
 
-The GUI now prefers `adb exec-out screenrecord --output-format=h264 -` decoded
-continuously by FFmpeg. If FFmpeg/screenrecord is unavailable or the stream
-fails, `FallbackCapture` demotes preview to the proven `adb exec-out screencap
--p` path. Automation is independent of GUI preview transport. The H.264 path
-is code-complete but still requires final latency/stability measurement on the
-target WSA host.
+WSA, Kingshot and TUGARIN BOTS run in the same interactive
+`COMPUTER\Программист1` session. The production fast path captures only the
+Kingshot client area through `GetClientRect`/`ClientToScreen` and MSS and is
+reported as `wsa-window`. Pinned scrcpy-server H.264 remains optional because
+the current WSA encoder produces no usable stream. `adb-screencap` is bounded
+recovery/diagnostics only and cannot pass the production performance gate.
 
 ## Input
 
@@ -132,7 +132,7 @@ The following code is retained for diagnostics/history but is not production:
 - `bluestacks_poc.py`;
 - `native_arm64_poc.py`;
 - legacy scrcpy desktop-window capture (diagnostics only);
-- production WSA-internal scrcpy-server H.264 transport (no external scrcpy window).
+- WSA-internal scrcpy-server H.264 transport (optional diagnostics).
 
 These paths should be moved out of the normal operator surface after the final
 WSA host acceptance and repository consolidation.

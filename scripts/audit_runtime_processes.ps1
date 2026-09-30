@@ -32,18 +32,50 @@ try {
                     $commandLine = [string]$cim.CommandLine
                 }
                 catch {}
+                $parentCommandLine = ""
+                if ($cim -and $cim.ParentProcessId) {
+                    try { $parentCommandLine = [string](Get-CimInstance Win32_Process -Filter "ProcessId=$($cim.ParentProcessId)" -ErrorAction Stop).CommandLine } catch {}
+                }
                 [ordered]@{
                     name = $_.ProcessName
                     pid = $_.Id
                     user = $_.UserName
                     session_id = $_.SessionId
                     command_line = $commandLine
+                    parent_process_id = if ($cim) { [int]$cim.ParentProcessId } else { 0 }
+                    parent_command_line = $parentCommandLine
                 }
             }
     )
 }
 catch {
-    throw "Could not inspect dedicated-user processes: $($_.Exception.Message)"
+    # IncludeUserName requires an elevated token even when auditing the current
+    # interactive account. Fall back to the read-only CIM owner method so the
+    # normal medium-integrity production session can still fail closed on its
+    # own stale processes.
+    $processes = @(
+        Get-CimInstance Win32_Process -ErrorAction Stop |
+            Where-Object { $_.Name -and ([IO.Path]::GetFileNameWithoutExtension($_.Name).ToLowerInvariant() -in $processNames) } |
+            ForEach-Object {
+                $cim = $_
+                $owner = $null
+                try { $owner = Invoke-CimMethod -InputObject $cim -MethodName GetOwner -ErrorAction Stop } catch {}
+                if ($owner -and $owner.User) {
+                    $ownerAccount = if ($owner.Domain) { "$($owner.Domain)\$($owner.User)" } else { [string]$owner.User }
+                    if ($ownerAccount -ieq $account) {
+                        [ordered]@{
+                            name = [IO.Path]::GetFileNameWithoutExtension($cim.Name)
+                            pid = [int]$cim.ProcessId
+                            user = $ownerAccount
+                            session_id = [int]$cim.SessionId
+                            command_line = [string]$cim.CommandLine
+                            parent_process_id = [int]$cim.ParentProcessId
+                            parent_command_line = try { [string](Get-CimInstance Win32_Process -Filter "ProcessId=$($cim.ParentProcessId)" -ErrorAction Stop).CommandLine } catch { "" }
+                        }
+                    }
+                }
+            }
+    )
 }
 
 $tasks = @()
@@ -69,11 +101,12 @@ catch {}
 $stale = @(
     $processes | Where-Object {
         $name = $_.name.ToLowerInvariant()
+        $line = ([string]$_.command_line) + " " + ([string]$_.parent_command_line)
+        $projectOwned = $line -match "(?i)warbot_git|warbot_wsa\\.*venv|tugarin bots|gui\.py|bot\.py|warbot_cli\.py|run_gui|scrcpy-server"
         if ($name -in @("python", "pythonw", "cmd", "conhost", "ffmpeg")) {
-            return $true
+            return $projectOwned
         }
         if ($name -eq "adb") {
-            $line = [string]$_.command_line
             return (
                 $line -match "tugarin-scrcpy-server" -or
                 $line -match "com\.genymobile\.scrcpy\.Server"
@@ -101,7 +134,7 @@ $result | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $Output
 $result | ConvertTo-Json -Depth 8 | Write-Host
 
 if (-not $pass) {
-    Write-Error "Dedicated-user stale Python/console/video transport processes remain after GUI/setup should be closed."
+    Write-Error "Production-user stale Python/console/video transport processes remain after GUI/setup should be closed."
     exit 21
 }
 exit 0

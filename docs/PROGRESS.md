@@ -5,7 +5,8 @@ Updated: 2026-09-30
 ## Proven on the real Windows host
 
 Latest infrastructure host acceptance: **PASS** on 2026-09-30 at
-commit `5aacd64efdfb2b6d2b609f9a5a25cf93255bba04`.
+commit `6471791903d1ef29c713d22e81529f1c48dc01f0`, running entirely as
+`COMPUTER\Программист1` (SID ending `-1007`).
 
 This is not the full MVP acceptance. The unified full-host orchestrator has
 not yet produced `MVP 1.0 HOST ACCEPTANCE PASS` on the current release
@@ -13,15 +14,15 @@ candidate from the exact interactive `Программист1` Windows SID.
 
 Evidence:
 
-- dedicated runtime Python `C:\warbot_wsa\tugarin-venv\Scripts\python.exe`;
-- 179 hosted-equivalent tests passed locally with `OK`;
+- production runtime Python `C:\warbot_wsa\tugarin-venv\Scripts\python.exe`;
+- 237 hosted-equivalent tests passed locally with `OK`;
 - Windows 10 WSA / Android 13 ready on `127.0.0.1:58526`;
 - framebuffer resolution 1920×1080;
 - network ready and Internet reachable;
 - Android audio service ready;
 - package manager ready;
 - free `/data` space ~121790 MiB;
-- Kingshot PID 9507 remained stable for 120 seconds;
+- Kingshot remained on one PID for 120 seconds;
 - startup/final loading-logo checks both false;
 - interactive-user stale-process audit passed with no Python/CMD/conhost process;
 - old GApps migration task exists only in disabled state.
@@ -43,7 +44,7 @@ release acceptance.
 ### P1 application
 
 - WSA is the explicit production backend;
-- pinned scrcpy-server v4.1 bootstrap inside WSA, unique ADB-forward socket per stream and FFmpeg decode; on the current host the encoder starts but emits no H.264 frames, so PNG screencap remains the active bounded fallback;
+- same-session `wsa-window` client-area capture is the production fast path; pinned scrcpy-server v4.1 remains an optional diagnostic transport and PNG screencap is recovery/diagnostics only;
 - single continuous GUI frame worker;
 - FPS/latency transport metrics in the GUI;
 - click/swipe/hold/wheel/right-click input;
@@ -65,13 +66,18 @@ release acceptance.
 | Gate | State |
 |---|---|
 | WSA boot/game P0 on real host | PASS |
-| Local hosted-equivalent suite | PASS — 229 tests, zero skips |
-| Latest integration HEAD real-host infrastructure gate | PASS at `5aacd64` |
+| Local hosted-equivalent suite | PASS — 237 tests, zero skips |
+| Latest integration HEAD real-host infrastructure gate | PASS at `6471791` |
 | Interactive-user stale-process audit | PASS — zero stale processes |
 | Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
-| Kingshot restart + ADB reconnect recovery | CODE + real-host injector DONE; PENDING HOST |
+| Kingshot restart + ADB reconnect recovery | PASS on real host |
 | Multi-cycle unattended real-game soak | CODE + bounded verifier DONE; PENDING HOST |
-| True compressed low-latency video transport | FAIL/PENDING — scrcpy encoder starts but emitted zero frames on the real host; PNG fallback active |
+| Production fast capture | PASS — `wsa-window`, 57.7 FPS, avg 14.2 ms, p95 16.3 ms, zero black/errors |
+
+The exact State #3 flow is currently blocked by a server/account message that
+requires creating a character in the physical mobile version before entering
+from this platform. The bot now records `account_restriction` evidence and
+stops before any click or `pm clear`; this restriction is not bypassed.
 
 ## Current-host findings on 2026-09-30
 

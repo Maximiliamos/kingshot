@@ -47,7 +47,7 @@ Therefore the one-command infrastructure gate is complete for this release
 candidate. Remaining acceptance is product-behavior evidence: interactive
 preview/input, full registration flow, recovery fault injection and soak.
 
-## H.264 preview acceptance
+## Production fast-preview acceptance
 
 After the infrastructure gate passes, validate the real low-latency preview
 transport on the same WSA host:
@@ -60,11 +60,11 @@ Target-host diagnostics proved Android `screenrecord v1.3` is file-only on
 this WSA build (zero stdout H.264 bytes at 720p/540p/native). It is therefore
 not a release transport.
 
-Default acceptance now provisions the pinned official `scrcpy-server v4.1`
-(SHA-256 verified), runs it as Android shell **inside WSA**, and requires the
-active transport to remain `scrcpy-h264` for the smoke window. FPS plus
-average/p95 frame latency are reported. Use `-AllowFallback` only for
-diagnostics; PNG `screencap` is not a PASS.
+Default acceptance prefers the exact Kingshot client-area `wsa-window`
+transport in the same Windows session and also accepts `scrcpy-h264` if it is
+actually proven. It requires at least 15 sustained FPS and records average/p95
+latency, black frames, stale/frozen evidence and capture failures. PNG
+`screencap` is not a production PASS.
 
 ## Full registration-flow acceptance
 
@@ -147,8 +147,8 @@ The orchestrator is fail-fast and runs:
 
 ```text
 verify_release.ps1
-→ verify_preview.ps1 (scrcpy-h264 required)
-→ verify_gui.ps1 (pythonw + rendered scrcpy-h264 frame)
+→ verify_preview.ps1 (wsa-window or proven scrcpy-h264, >=15 FPS)
+→ verify_gui.ps1 (pythonw + rendered fast-transport frame)
 → verify_operator_io.ps1 (Unicode/UI hierarchy/audio)
 → verify_recovery.ps1 (stop Kingshot + ADB disconnect/reconnect)
 → verify_game_flow.ps1 (exact State #3 → tutorial → Тугарин<N>)

@@ -17,6 +17,11 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("stale_processes", AUDIT)
         self.assertIn("tugarin-scrcpy-server", AUDIT)
         self.assertIn("command_line", AUDIT)
+        self.assertIn("Invoke-CimMethod -InputObject $cim -MethodName GetOwner", AUDIT)
+        self.assertIn("normal medium-integrity production session", AUDIT)
+        self.assertIn("parent_command_line", AUDIT)
+        self.assertIn("$projectOwned", AUDIT)
+        self.assertIn("warbot_git|warbot_wsa", AUDIT)
         self.assertIn("exit 21", AUDIT)
 
     def test_release_gate_runs_tests_mvp_and_process_audit(self):
