@@ -9,17 +9,69 @@ import bot
 
 class TutorialVisionTests(unittest.TestCase):
     def test_direct_android_frame_sets_real_input_geometry(self):
-        frame = np.zeros((1600, 720, 3), dtype=np.uint8)
-        old_w, old_h = bot.INPUT_W, bot.INPUT_H
+        frame = np.zeros((2376, 1060, 3), dtype=np.uint8)
+        old = (
+            bot.INPUT_W, bot.INPUT_H,
+            bot.INPUT_CONTENT_LEFT, bot.INPUT_CONTENT_TOP,
+            bot.INPUT_CONTENT_W, bot.INPUT_CONTENT_H,
+        )
         try:
             with patch.object(bot, "BACKEND_NAME", "native_arm64"):
-                bot.sync_input_geometry(frame)
-            self.assertEqual((bot.INPUT_W, bot.INPUT_H), (720, 1600))
+                bot.sync_input_geometry(
+                    frame,
+                    {"left": 0, "top": 0, "width": 1060, "height": 2376},
+                )
+            self.assertEqual((bot.INPUT_W, bot.INPUT_H), (1060, 2376))
             with patch("bot.tap") as tap:
                 bot.tap_norm(0.5, 0.25)
-            tap.assert_called_once_with(360.0, 400.0)
+            tap.assert_called_once_with(530.0, 594.0)
         finally:
-            bot.INPUT_W, bot.INPUT_H = old_w, old_h
+            (
+                bot.INPUT_W, bot.INPUT_H,
+                bot.INPUT_CONTENT_LEFT, bot.INPUT_CONTENT_TOP,
+                bot.INPUT_CONTENT_W, bot.INPUT_CONTENT_H,
+            ) = old
+
+    def test_wsa_letterbox_maps_phone_coordinates_into_center_content(self):
+        # The H.264 preview is 1280x720 but input targets the physical
+        # 1920x1080 WSA framebuffer. Kingshot is portrait in the center.
+        frame = np.zeros((720, 1280, 3), dtype=np.uint8)
+        old = (
+            bot.INPUT_W, bot.INPUT_H,
+            bot.INPUT_CONTENT_LEFT, bot.INPUT_CONTENT_TOP,
+            bot.INPUT_CONTENT_W, bot.INPUT_CONTENT_H,
+        )
+        try:
+            with patch.object(bot, "BACKEND_NAME", "wsa"):
+                bot.sync_input_geometry(
+                    frame,
+                    {"left": 0, "top": 0, "width": 1920, "height": 1080},
+                )
+            self.assertEqual((bot.INPUT_W, bot.INPUT_H), (1920, 1080))
+            self.assertAlmostEqual(bot.INPUT_CONTENT_H, 1080.0, places=3)
+            self.assertAlmostEqual(
+                bot.INPUT_CONTENT_W,
+                1080.0 * bot.PHONE_W / bot.PHONE_H,
+                places=3,
+            )
+            with patch("bot.tap") as tap:
+                bot.tap_norm(0.5, 0.5)
+            x, y = tap.call_args.args
+            self.assertAlmostEqual(x, 960.0, places=3)
+            self.assertAlmostEqual(y, 540.0, places=3)
+
+            with patch("bot.tap") as tap:
+                bot.tap_norm(0.0, 0.5)
+            x, y = tap.call_args.args
+            self.assertGreater(x, 700.0)
+            self.assertLess(x, 740.0)
+            self.assertAlmostEqual(y, 540.0, places=3)
+        finally:
+            (
+                bot.INPUT_W, bot.INPUT_H,
+                bot.INPUT_CONTENT_LEFT, bot.INPUT_CONTENT_TOP,
+                bot.INPUT_CONTENT_W, bot.INPUT_CONTENT_H,
+            ) = old
 
     def test_crop_phone_normalizes_any_scrcpy_window_size(self):
         frame = np.zeros((1416, 632, 3), dtype=np.uint8)
