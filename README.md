@@ -54,6 +54,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через Android transport;
+- low-latency H.264 `screenrecord → FFmpeg` preview с автоматическим fallback на PNG `screencap`;
 - один долгоживущий preview-worker вместо создания нового потока на каждый кадр;
 - FPS/latency preview telemetry;
 - интерактивный экран Android внутри GUI: tap/swipe/hold/wheel/right-click Back;
