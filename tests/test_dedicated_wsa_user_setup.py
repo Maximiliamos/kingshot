@@ -63,6 +63,12 @@ class DedicatedWsaUserSetupTests(unittest.TestCase):
         self.assertIn('[string]$head = Update-Repository', self.source)
         self.assertIn('[string]$venvPython = Ensure-PythonEnvironment', self.source)
 
+    def test_low_latency_preview_codec_is_optional_and_falls_back_safely(self):
+        self.assertIn("function Ensure-PreviewCodec", self.source)
+        self.assertIn("Gyan.FFmpeg", self.source)
+        self.assertIn("ADB screencap fallback", self.source)
+        self.assertIn("[void](Ensure-PreviewCodec)", self.source)
+
     def test_production_venv_installs_android_unicode_helpers(self):
         self.assertIn("requirements-android-optional.txt", self.source)
         self.assertIn("Android Unicode/system-UI helpers", self.source)
