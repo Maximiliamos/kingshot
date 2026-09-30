@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 
 import bot
 from device_backend import BackendCapture, create_backend
-from frame_stream import ContinuousFrameStream
+from frame_stream import ContinuousFrameStream, create_preview_capture
 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -1083,7 +1083,7 @@ class WarBotWindow(QMainWindow):
         self._stop_frame_stream()
         try:
             backend = create_backend(mode, serial=serial, adb_path=adb_path)
-            capture = BackendCapture(backend)
+            capture = create_preview_capture(backend)
 
             def on_frame(frame, title, rect, metrics):
                 phone, _, _ = bot.crop_phone(frame)
@@ -1094,8 +1094,8 @@ class WarBotWindow(QMainWindow):
                 capture,
                 on_frame=on_frame,
                 on_error=lambda error: self.stream_failed.emit(error),
-                target_fps=4.0,
-                transport="adb-screencap",
+                target_fps=30.0,
+                transport="preview",
             )
             self.frame_stream = stream
             self.frame_stream_signature = signature
