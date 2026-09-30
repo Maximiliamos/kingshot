@@ -8,38 +8,37 @@ production proof.
 
 | Priority | Work item | Code | Real host |
 |---|---|---:|---:|
-| P0 | WSA runtime + Kingshot gate | DONE | PASS on prior accepted commit |
-| P0 | XML/AUMID installer regression | DONE | NEXT smoke |
-| P0 | Consoleless GUI/process cleanup | DONE | NEXT smoke |
+| P0 | WSA runtime + Kingshot gate | DONE | PASS on 2026-09-30 release-candidate host run |
+| P0 | XML/AUMID installer regression | DONE | PASS in release host gate |
+| P0 | Consoleless GUI/process cleanup | DONE | process audit PASS; final GUI smoke included in MVP gate path |
 | P0 | Full Windows CI incl. Qt GUI | DONE | required green |
-| P1 | Continuous H.264 preview + screencap fallback | DONE | H.264 host latency/stability smoke pending |
+| P1 | WSA-internal scrcpy-server H.264 + screencap fallback | DONE | replacement host latency/stability smoke pending |
 | P1 | FPS/latency telemetry | DONE | smoke |
 | P1 | Full mouse controls | DONE | smoke |
 | P1 | Keyboard + Unicode clipboard path | DONE | Unicode host smoke |
 | P1 | Audio health + volume/mute control | DONE | smoke |
 | P1 | Registration state machine | EXISTING | full real-flow pending |
 | P1 | Vision/action-gate safeguards | EXISTING | full real-flow pending |
-| P2 | Bounded runtime/game recovery | DONE | fault-injection pending |
+| P2 | Bounded runtime/game recovery + periodic PID health | DONE | automated game-stop + ADB-disconnect host gate pending |
 | P2 | Heartbeat/health panel | DONE | smoke |
 | P2 | Structured event log | DONE | soak pending |
 | P2 | Corrupt-state fail-closed + previous snapshot | DONE | smoke |
 | P2 | Deterministic long-run-lite tests | DONE | CI |
-| P2 | Multi-cycle real-game soak | release/heartbeat/event tooling ready | pending |
+| P2 | Multi-cycle real-game soak | one-character reset cycles + machine-readable evidence DONE | host run pending |
 | P3 | Consolidate production history into main | pending CI/host gate | — |
 | P3 | Archive old emulator research paths | pending merge | — |
 | P3 | Stable installer/release tag | installer/release gate DONE | tag pending final host evidence |
 
 ## Next real-host acceptance command
 
-The code-side hardening is intentionally driven through the existing evidence
-workflow. On the target Windows PC the acceptance path remains:
+The complete MVP path is now one fail-fast command:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run_and_report.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 ```
 
-The report must prove the newest commit and no console/zombie regression before
-a 1.0 tag is created.
+It runs infrastructure, low-latency preview, real recovery fault injection,
+one exact State #3 → `Тугарин<N>` cycle, then a bounded multi-cycle soak.
 
 ## 1.0 release gates
 
