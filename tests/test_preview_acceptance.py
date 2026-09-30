@@ -13,6 +13,11 @@ class PreviewAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("PREVIEW HOST GATE PASS", SOURCE)
         self.assertIn("PREVIEW HOST GATE FAIL", SOURCE)
 
+    def test_preview_gate_runs_probe_after_failure(self):
+        self.assertIn("preview-probe", SOURCE)
+        self.assertIn("preview-h264-probe.json", SOURCE)
+        self.assertIn("Collecting H.264 encoder/decoder diagnostics", SOURCE)
+
     def test_preview_gate_uses_tugarin_venv(self):
         self.assertIn(r"C:\warbot_wsa\tugarin-venv\Scripts\python.exe", SOURCE)
         self.assertIn(r"C:\warbot_wsa\release-venv\Scripts\python.exe", SOURCE)
