@@ -189,12 +189,19 @@ class TutorialVisionTests(unittest.TestCase):
         height, width = template.shape[:2]
         x, y = 126, 352
         phone[y:y + height, x:x + width] = template
+        # The production matcher requires both the hand and a lit target.
+        target_x = round(x + width * 0.25)
+        target_y = round(y + height * 0.93)
+        radius = max(8, round(min(width, height) * 0.11))
+        cv2.circle(phone, (target_x, target_y), radius, (0, 255, 255), -1)
 
         hit = bot.match_tutorial_hand(phone)
 
         self.assertIsNotNone(hit)
-        self.assertGreaterEqual(hit["score"], 0.99)
-        self.assertEqual(hit["loc"], (x, y))
+        self.assertEqual(hit["variant"], "tutorial_hand_building.png")
+        self.assertGreaterEqual(hit["score"], 0.68)
+        self.assertLessEqual(abs(hit["loc"][0] - x), 2)
+        self.assertLessEqual(abs(hit["loc"][1] - y), 2)
 
     def test_roof_hand_variant_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
