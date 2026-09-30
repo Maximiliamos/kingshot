@@ -1,9 +1,9 @@
 """Continuous framebuffer transports for TUGARIN BOTS.
 
-The GUI prefers a low-latency raw H.264 Android screenrecord stream decoded by
-FFmpeg. If FFmpeg or screenrecord is unavailable, preview falls back to the
-proven ADB PNG screencap path. Automation remains independent from this GUI
-transport and continues to use DeviceBackend frames.
+The GUI prefers a low-latency raw H.264 stream produced by the pinned scrcpy
+server running inside the same WSA instance. If the stream is unavailable,
+preview falls back to the proven ADB PNG screencap path. Automation remains
+independent from this GUI transport and continues to use DeviceBackend frames.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from typing import Any, Callable
 import numpy as np
 
 from device_backend import BackendCapture, BackendError
+from scrcpy_transport import ScrcpyServerCapture
 
 
 WINDOWS_NO_WINDOW = (
@@ -341,12 +342,13 @@ class FallbackCapture:
 
 
 class AutoPreviewCapture:
-    """Lazily choose H.264 inside the worker so GUI construction never blocks."""
+    """Lazily choose scrcpy H.264 so GUI construction never blocks."""
 
     def __init__(self, backend):
         self.backend = backend
         self.active = None
         self._closed = False
+        self.last_primary_error = ""
 
     @property
     def transport_name(self) -> str:
@@ -361,9 +363,10 @@ class AutoPreviewCapture:
             return
         fallback = BackendCapture(self.backend)
         try:
-            preferred = H264ScreenrecordCapture(self.backend)
+            preferred = ScrcpyServerCapture(self.backend)
             self.active = FallbackCapture(preferred, fallback)
-        except Exception:
+        except Exception as exc:
+            self.last_primary_error = str(exc)
             self.active = fallback
 
     def grab(self):
