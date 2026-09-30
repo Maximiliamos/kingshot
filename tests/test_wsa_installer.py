@@ -17,6 +17,28 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn("if (-not $RuntimeOnly -and -not (Test-IsAdmin))", self.source)
         self.assertIn('foreach ($featureName in @("VirtualMachinePlatform", "HypervisorPlatform"))', self.source)
 
+    def test_manifest_parsing_reads_complete_xml_documents(self):
+        self.assertIn(
+            '[xml]$preflightManifest = Get-Content -LiteralPath $manifestPath -Raw',
+            self.source,
+        )
+        self.assertIn(
+            '[xml]$manifest = Get-Content -LiteralPath $manifestPath -Raw -ErrorAction Stop',
+            self.source,
+        )
+        self.assertIn(
+            '[xml]$manifestXml = Get-Content -LiteralPath ".\\AppxManifest.xml" -Raw',
+            self.source,
+        )
+
+    def test_aumid_catalog_uses_installed_manifest_before_fallback(self):
+        start = self.source.index("function Get-WsaApplicationCatalog")
+        end = self.source.index("function Save-WsaUserContextDiagnostics", start)
+        catalog = self.source[start:end]
+        self.assertIn("AppxManifest.xml", catalog)
+        self.assertIn('PackageFamilyName + "!" + $id', catalog)
+        self.assertNotIn("Get-AppxPackageManifest", catalog)
+
     def test_gapps_migration_is_explicit_pinned_and_backed_up(self):
         self.assertIn('[ValidateSet("NoGApps", "GApps")]', self.source)
         self.assertIn('if (-not $AllowMagisk)', self.source)
