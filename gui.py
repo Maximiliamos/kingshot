@@ -25,6 +25,7 @@ CONTROL_FILE = os.path.join(ROOT, "control.json")
 GUI_CONFIG_FILE = os.path.join(ROOT, "gui_config.json")
 LOG_FILE = os.path.join(ROOT, "logs", "bot.log")
 PID_FILE = os.path.join(ROOT, "bot.pid")
+HEARTBEAT_FILE = os.path.join(ROOT, "debug", "runtime-heartbeat.json")
 
 PHASE_NAMES = {
     "rename_governor": "Переименование губернатора",
@@ -347,6 +348,7 @@ class WarBotWindow(QMainWindow):
         self.adb_auth_value = QLabel("—")
         self.google_services_value = QLabel("—")
         self.p0_value = QLabel("—")
+        self.heartbeat_value = QLabel("—")
         for row, (name, widget) in enumerate((
             ("Режим", self.phase_value), ("Шаг", self.step_value),
             ("Следующее имя", self.name_value), ("Создано всего", self.created_value),
@@ -359,6 +361,7 @@ class WarBotWindow(QMainWindow):
             ("ADB authorization", self.adb_auth_value),
             ("Google Services", self.google_services_value),
             ("P0 manifest", self.p0_value),
+            ("Heartbeat", self.heartbeat_value),
             ("Последняя остановка", self.stop_reason_value),
         )):
             caption = QLabel(name)
@@ -943,6 +946,18 @@ class WarBotWindow(QMainWindow):
         cycle_created = int(state.get("characters_created_cycle", 0))
         self.cycle_created_value.setText(f"{cycle_created} / {per_cycle}")
         self.stop_reason_value.setText(str(state.get("last_stop_reason", "") or "—"))
+        heartbeat = read_json(HEARTBEAT_FILE, {})
+        written_at = str(heartbeat.get("written_at", "") or "")
+        heartbeat_text = str(heartbeat.get("status", "—") or "—")
+        if written_at:
+            try:
+                written = datetime.fromisoformat(written_at.replace("Z", "+00:00"))
+                now = datetime.now(written.tzinfo) if written.tzinfo else datetime.now()
+                age = max(0.0, (now - written).total_seconds())
+                heartbeat_text += f" · {age:.1f} сек"
+            except ValueError:
+                pass
+        self.heartbeat_value.setText(heartbeat_text)
         running_pid = bot_pid()
         if self.pending_bot_start:
             self.start_button.setEnabled(False)
