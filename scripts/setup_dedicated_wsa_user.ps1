@@ -401,6 +401,32 @@ function Ensure-PythonEnvironment {
     return [string]$venvPython
 }
 
+function Ensure-PreviewCodec {
+    $ffmpeg = Get-Command ffmpeg.exe -ErrorAction SilentlyContinue
+    if (-not $ffmpeg) { $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue }
+    if ($ffmpeg) {
+        Write-SetupLog "FFmpeg preview decoder ready: $($ffmpeg.Source)"
+        return $true
+    }
+
+    $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
+    if (-not $winget) {
+        Write-SetupLog "WARNING: FFmpeg not found and winget is unavailable; GUI will use ADB screencap fallback."
+        return $false
+    }
+
+    Write-SetupLog "Installing FFmpeg for low-latency H.264 preview (Gyan.FFmpeg)."
+    & $winget.Source install --id Gyan.FFmpeg -e --silent --accept-package-agreements --accept-source-agreements 2>&1 |
+        ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) {
+        Write-SetupLog "WARNING: FFmpeg installation failed exit=$LASTEXITCODE; GUI will use ADB screencap fallback."
+        return $false
+    }
+
+    Write-SetupLog "FFmpeg installation completed. A new process/session will discover its command alias."
+    return $true
+}
+
 function Create-GuiShortcut {
     param([Parameter(Mandatory = $true)][string]$PythonExe)
     $desktop = [Environment]::GetFolderPath("Desktop")
@@ -460,6 +486,7 @@ function Invoke-Continue {
 
     [string]$head = Update-Repository
     [string]$venvPython = Ensure-PythonEnvironment
+    [void](Ensure-PreviewCodec)
     $venvScripts = Split-Path -Parent $venvPython
     $env:PATH = "$venvScripts;$env:PATH"
     $env:PYTHONIOENCODING = "utf-8"
