@@ -59,7 +59,7 @@ class WarBotCliTests(unittest.TestCase):
         out = io.StringIO()
         with patch("warbot_cli.create_backend", return_value=backend), \
                 patch("warbot_cli.create_preview_capture", return_value=capture), \
-                patch("warbot_cli.time.monotonic", side_effect=[0.0, 0.0, 0.01, 0.5, 0.5, 0.51, 1.0, 1.0, 1.01, 1.5, 1.5, 1.51, 2.1, 2.1]), \
+                patch("warbot_cli.time.monotonic", side_effect=[0.0, 0.0, 0.01, 0.5, 0.5, 0.51, 1.0, 1.0, 1.01, 1.5, 1.5, 1.51, 2.1, 2.1, 2.1]), \
                 redirect_stdout(out):
             code = warbot_cli.main([
                 "preview-smoke", "--backend", "wsa",
