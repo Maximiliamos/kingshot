@@ -1307,14 +1307,21 @@ def handle_rename_governor(phone, state):
             modal = match(phone, tpl("governor_rename_dialog_large.png"), 0.94)
         if modal:
             return False
-        committed_nickname = f"Тугарин{int(state.get('pending_nickname', 1))}"
-        state["next_nickname"] = int(state.get("pending_nickname", 1)) + 1
+        committed_number = int(state.get("pending_nickname", 1))
+        committed_nickname = f"Тугарин{committed_number}"
+        evidence_path = os.path.join(
+            DEBUG_DIR,
+            f"rename_committed_{committed_number}_{fs()}.png",
+        )
+        save_img(evidence_path, phone)
+        state["next_nickname"] = committed_number + 1
         state["characters_created"] = int(state.get("characters_created", 0)) + 1
         try:
             emit_event(
                 "nickname_committed",
                 nickname=committed_nickname,
                 characters_created=int(state["characters_created"]),
+                evidence_screenshot=evidence_path,
             )
         except Exception:
             pass
