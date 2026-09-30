@@ -12,6 +12,7 @@ import hashlib
 import os
 from pathlib import Path
 import queue
+import secrets
 import re
 import shutil
 import socket
@@ -102,6 +103,8 @@ class ScrcpyServerCapture:
         self.source_height = int(match.group(2))
         self.max_size = max(320, int(max_size))
         self.bit_rate = max(500_000, int(bit_rate))
+        self.scid = secrets.randbelow(0x7FFFFFFE) + 1
+        self.socket_name = f"scrcpy_{self.scid:08x}"
         self.max_fps = max(1, int(max_fps))
         self.frame_timeout = max(0.5, float(frame_timeout))
         self.width, self.height = self._fit_size(
@@ -202,7 +205,7 @@ class ScrcpyServerCapture:
 
         port = self._reserve_port()
         self._adb_run(
-            ["forward", f"tcp:{port}", "localabstract:scrcpy"],
+            ["forward", f"tcp:{port}", f"localabstract:{self.socket_name}"],
             timeout=10,
             check=True,
         )
@@ -212,6 +215,7 @@ class ScrcpyServerCapture:
             f"CLASSPATH={SCRCPY_REMOTE_PATH} "
             "app_process / com.genymobile.scrcpy.Server "
             f"{SCRCPY_VERSION} "
+            f"scid={self.scid:08x} "
             "tunnel_forward=true audio=false control=false cleanup=false "
             "raw_stream=true video_codec=h264 "
             f"max_size={self.max_size} video_bit_rate={self.bit_rate} "
@@ -375,6 +379,8 @@ class ScrcpyServerCapture:
             "server_exists": self.server_path.is_file(),
             "serial": self.serial,
             "forward_port": self._forward_port,
+            "scid": f"{self.scid:08x}",
+            "socket_name": self.socket_name,
             "source_size": [self.source_width, self.source_height],
             "decoded_size": [self.width, self.height],
             "server_exit": (
