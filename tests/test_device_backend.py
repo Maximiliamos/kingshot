@@ -237,13 +237,49 @@ Current Networks:
             with self.assertRaises(db.BackendError):
                 backend.require_ready(native_arm64=True)
 
-    def test_input_text_fails_closed_for_cyrillic(self):
+    def test_input_text_fails_closed_for_cyrillic_without_unicode_channel(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
             adb_path=r"C:\fake\adb.exe",
         )
-        with self.assertRaises(db.BackendError):
+        with patch.object(backend, "_uiautomator", return_value=None):
+            with self.assertRaises(db.BackendError):
+                backend.input_text("Тугарин1")
+
+    def test_input_text_uses_clipboard_for_cyrillic(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\fake\adb.exe",
+        )
+
+        class FakeUi:
+            def __init__(self):
+                self.value = None
+
+            def set_clipboard(self, value):
+                self.value = value
+
+        ui = FakeUi()
+        with patch.object(backend, "_uiautomator", return_value=ui), \
+                patch.object(backend, "keyevent") as keyevent:
             backend.input_text("Тугарин1")
+
+        self.assertEqual(ui.value, "Тугарин1")
+        keyevent.assert_called_once_with("KEYCODE_PASTE")
+
+    def test_audio_controls_route_to_android_keyevents(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\fake\adb.exe",
+        )
+        with patch.object(backend, "keyevent") as keyevent:
+            backend.volume_up()
+            backend.volume_down()
+            backend.volume_mute()
+        self.assertEqual(
+            [call.args[0] for call in keyevent.call_args_list],
+            ["KEYCODE_VOLUME_UP", "KEYCODE_VOLUME_DOWN", "KEYCODE_VOLUME_MUTE"],
+        )
 
     def test_wait_runtime_services_requires_frame_network_internet_and_audio(self):
         backend = db.AdbDeviceBackend(
