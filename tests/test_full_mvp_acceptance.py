@@ -31,6 +31,15 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("$env:USERNAME", SOURCE)
         self.assertIn("mvp-final-process-audit.json", SOURCE)
 
+    def test_master_persists_machine_readable_evidence(self):
+        self.assertIn("mvp-full-acceptance.json", SOURCE)
+        self.assertIn("Save-AcceptanceEvidence", SOURCE)
+        self.assertIn('overall = $Overall', SOURCE)
+        self.assertIn('head = $head', SOURCE)
+        self.assertIn('gates = @($GateResults)', SOURCE)
+        self.assertIn('-Overall "fail"', SOURCE)
+        self.assertIn('-Overall "pass"', SOURCE)
+
     def test_destructive_gates_are_disclosed(self):
         self.assertIn("intentionally clear Kingshot app data", SOURCE)
         self.assertIn("nickname counter is preserved", SOURCE)
