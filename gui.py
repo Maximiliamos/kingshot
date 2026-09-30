@@ -1223,6 +1223,50 @@ def main():
         return 0
     window = WarBotWindow()
     window.show()
+
+    smoke_seconds = 0.0
+    try:
+        smoke_seconds = float(os.environ.get("TUGARIN_GUI_HOST_SMOKE_SECONDS", "0") or 0)
+    except ValueError:
+        smoke_seconds = 0.0
+
+    if smoke_seconds > 0:
+        smoke_seconds = max(3.0, min(60.0, smoke_seconds))
+        report_path = os.environ.get(
+            "TUGARIN_GUI_HOST_SMOKE_REPORT",
+            os.path.join(ROOT, "debug", "gui-host-smoke.json"),
+        )
+
+        wsa_index = window.backend_mode.findData("wsa")
+        if wsa_index >= 0:
+            window.backend_mode.setCurrentIndex(wsa_index)
+        window.android_serial.setText("127.0.0.1:58526")
+        window.refresh_capture()
+
+        def finish_host_smoke():
+            pixmap = window.preview.pixmap()
+            has_frame = bool(pixmap is not None and not pixmap.isNull())
+            stream_text = window.stream_value.text()
+            status_text = window.device_status.text()
+            scrcpy_h264 = "scrcpy-h264" in stream_text
+            report = {
+                "pass": bool(has_frame and scrcpy_h264),
+                "has_rendered_frame": has_frame,
+                "stream": stream_text,
+                "device_status": status_text,
+                "frame_stream_running": bool(
+                    window.frame_stream is not None and window.frame_stream.running
+                ),
+                "backend": "wsa",
+                "serial": "127.0.0.1:58526",
+            }
+            os.makedirs(os.path.dirname(os.path.abspath(report_path)), exist_ok=True)
+            atomic_json(report_path, report)
+            window.close()
+            app.exit(0 if report["pass"] else 8)
+
+        QTimer.singleShot(round(smoke_seconds * 1000), finish_host_smoke)
+
     return app.exec()
 
 
