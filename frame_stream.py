@@ -249,15 +249,49 @@ class FallbackCapture:
                 pass
 
 
-def create_preview_capture(backend):
-    """Prefer continuous H.264; safely fall back to BackendCapture."""
+class AutoPreviewCapture:
+    """Lazily choose H.264 inside the worker so GUI construction never blocks."""
 
-    fallback = BackendCapture(backend)
-    try:
-        preferred = H264ScreenrecordCapture(backend)
-    except Exception:
-        return fallback
-    return FallbackCapture(preferred, fallback)
+    def __init__(self, backend):
+        self.backend = backend
+        self.active = None
+        self._closed = False
+
+    @property
+    def transport_name(self) -> str:
+        if self.active is None:
+            return "preview-starting"
+        return getattr(self.active, "transport_name", "adb-screencap")
+
+    def _ensure_active(self):
+        if self._closed:
+            raise BackendError("Preview capture is closed.")
+        if self.active is not None:
+            return
+        fallback = BackendCapture(self.backend)
+        try:
+            preferred = H264ScreenrecordCapture(self.backend)
+            self.active = FallbackCapture(preferred, fallback)
+        except Exception:
+            self.active = fallback
+
+    def grab(self):
+        self._ensure_active()
+        return self.active.grab()
+
+    def close(self) -> None:
+        self._closed = True
+        if self.active is not None:
+            try:
+                self.active.close()
+            finally:
+                self.active = None
+
+
+def create_preview_capture(backend):
+    """Return a non-blocking lazy preview selector."""
+
+    return AutoPreviewCapture(backend)
 
 
 class ContinuousFrameStream:
