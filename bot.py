@@ -312,7 +312,7 @@ def save_state(s):
 
 def load_control():
     try:
-        with open(CONTROL_FILE, "r", encoding="utf-8") as f:
+        with open(CONTROL_FILE, "r", encoding="utf-8-sig") as f:
             value = json.load(f)
         return {"paused": bool(value.get("paused", False)), "stop": bool(value.get("stop", False))}
     except (OSError, ValueError, TypeError):
