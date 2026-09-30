@@ -18,6 +18,7 @@ import mss
 import numpy as np
 
 from device_backend import BackendCapture, BackendError, create_backend
+from frame_stream import create_preview_capture
 from runtime_events import emit_event
 from runtime_recovery import RecoveryController
 from runtime_watchdog import RuntimeHeartbeat
@@ -51,6 +52,10 @@ PHONE_W = 1060
 PHONE_H = 2376
 INPUT_W = PHONE_W
 INPUT_H = PHONE_H
+INPUT_CONTENT_LEFT = 0.0
+INPUT_CONTENT_TOP = 0.0
+INPUT_CONTENT_W = float(PHONE_W)
+INPUT_CONTENT_H = float(PHONE_H)
 VISION_W = 421
 VISION_H = 944
 TARGET_STATE = 3
@@ -494,10 +499,10 @@ def get_device_backend():
 
 
 def create_capture():
-    """Use direct Android frames by default; keep scrcpy only as diagnostics."""
+    """Use the low-latency WSA stream for vision, with PNG fallback."""
     if BACKEND_NAME == "scrcpy":
         return ScrcpyCapture()
-    return BackendCapture(get_device_backend())
+    return create_preview_capture(get_device_backend())
 
 
 def adb(args, capture=False):
@@ -552,13 +557,23 @@ def hold(x, y, duration_ms):
     log(f"Android hold phone=({x},{y}) duration={duration_ms} ms")
 
 
+def map_phone_norm(nx, ny):
+    """Map normalized portrait-game coordinates into the physical Android display."""
+    nx = max(0.0, min(1.0, float(nx)))
+    ny = max(0.0, min(1.0, float(ny)))
+    return (
+        INPUT_CONTENT_LEFT + nx * INPUT_CONTENT_W,
+        INPUT_CONTENT_TOP + ny * INPUT_CONTENT_H,
+    )
+
+
 def tap_norm(nx, ny):
-    tap(nx * INPUT_W, ny * INPUT_H)
+    tap(*map_phone_norm(nx, ny))
 
 
 def tap_client(phone, nx, ny):
-    """Tap a normalized point in the current Android frame."""
-    tap(nx * INPUT_W, ny * INPUT_H)
+    """Tap a normalized point in the portrait game content, not letterbox bars."""
+    tap_norm(nx, ny)
 
 
 def type_tugarin_on_russian_keyboard(phone, number):
@@ -961,21 +976,22 @@ def tap_match(phone, hit):
     x, y = hit["loc"]
     cx = x + hit["w"] / 2
     cy = y + hit["h"] / 2
-    tap(cx * INPUT_W / phone.shape[1], cy * INPUT_H / phone.shape[0])
+    tap_norm(cx / phone.shape[1], cy / phone.shape[0])
 
 
 def hold_match(phone, hit, duration_ms):
     x, y = hit["loc"]
     cx = x + hit["w"] / 2
     cy = y + hit["h"] / 2
-    hold(cx * INPUT_W / phone.shape[1], cy * INPUT_H / phone.shape[0], duration_ms)
+    px, py = map_phone_norm(cx / phone.shape[1], cy / phone.shape[0])
+    hold(px, py, duration_ms)
 
 
 def tap_match_relative(phone, hit, rel_x, rel_y):
     """Tap a known point inside a context template, not its visual centre."""
     x = hit["loc"][0] + hit["w"] * rel_x
     y = hit["loc"][1] + hit["h"] * rel_y
-    tap(x * INPUT_W / phone.shape[1], y * INPUT_H / phone.shape[0])
+    tap_norm(x / phone.shape[1], y / phone.shape[0])
 
 
 def debug(phone, hit, name):
@@ -985,21 +1001,44 @@ def debug(phone, hit, name):
     save_img(os.path.join(DEBUG_DIR, f"{fs()}_{name}_{hit['score']:.3f}.png"), out)
 
 
-def sync_input_geometry(frame):
-    """Use the real Android framebuffer size for input coordinates.
+def sync_input_geometry(frame, rect=None):
+    """Map portrait game coordinates onto the physical Android framebuffer.
 
-    Template matching always runs at VISION_W x VISION_H, but ADB input must
-    target the guest's actual framebuffer. Legacy scrcpy still uses the
-    physical device constants because its desktop window can be arbitrarily
-    resized/letterboxed.
+    WSA may expose a 16:9 framebuffer while Kingshot is portrait and centered
+    with side bars. Vision works on the cropped portrait content, therefore
+    input must add the same crop offset instead of scaling to the full display.
     """
     global INPUT_W, INPUT_H
+    global INPUT_CONTENT_LEFT, INPUT_CONTENT_TOP, INPUT_CONTENT_W, INPUT_CONTENT_H
+
     if BACKEND_NAME == "scrcpy":
         INPUT_W, INPUT_H = PHONE_W, PHONE_H
-        return
-    height, width = frame.shape[:2]
-    if width >= 100 and height >= 100:
-        INPUT_W, INPUT_H = width, height
+    else:
+        height, width = frame.shape[:2]
+        rect_width = int((rect or {}).get("width", 0) or 0)
+        rect_height = int((rect or {}).get("height", 0) or 0)
+        if rect_width >= 100 and rect_height >= 100:
+            INPUT_W, INPUT_H = rect_width, rect_height
+        elif width >= 100 and height >= 100:
+            INPUT_W, INPUT_H = width, height
+
+    target = PHONE_W / PHONE_H
+    actual = INPUT_W / max(1.0, INPUT_H)
+    if actual > target:
+        content_h = float(INPUT_H)
+        content_w = content_h * target
+        left = (INPUT_W - content_w) / 2.0
+        top = 0.0
+    else:
+        content_w = float(INPUT_W)
+        content_h = content_w / target
+        left = 0.0
+        top = (INPUT_H - content_h) / 2.0
+
+    INPUT_CONTENT_LEFT = left
+    INPUT_CONTENT_TOP = top
+    INPUT_CONTENT_W = content_w
+    INPUT_CONTENT_H = content_h
 
 
 def crop_phone(frame):
@@ -1618,7 +1657,11 @@ def main():
                 try:
                     capture = create_capture()
                     frame, title, rect = capture.grab()
-                    log(f"Захват Android: {title} {rect['width']}x{rect['height']}")
+                    sync_input_geometry(frame, rect)
+                    log(
+                        f"Захват Android: {title} {rect['width']}x{rect['height']} "
+                        f"content={INPUT_CONTENT_W:.0f}x{INPUT_CONTENT_H:.0f}"
+                    )
                 except Exception as e:
                     log(f"Захват Android не открылся: {e}.")
                     if capture is not None:
@@ -1630,7 +1673,7 @@ def main():
                     continue
 
             try:
-                frame, _, _ = capture.grab()
+                frame, _, rect = capture.grab()
                 recovery.capture_succeeded()
             except Exception as e:
                 log(f"Захват Android: {e}. Пересоздаю захват.")
@@ -1646,7 +1689,7 @@ def main():
                 backend=backend.backend_name,
                 serial=backend.serial,
             )
-            sync_input_geometry(frame)
+            sync_input_geometry(frame, rect)
             phone, left, right = crop_phone(frame)
 
             if not stream_ok(frame, left, right):
