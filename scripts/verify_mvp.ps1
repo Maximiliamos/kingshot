@@ -66,4 +66,4 @@ if (-not (Test-Path $frame)) {
 Write-Host ""
 Write-Host "MVP HOST GATE PASS"
 Write-Host "Screenshot: $frame"
-Write-Host "Now launch the GUI with: .\run_gui.bat"
+Write-Host "Now launch the GUI with: wscript.exe //B .\run_gui.vbs"
