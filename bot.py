@@ -78,6 +78,7 @@ TEMPLATE_CACHE = {}
 LAST_OCR_AT = 0.0
 WATCHDOG_SECONDS = 75.0
 GOVERNOR_CONFIRM_SECONDS = 1.5
+RUNTIME_PROBE_INTERVAL = 5.0
 
 user32 = ctypes.windll.user32
 # MSS uses physical pixels. Ask Windows for client-window coordinates in the
@@ -454,6 +455,14 @@ def perform_cycle_reset(state):
     save_state(state)
     begin_tutorial(state, "initial")
     backend.launch_app()
+    try:
+        emit_event(
+            "cycle_reset",
+            current_cycle=int(state["current_cycle"]),
+            characters_created=int(state.get("characters_created", 0)),
+        )
+    except Exception:
+        pass
     log(f"Новый цикл #{state['current_cycle']}: игра запущена после очистки данных.")
 
 
@@ -1634,6 +1643,7 @@ def main():
     recovery = RecoveryController()
     heartbeat = RuntimeHeartbeat()
     backend = get_device_backend()
+    last_runtime_probe = 0.0
     heartbeat.write(
         state=state,
         backend=backend.backend_name,
@@ -1661,6 +1671,54 @@ def main():
             if pause_reported:
                 log("GUI: работа продолжена.")
                 pause_reported = False
+
+            now_mono = time.monotonic()
+            if now_mono - last_runtime_probe >= RUNTIME_PROBE_INTERVAL:
+                last_runtime_probe = now_mono
+                try:
+                    decision = recovery.probe_runtime(backend)
+                except Exception as exc:
+                    decision = None
+                    state["last_stop_reason"] = f"Runtime health probe failed: {exc}"
+                    save_state(state)
+                    log("STOP: " + state["last_stop_reason"])
+                    try:
+                        emit_event(
+                            "runtime_probe",
+                            action="stop",
+                            terminal=True,
+                            detail=state["last_stop_reason"],
+                        )
+                    except Exception:
+                        pass
+                    break
+
+                if decision.action != "healthy":
+                    try:
+                        emit_event(
+                            "runtime_probe",
+                            action=decision.action,
+                            terminal=decision.terminal,
+                            detail=decision.detail,
+                        )
+                    except Exception:
+                        pass
+                    log(f"Runtime probe: {decision.action}: {decision.detail}")
+                    if decision.terminal:
+                        state["last_stop_reason"] = decision.detail
+                        save_state(state)
+                        break
+                    if decision.action in ("game_restarted", "wait_runtime"):
+                        gate = ActionGate()
+                        unknown_since = None
+                        if capture is not None:
+                            try:
+                                capture.close()
+                            except Exception:
+                                pass
+                            capture = None
+                        time.sleep(2.0)
+                        continue
 
             if state.get("phase") == "complete":
                 log("Работа завершена по настройке цикла.")
