@@ -201,6 +201,47 @@ class WarBotCliTests(unittest.TestCase):
         self.assertFalse(result["pass"])
         self.assertFalse(result["checks"]["nickname_evidence_screenshot"])
 
+    def test_soak_evidence_requires_ordered_nicknames_and_screenshots(self):
+        state = {
+            "phase": "tutorial_initial",
+            "step": "intro",
+            "next_nickname": 5,
+            "characters_created": 4,
+            "current_cycle": 3,
+            "last_stop_reason": "",
+        }
+        with TemporaryDirectory() as td:
+            first = Path(td) / "rename3.png"
+            second = Path(td) / "rename4.png"
+            first.write_bytes(b"one")
+            second.write_bytes(b"two")
+            events = [
+                {
+                    "event": "mvp_soak_start",
+                    "next_nickname_before": 3,
+                    "characters_before": 2,
+                    "current_cycle": 1,
+                },
+                {
+                    "event": "nickname_committed",
+                    "nickname": "Тугарин3",
+                    "evidence_screenshot": str(first),
+                },
+                {"event": "cycle_reset"},
+                {
+                    "event": "nickname_committed",
+                    "nickname": "Тугарин4",
+                    "evidence_screenshot": str(second),
+                },
+            ]
+            with patch("bot.load_state", return_value=state), \
+                    patch("runtime_events.read_recent_events", return_value=events):
+                result = warbot_cli.collect_mvp_soak_evidence(2)
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["characters_delta"], 2)
+        self.assertEqual(result["nickname_commits"][:2], ["Тугарин3", "Тугарин4"])
+        self.assertEqual(len(result["nickname_evidence_screenshots"]), 2)
+
     def test_clear_game_data_requires_explicit_yes(self):
         backend = MagicMock()
         with patch("warbot_cli.create_backend", return_value=backend):
