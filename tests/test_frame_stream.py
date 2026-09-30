@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from frame_stream import ContinuousFrameStream
+from frame_stream import AutoPreviewCapture, ContinuousFrameStream, FallbackCapture
 
 
 class FakeCapture:
@@ -27,7 +27,35 @@ class FailingCapture(FakeCapture):
         raise RuntimeError("capture down")
 
 
+class FailingOnceCapture(FakeCapture):
+    transport_name = "preferred"
+
+    def grab(self):
+        self.calls += 1
+        raise RuntimeError("preferred failed")
+
+
+class NamedFallbackCapture(FakeCapture):
+    transport_name = "fallback"
+
+
 class FrameStreamTests(unittest.TestCase):
+    def test_fallback_capture_demotes_after_primary_failure(self):
+        preferred = FailingOnceCapture()
+        fallback = NamedFallbackCapture()
+        capture = FallbackCapture(preferred, fallback)
+        frame, title, rect = capture.grab()
+        self.assertEqual(frame.shape, (20, 10, 3))
+        self.assertEqual(capture.transport_name, "fallback")
+        self.assertTrue(preferred.closed)
+
+    def test_auto_preview_is_lazy_before_first_grab(self):
+        backend = object()
+        capture = AutoPreviewCapture(backend)
+        self.assertIsNone(capture.active)
+        self.assertEqual(capture.transport_name, "preview-starting")
+        capture.close()
+
     def test_continuous_stream_emits_frames_and_metrics(self):
         capture = FakeCapture()
         ready = threading.Event()
