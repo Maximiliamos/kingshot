@@ -866,18 +866,40 @@ if (-not $SkipInstall -and -not $RuntimeOnly) {
             $migrationBackup = Join-Path $WorkRoot ("profile-backups\wsa-flavor-migration-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
             New-Item -ItemType Directory -Force -Path $migrationBackup | Out-Null
             $packageData = Join-Path $env:LOCALAPPDATA "Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe"
-            $userdata = Join-Path $packageData "LocalCache\userdata.vhdx"
-            if (Test-Path -LiteralPath $userdata -PathType Leaf) {
-                Copy-Item -LiteralPath $userdata -Destination (Join-Path $migrationBackup "userdata.vhdx") -Force
+            Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            $localCache = Join-Path $packageData "LocalCache"
+            $vhdFiles = @(Get-ChildItem -LiteralPath $localCache -Filter "*.vhdx" -File -ErrorAction SilentlyContinue)
+            $userdataFiles = @($vhdFiles | Where-Object Name -Like "userdata*.vhdx")
+            if ($userdataFiles.Count -eq 0) {
+                throw "Refusing WSA flavor migration: no userdata*.vhdx was found in $localCache."
             }
+            $backupInventory = @()
+            foreach ($vhd in $vhdFiles) {
+                $destination = Join-Path $migrationBackup $vhd.Name
+                Copy-Item -LiteralPath $vhd.FullName -Destination $destination -Force
+                $copied = Get-Item -LiteralPath $destination
+                if ($copied.Length -ne $vhd.Length) {
+                    throw "WSA migration backup size mismatch for $($vhd.Name)."
+                }
+                $backupInventory += @{
+                    name = $vhd.Name
+                    length = $copied.Length
+                    sha256 = (Get-Sha256 -Path $destination)
+                }
+            }
+            $settingsSource = Join-Path $packageData "Settings"
+            if (Test-Path -LiteralPath $settingsSource -PathType Container) {
+                Copy-Item -LiteralPath $settingsSource -Destination (Join-Path $migrationBackup "Settings") -Recurse -Force
+            }
+            $backupInventory | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $migrationBackup "backup-files.json")
             @{
                 package = $existing.PackageFullName
                 install_location = $existing.InstallLocation
                 flavor_before = if ($existing.InstallLocation -match "GApps") { "GApps" } else { "NoGApps" }
                 flavor_after = $WsaFlavor
             } | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 (Join-Path $migrationBackup "migration.json")
-            Write-Log "Backed up existing WSA userdata metadata to $migrationBackup."
-            Stop-Process -Name "WsaSettings","WsaClient","WindowsSubsystemForAndroid","WsaService","WSACrashUploader","vmmemWSA" -Force -ErrorAction SilentlyContinue
+            Write-Log "Backed up existing WSA userdata VHDX and settings to $migrationBackup."
             Remove-AppxPackage -Package $existing.PackageFullName -ErrorAction Stop
             $existing = $null
             $needsPackageInstall = $true

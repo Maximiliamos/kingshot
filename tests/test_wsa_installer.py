@@ -51,6 +51,10 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('501a3ad48c998e9b1e1d91cfbdfb742f8f46f927e9f09dc9b11c70abbe074458', self.source)
         self.assertIn('$ReplaceExistingWsa', self.source)
         self.assertIn('wsa-flavor-migration-', self.source)
+        self.assertIn('-Filter "*.vhdx"', self.source)
+        self.assertIn('Where-Object Name -Like "userdata*.vhdx"', self.source)
+        self.assertIn('backup-files.json', self.source)
+        self.assertIn('WSA migration backup size mismatch', self.source)
 
     def test_all_runtime_adb_and_python_probes_are_hidden(self):
         self.assertIn('Start-Process -FilePath $adb -ArgumentList $Arguments -WindowStyle Hidden', self.source)
