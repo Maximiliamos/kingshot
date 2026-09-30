@@ -95,6 +95,7 @@ Evidence to retain:
 - `logs/events.jsonl`;
 - `debug/runtime-heartbeat.json`;
 - screenshots for any unknown/action timeout;
+- a post-rename screenshot referenced by each `nickname_committed` event;
 - final `state.json` and `state.previous.json`.
 
 ## Recovery acceptance
@@ -136,6 +137,11 @@ unexplained.
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 ```
+
+The orchestrator first requires a clean tracked Git worktree so host evidence
+cannot accidentally describe uncommitted code. It continuously writes
+`debug/mvp-full-acceptance.json` with the exact Git SHA, each gate result,
+timestamps and final PASS/FAIL.
 
 The orchestrator is fail-fast and runs:
 
