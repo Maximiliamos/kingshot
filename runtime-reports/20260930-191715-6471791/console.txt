@@ -1,0 +1,151 @@
+﻿[2026-09-30T19:13:36.8774827+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T19:13:38.1857400+03:00] Selected WSABuilds LTS 8 NoGApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T19:13:38.2536562+03:00] Windows developer package registration is enabled.
+[2026-09-30T19:13:39.1077694+03:00] TUGARIN BOTS NoGApps WSA package is already registered; keeping it.
+[2026-09-30T19:13:40.5700207+03:00] Could not fully inspect WSA package preflight: Не удается преобразовать значение "{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "ANDROID_CONTROL_CHANNEL_REFUSED",
+    "exit_code":  20,
+    "commit":  "0582e1170087f65611f73423587da4a1f5f6fb66",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-30T19:07:59.3732274+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "port_reservation_ok":  true,
+    "attempted_serials":  [
+                              "172.18.246.117:58526",
+                              "172.22.152.95:5555",
+                              "172.18.246.117:5555",
+                              "172.19.0.1:58526",
+                              "172.18.255.255:58526",
+                              "172.22.144.1:5555",
+                              "172.22.159.255:5555",
+                              "192.168.1.101:58526",
+                              "172.22.159.255:58526",
+                              "172.18.255.82:58526",
+                              "127.0.0.1:58526",
+                              "172.18.240.1:5555",
+                              "172.18.255.82:5555",
+                              "172.18.242.7:5555",
+                              "172.18.242.7:58526",
+                              "172.18.240.1:58526",
+                              "172.22.144.1:58526",
+                              "172.18.255.255:5555",
+                              "172.22.152.95:58526"
+                          ],
+    "foreign_android_seen":  false,
+    "port_58526_refused":  true,
+    "tcp_endpoint_seen":  true,
+    "loopback_exemption_ok":  false,
+    "packaged_activation_attempted":  false,
+    "client_crash_seen":  false,
+    "developer_repair_attempted":  true,
+    "packaged_activation_succeeded":  true,
+    "runtime_ever_seen":  true,
+    "upstream_uri_launch_requested":  false,
+    "pair_attempted":  false,
+    "runtime_alive_final":  true,
+    "installed_version":  "2407.40000.4.0",
+    "raw_wsaclient_launch_attempted":  false,
+    "packaged_activation_retried":  false
+}
+" в тип "System.Xml.XmlDocument". Ошибка: "Невозможно вставить указанный узел в качестве действительного дочернего узла данного узла, т.к. указанный узел имеет неверный тип."
+[2026-09-30T19:13:40.8029763+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T19:13:40.8390148+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T19:13:40.8791565+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T19:13:41.9946429+03:00] Could not enumerate WSA AUMIDs from package manifest: Не удается преобразовать значение "{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "ANDROID_CONTROL_CHANNEL_REFUSED",
+    "exit_code":  20,
+    "commit":  "0582e1170087f65611f73423587da4a1f5f6fb66",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-30T19:07:59.3732274+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "port_reservation_ok":  true,
+    "attempted_serials":  [
+                              "172.18.246.117:58526",
+                              "172.22.152.95:5555",
+                              "172.18.246.117:5555",
+                              "172.19.0.1:58526",
+                              "172.18.255.255:58526",
+                              "172.22.144.1:5555",
+                              "172.22.159.255:5555",
+                              "192.168.1.101:58526",
+                              "172.22.159.255:58526",
+                              "172.18.255.82:58526",
+                              "127.0.0.1:58526",
+                              "172.18.240.1:5555",
+                              "172.18.255.82:5555",
+                              "172.18.242.7:5555",
+                              "172.18.242.7:58526",
+                              "172.18.240.1:58526",
+                              "172.22.144.1:58526",
+                              "172.18.255.255:5555",
+                              "172.22.152.95:58526"
+                          ],
+    "foreign_android_seen":  false,
+    "port_58526_refused":  true,
+    "tcp_endpoint_seen":  true,
+    "loopback_exemption_ok":  false,
+    "packaged_activation_attempted":  false,
+    "client_crash_seen":  false,
+    "developer_repair_attempted":  true,
+    "packaged_activation_succeeded":  true,
+    "runtime_ever_seen":  true,
+    "upstream_uri_launch_requested":  false,
+    "pair_attempted":  false,
+    "runtime_alive_final":  true,
+    "installed_version":  "2407.40000.4.0",
+    "raw_wsaclient_launch_attempted":  false,
+    "packaged_activation_retried":  false
+}
+" в тип "System.Xml.XmlDocument". Ошибка: "Невозможно вставить указанный узел в качестве действительного дочернего узла данного узла, т.к. указанный узел имеет неверный тип."
+[2026-09-30T19:13:42.0023748+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T19:13:42.3675905+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20000).
+[2026-09-30T19:13:42.4321124+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=32280).
+[2026-09-30T19:14:21.0096346+03:00] WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation.
+[2026-09-30T19:14:21.0296963+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20000).
+[2026-09-30T19:14:21.0560224+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=28780).
+[2026-09-30T19:14:37.4685880+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch.
+[2026-09-30T19:14:37.4774863+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-09-30T19:14:40.6344605+03:00] Developer-mode fallback applied; original settings preserved at C:\warbot_wsa\developer-mode-fallback\settings.dat.backup-20260930-191437.
+[2026-09-30T19:14:40.9898658+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=19804).
+[2026-09-30T19:14:41.0187918+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=11172).
+[2026-09-30T19:14:53.3967215+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:06.9266090+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:08.3884667+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:09.7223921+03:00] Android endpoint 172.18.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:10.0514259+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:10.3508654+03:00] Android endpoint 172.19.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:34.1619958+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:34.4887218+03:00] Android endpoint 172.18.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:36.2660855+03:00] Android endpoint 172.19.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:36.5506125+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:36.8802979+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:48.6728850+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:48.9469018+03:00] Android endpoint 172.18.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:50.5773003+03:00] Android endpoint 172.19.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:50.8581841+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:51.1664366+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:15:56.6561839+03:00] All non-destructive startup routes were exhausted; performing the single allowed WSA recycle.
+[2026-09-30T19:16:01.0281614+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=24328).
+[2026-09-30T19:16:01.0579659+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=34788).
+[2026-09-30T19:16:08.7721609+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:09.2234723+03:00] Android endpoint 172.18.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:14.9890615+03:00] Android endpoint 172.19.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:15.4405998+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:15.8611961+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:33.7509852+03:00] Android endpoint 127.0.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:34.6306473+03:00] Android endpoint 172.18.240.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:41.5748797+03:00] Android endpoint 172.19.0.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:42.8172793+03:00] Android endpoint 172.22.144.1:58526 is reachable but awaiting ADB host-key authorization.
+[2026-09-30T19:16:46.3244547+03:00] Android endpoint 192.168.1.101:58526 is reachable but awaiting ADB host-key authorization.

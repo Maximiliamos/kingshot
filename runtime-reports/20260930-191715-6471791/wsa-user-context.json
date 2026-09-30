@@ -1,0 +1,34 @@
+﻿{
+    "current_account":  "COMPUTER\\Программист1",
+    "current_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "current_session_id":  4,
+    "is_admin":  true,
+    "explorer_owners":  [
+                            {
+                                "process_id":  10656,
+                                "session_id":  1,
+                                "account":  "COMPUTER\\Администратор",
+                                "sid":  "S-1-5-21-1641294696-4270169483-3689275233-500"
+                            },
+                            {
+                                "process_id":  31548,
+                                "session_id":  3,
+                                "account":  "COMPUTER\\TugarinBots",
+                                "sid":  "S-1-5-21-1641294696-4270169483-3689275233-1008"
+                            },
+                            {
+                                "process_id":  11552,
+                                "session_id":  4,
+                                "account":  "COMPUTER\\Программист1",
+                                "sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007"
+                            }
+                        ],
+    "package_users":  [
+                          {
+                              "package_full_name":  "MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe",
+                              "install_location":  "C:\\warbot_wsa\\WSA_LTS8_Windows10\\WSA_2407.40000.4.0_x64",
+                              "user_security_id":  "Microsoft.Windows.Appx.PackageManager.Commands.AppxUserSecurityId",
+                              "install_state":  "Installed"
+                          }
+                      ]
+}

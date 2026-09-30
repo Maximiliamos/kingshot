@@ -1,0 +1,10 @@
+﻿
+
+Name            : MicrosoftCorporationII.WindowsSubsystemForAndroid
+PackageFullName : MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+Version         : 2407.40000.4.0
+InstallLocation : C:\warbot_wsa\WSA_LTS8_Windows10\WSA_2407.40000.4.0_x64
+
+
+
+
