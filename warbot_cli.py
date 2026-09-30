@@ -6,10 +6,12 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 import cv2
 
 from device_backend import BackendError, NativeArm64Backend, WsaBackend, create_backend
+from frame_stream import create_preview_capture
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         "action",
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
-            "restart-game",
+            "restart-game", "preview-smoke",
             "clear-game-data", "clean-start", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
@@ -29,6 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", default="warbot-frame.png")
     parser.add_argument("--apks-dir", default=None)
     parser.add_argument("--game-stability-seconds", type=int, default=45)
+    parser.add_argument("--preview-seconds", type=float, default=10.0)
+    parser.add_argument("--require-h264", action="store_true")
     parser.add_argument("--wipe", action="store_true")
     parser.add_argument(
         "--clean-game",
@@ -137,6 +141,59 @@ def main(argv=None) -> int:
                 "WSA lifecycle is managed by Windows."
             )
         backend.stop_runtime()
+        return 0
+
+    if args.action == "preview-smoke":
+        backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
+        capture = create_preview_capture(backend)
+        duration = max(2.0, float(args.preview_seconds))
+        started = time.monotonic()
+        deadline = started + duration
+        frames = 0
+        latencies = []
+        transports = []
+        last_shape = None
+        try:
+            while time.monotonic() < deadline:
+                before = time.monotonic()
+                frame, _, _ = capture.grab()
+                elapsed_ms = (time.monotonic() - before) * 1000.0
+                if frame is None or getattr(frame, "size", 0) == 0:
+                    raise BackendError("Preview returned an empty frame")
+                frames += 1
+                latencies.append(elapsed_ms)
+                transport = str(getattr(capture, "transport_name", "unknown"))
+                if not transports or transports[-1] != transport:
+                    transports.append(transport)
+                last_shape = list(frame.shape)
+        finally:
+            capture.close()
+
+        elapsed = max(0.001, time.monotonic() - started)
+        if frames < 3:
+            raise BackendError(f"Preview smoke produced too few frames: {frames}")
+
+        ordered = sorted(latencies)
+        p95_index = min(len(ordered) - 1, max(0, int(round((len(ordered) - 1) * 0.95))))
+        active_transport = transports[-1] if transports else "unknown"
+        result = {
+            "pass": True,
+            "seconds": round(elapsed, 3),
+            "frames": frames,
+            "fps": round(frames / elapsed, 3),
+            "avg_latency_ms": round(sum(latencies) / len(latencies), 3),
+            "p95_latency_ms": round(ordered[p95_index], 3),
+            "active_transport": active_transport,
+            "transport_history": transports,
+            "frame_shape": last_shape,
+            "h264": active_transport == "h264-screenrecord",
+        }
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if args.require_h264 and not result["h264"]:
+            raise BackendError(
+                "H.264 preview was required but preview fell back to "
+                f"{active_transport}. See JSON metrics above."
+            )
         return 0
 
     if args.action == "screenshot":
