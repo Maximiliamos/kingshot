@@ -41,6 +41,11 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
     def test_gui_is_single_instance_and_reports_runtime_identity(self):
         self.assertIn("QLockFile", self.gui)
         self.assertIn("tugarin-bots-gui.lock", self.gui)
+        lock_branch = self.gui.split("if not instance_lock.tryLock(100):", 1)[1].split(
+            "window = WarBotWindow()", 1
+        )[0]
+        self.assertIn("return 0", lock_branch)
+        self.assertNotIn("QMessageBox", lock_branch)
         self.assertIn("Windows SID/User", self.gui)
         self.assertIn("WSA flavor", self.gui)
         self.assertIn("ADB authorization", self.gui)

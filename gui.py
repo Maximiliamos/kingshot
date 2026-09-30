@@ -1277,11 +1277,10 @@ def main():
     instance_lock = QLockFile(os.path.join(tempfile.gettempdir(), "tugarin-bots-gui.lock"))
     instance_lock.setStaleLockTime(0)
     if not instance_lock.tryLock(100):
-        QMessageBox.information(
-            None,
-            "TUGARIN BOTS",
-            "TUGARIN BOTS уже запущен. Второй экземпляр не будет открыт.",
-        )
+        # A shortcut may be clicked more than once while the existing window is
+        # obscured.  Do not leave a second pythonw process blocked on a modal
+        # dialog: it looks like a duplicate runtime and can steal input focus.
+        # The already-running instance remains the sole capture owner.
         return 0
     window = WarBotWindow()
     window.show()
