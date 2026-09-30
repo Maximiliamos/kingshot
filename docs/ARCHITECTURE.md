@@ -53,10 +53,12 @@ Automation consumes frames through the backend contract. The GUI uses
 `ContinuousFrameStream`, a single long-lived preview worker, instead of
 creating a new worker for every Qt timer tick.
 
-The currently proven transport remains `adb exec-out screencap -p`. The
-stream boundary deliberately isolates transport from GUI/state-machine code so
-an H.264/scrcpy-server transport can replace it after real-host validation
-without another application rewrite.
+The GUI now prefers `adb exec-out screenrecord --output-format=h264 -` decoded
+continuously by FFmpeg. If FFmpeg/screenrecord is unavailable or the stream
+fails, `FallbackCapture` demotes preview to the proven `adb exec-out screencap
+-p` path. Automation is independent of GUI preview transport. The H.264 path
+is code-complete but still requires final latency/stability measurement on the
+target WSA host.
 
 ## Input
 
