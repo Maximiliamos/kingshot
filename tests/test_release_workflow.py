@@ -11,7 +11,8 @@ INSTALL = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8-sig")
 class ReleaseWorkflowTests(unittest.TestCase):
     def test_process_audit_records_adb_but_only_fails_stale_console_python(self):
         self.assertIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb"', AUDIT)
-        self.assertIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost"', AUDIT)
+        self.assertIn('"python", "pythonw", "cmd", "conhost"', AUDIT)
+        self.assertNotIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost"\n        )', AUDIT)
         self.assertIn("stale_processes", AUDIT)
         self.assertIn("exit 21", AUDIT)
 
