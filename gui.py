@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 import bot
 from device_backend import BackendCapture, create_backend
+from frame_stream import ContinuousFrameStream
 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -80,6 +81,7 @@ class InteractivePreview(QLabel):
 
     tap_requested = Signal(int, int)
     swipe_requested = Signal(int, int, int, int, int)
+    hold_requested = Signal(int, int, int)
     key_requested = Signal(str)
     text_requested = Signal(str)
 
@@ -123,6 +125,10 @@ class InteractivePreview(QLabel):
         return dx, dy
 
     def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.RightButton:
+            self.key_requested.emit("KEYCODE_BACK")
+            event.accept()
+            return
         if event.button() == Qt.MouseButton.LeftButton:
             self.setFocus(Qt.FocusReason.MouseFocusReason)
             mapped = self._map_to_device(event.position())
@@ -141,7 +147,9 @@ class InteractivePreview(QLabel):
             if end is not None:
                 elapsed_ms = max(50, min(5000, round((time.monotonic() - self._press_at) * 1000)))
                 distance = abs(end[0] - start[0]) + abs(end[1] - start[1])
-                if distance <= 12:
+                if distance <= 12 and elapsed_ms >= 650:
+                    self.hold_requested.emit(end[0], end[1], elapsed_ms)
+                elif distance <= 12:
                     self.tap_requested.emit(*end)
                 else:
                     self.swipe_requested.emit(start[0], start[1], end[0], end[1], elapsed_ms)
@@ -169,11 +177,24 @@ class InteractivePreview(QLabel):
             return
 
         text = event.text()
-        if text and text.isprintable() and text.isascii():
+        if text and text.isprintable():
             self.text_requested.emit(text)
             event.accept()
             return
         super().keyPressEvent(event)
+
+    def wheelEvent(self, event):
+        mapped = self._map_to_device(event.position())
+        if mapped is None:
+            super().wheelEvent(event)
+            return
+        x, y = mapped
+        span = max(120, self._device_height // 5)
+        direction = 1 if event.angleDelta().y() > 0 else -1
+        start_y = max(0, min(self._device_height - 1, y + direction * span // 2))
+        end_y = max(0, min(self._device_height - 1, y - direction * span // 2))
+        self.swipe_requested.emit(x, start_y, x, end_y, 250)
+        event.accept()
 
 
 class Card(QFrame):
@@ -189,6 +210,8 @@ class Card(QFrame):
 class WarBotWindow(QMainWindow):
     capture_ready = Signal(object, str, object)
     capture_failed = Signal(str)
+    stream_failed = Signal(str)
+    stream_metrics_ready = Signal(object)
     manual_input_log = Signal(str)
     health_ready = Signal(object)
 
@@ -210,8 +233,12 @@ class WarBotWindow(QMainWindow):
         self.capture = None
         self.capture_signature = None
         self.capture_busy = False
+        self.frame_stream = None
+        self.frame_stream_signature = None
         self.capture_ready.connect(self._render_capture)
         self.capture_failed.connect(self._capture_failed)
+        self.stream_failed.connect(self._stream_failed)
+        self.stream_metrics_ready.connect(self._render_stream_metrics)
         self.manual_input_log.connect(self.append_log)
         self.health_ready.connect(self._render_runtime_health)
         self.health_busy = False
@@ -287,12 +314,13 @@ class WarBotWindow(QMainWindow):
         self.preview.setObjectName("preview")
         self.preview.tap_requested.connect(self.preview_tap)
         self.preview.swipe_requested.connect(self.preview_swipe)
+        self.preview.hold_requested.connect(self.preview_hold)
         self.preview.key_requested.connect(self.preview_key)
         self.preview.text_requested.connect(self.preview_text)
         preview_card.layout.addWidget(self.preview, 1)
         preview_help = QLabel(
-            "Мышь: клик = касание, протяжка = свайп. "
-            "Кликни по экрану и используй клавиатуру для ввода/Android-клавиш."
+            "Мышь: клик = касание, удержание = long-press, протяжка/колесо = свайп, "
+            "правый клик = Назад. Клавиатура и Unicode-текст передаются в Android."
         )
         preview_help.setWordWrap(True)
         preview_help.setObjectName("muted")
@@ -313,6 +341,7 @@ class WarBotWindow(QMainWindow):
         self.network_value = QLabel("—")
         self.internet_value = QLabel("—")
         self.audio_value = QLabel("—")
+        self.stream_value = QLabel("—")
         self.windows_user_value = QLabel(os.environ.get("USERNAME", "—"))
         self.wsa_flavor_value = QLabel("—")
         self.adb_auth_value = QLabel("—")
@@ -324,6 +353,7 @@ class WarBotWindow(QMainWindow):
             ("Цикл", self.cycle_value), ("В этом цикле", self.cycle_created_value),
             ("Сеть Android", self.network_value), ("Интернет", self.internet_value),
             ("Аудиосервис", self.audio_value),
+            ("Видео", self.stream_value),
             ("Windows SID/User", self.windows_user_value),
             ("WSA flavor", self.wsa_flavor_value),
             ("ADB authorization", self.adb_auth_value),
@@ -336,6 +366,17 @@ class WarBotWindow(QMainWindow):
             grid.addWidget(caption, row, 0)
             grid.addWidget(widget, row, 1)
         state_card.layout.addLayout(grid)
+        audio_row = QHBoxLayout()
+        volume_down = QPushButton("🔉 −")
+        volume_mute = QPushButton("🔇")
+        volume_up = QPushButton("🔊 +")
+        volume_down.clicked.connect(lambda: self._send_manual_input("volume_down"))
+        volume_mute.clicked.connect(lambda: self._send_manual_input("volume_mute"))
+        volume_up.clicked.connect(lambda: self._send_manual_input("volume_up"))
+        audio_row.addWidget(volume_down)
+        audio_row.addWidget(volume_mute)
+        audio_row.addWidget(volume_up)
+        state_card.layout.addLayout(audio_row)
         side.addWidget(state_card)
 
         action_card = Card("ПОСЛЕДНИЕ ДЕЙСТВИЯ")
@@ -697,12 +738,24 @@ class WarBotWindow(QMainWindow):
                         f"свайп {args[0]},{args[1]} → {args[2]},{args[3]} "
                         f"({args[4]} мс)"
                     )
+                elif kind == "hold":
+                    backend.hold(*args)
+                    detail = f"удержание {args[0]},{args[1]} ({args[2]} мс)"
                 elif kind == "key":
                     backend.keyevent(args[0])
                     detail = f"клавиша {args[0]}"
                 elif kind == "text":
                     backend.input_text(args[0])
                     detail = f"текст {args[0]!r}"
+                elif kind == "volume_up":
+                    backend.volume_up()
+                    detail = "громкость +"
+                elif kind == "volume_down":
+                    backend.volume_down()
+                    detail = "громкость -"
+                elif kind == "volume_mute":
+                    backend.volume_mute()
+                    detail = "mute"
                 else:
                     raise RuntimeError(f"Неизвестный ручной ввод: {kind}")
                 self.manual_input_log.emit("[Manual] " + detail)
@@ -723,6 +776,9 @@ class WarBotWindow(QMainWindow):
             "swipe",
             int(x1), int(y1), int(x2), int(y2), int(duration_ms),
         )
+
+    def preview_hold(self, x, y, duration_ms):
+        self._send_manual_input("hold", int(x), int(y), int(duration_ms))
 
     def preview_key(self, code):
         self._send_manual_input("key", str(code))
@@ -927,16 +983,33 @@ class WarBotWindow(QMainWindow):
         self.device_status.setText(f"● Android недоступен: {message}")
         self.device_status.setStyleSheet("color: #ff7185")
 
+    def _stop_frame_stream(self):
+        stream = self.frame_stream
+        self.frame_stream = None
+        self.frame_stream_signature = None
+        if stream is not None:
+            stream.stop()
+
+    def _stream_failed(self, message):
+        self.device_status.setText(f"● Видео: {message}")
+        self.device_status.setStyleSheet("color: #ffb454")
+
+    def _render_stream_metrics(self, metrics):
+        self.stream_value.setText(
+            f"{metrics.get('transport', 'video')} · "
+            f"{metrics.get('fps', 0.0):.1f} FPS · "
+            f"{metrics.get('latency_ms', 0.0):.0f} ms"
+        )
+
     def refresh_capture(self):
         mode = str(self.backend_mode.currentData() or "wsa")
         serial = self.android_serial.text().strip() or "127.0.0.1:58526"
         adb_path = self.adb_path.text().strip()
         signature = (mode, serial, adb_path, self.window_title.text().strip())
 
-        # Legacy scrcpy/MSS capture is kept synchronous only for diagnostics.
-        # Native ADB screencap can take hundreds of milliseconds (or timeout
-        # while Android boots), so it must never block the Qt UI thread.
+        # Legacy desktop-window capture remains diagnostics-only.
         if mode == "scrcpy":
+            self._stop_frame_stream()
             try:
                 if self.capture is None or signature != self.capture_signature:
                     if self.capture is not None:
@@ -949,39 +1022,49 @@ class WarBotWindow(QMainWindow):
                 frame, title, rect = self.capture.grab()
                 phone, _, _ = bot.crop_phone(frame)
                 self._render_capture(phone, title, rect)
+                self.stream_value.setText("legacy scrcpy")
             except Exception as error:
                 self._capture_failed(str(error))
             return
 
-        if self.capture_busy:
-            return
-        try:
-            if self.capture is None or signature != self.capture_signature:
-                if self.capture is not None:
-                    self.capture.close()
-                backend = create_backend(mode, serial=serial, adb_path=adb_path)
-                self.capture = BackendCapture(backend)
-                self.capture_signature = signature
-        except Exception as error:
-            self._capture_failed(str(error))
-            return
-
-        self.capture_busy = True
-        capture = self.capture
-
-        def worker():
+        if self.capture is not None:
             try:
-                frame, title, rect = capture.grab()
+                self.capture.close()
+            except Exception:
+                pass
+            self.capture = None
+            self.capture_signature = None
+
+        if (
+            self.frame_stream is not None
+            and self.frame_stream_signature == signature
+            and self.frame_stream.running
+        ):
+            return
+
+        self._stop_frame_stream()
+        try:
+            backend = create_backend(mode, serial=serial, adb_path=adb_path)
+            capture = BackendCapture(backend)
+
+            def on_frame(frame, title, rect, metrics):
                 phone, _, _ = bot.crop_phone(frame)
                 self.capture_ready.emit(phone, title, rect)
-            except Exception as error:
-                self.capture_failed.emit(str(error))
+                self.stream_metrics_ready.emit(metrics.to_dict())
 
-        threading.Thread(
-            target=worker,
-            name="warbot-gui-capture",
-            daemon=True,
-        ).start()
+            stream = ContinuousFrameStream(
+                capture,
+                on_frame=on_frame,
+                on_error=lambda error: self.stream_failed.emit(error),
+                target_fps=4.0,
+                transport="adb-screencap",
+            )
+            self.frame_stream = stream
+            self.frame_stream_signature = signature
+            stream.start()
+        except Exception as error:
+            self._stop_frame_stream()
+            self._capture_failed(str(error))
 
     def refresh_log_file(self):
         try:
@@ -1037,20 +1120,32 @@ class WarBotWindow(QMainWindow):
             "window_title": self.window_title.text().strip() or bot.SCRCPY_VIDEO_TITLE,
         }
         atomic_json(GUI_CONFIG_FILE, config)
-        state = read_json(bot.STATE_FILE, dict(bot.DEFAULT_STATE))
+        try:
+            state = bot.load_state()
+        except RuntimeError as error:
+            if show_message:
+                QMessageBox.critical(
+                    self,
+                    "TUGARIN BOTS",
+                    "state.json повреждён; настройки состояния не перезаписаны.\n" + str(error),
+                )
+            return
         state["target_state"] = config["target_state"]
         state["characters_per_cycle"] = config["characters_per_cycle"]
         state["auto_reset_data"] = config["auto_reset_data"]
         state["repeat_cycles"] = config["infinite_cycle"]
         if int(state.get("characters_created", 0)) == 0:
             state["next_nickname"] = config["next_number"]
-        atomic_json(bot.STATE_FILE, state)
+        bot.save_state(state)
         if show_message:
             QMessageBox.information(self, "TUGARIN BOTS", "Настройки сохранены.")
 
     def closeEvent(self, event):
+        self.timer.stop()
+        self._stop_frame_stream()
         if self.capture is not None:
             self.capture.close()
+            self.capture = None
         event.accept()
 
     def apply_style(self):
