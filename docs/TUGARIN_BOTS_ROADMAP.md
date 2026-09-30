@@ -10,7 +10,7 @@ production proof.
 |---|---|---:|---:|
 | P0 | WSA runtime + Kingshot gate | DONE | PASS on 2026-09-30 release-candidate host run |
 | P0 | XML/AUMID installer regression | DONE | PASS in release host gate |
-| P0 | Consoleless GUI/process cleanup | DONE | process audit PASS; final GUI smoke included in MVP gate path |
+| P0 | Consoleless GUI/process cleanup | DONE | process audit PASS; pythonw + rendered-frame host gate automated |
 | P0 | Full Windows CI incl. Qt GUI | DONE | required green |
 | P1 | WSA-internal scrcpy-server H.264 + screencap fallback | DONE | replacement host latency/stability smoke pending |
 | P1 | FPS/latency telemetry | DONE | smoke |
