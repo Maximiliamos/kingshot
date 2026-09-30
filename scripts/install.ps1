@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Installing WAR BOT into $Target"
+Write-Host "Installing TUGARIN BOTS into $Target"
 
 New-Item -ItemType Directory -Force -Path $Target | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $Target "templates") | Out-Null
@@ -16,9 +16,16 @@ $files = @(
     "bot.py",
     "gui.py",
     "device_backend.py",
+    "frame_stream.py",
+    "runtime_events.py",
+    "runtime_recovery.py",
+    "runtime_watchdog.py",
     "native_arm64_poc.py",
     "warbot_cli.py",
     "run_gui.bat",
+    "run_gui.vbs",
+    "install_tugarin_bots.ps1",
+    "install_tugarin_bots.cmd",
     "requirements.txt",
     "requirements-android-optional.txt"
 )
@@ -40,7 +47,9 @@ if (Test-Path "$PSScriptRoot\..\docs") {
 foreach ($scriptName in @(
     "verify_mvp.ps1",
     "run_and_report.ps1",
-    "upload_runtime_report.ps1"
+    "upload_runtime_report.ps1",
+    "setup_dedicated_wsa_user.ps1",
+    "stop_gapps_migration_task.ps1"
 )) {
     $scriptPath = Join-Path $PSScriptRoot $scriptName
     if (Test-Path $scriptPath) {
@@ -56,14 +65,16 @@ if (Test-Path "$PSScriptRoot\..\templates") {
 }
 
 python -m pip install -r "$PSScriptRoot\..\requirements.txt"
+if ($LASTEXITCODE -ne 0) { throw "Core dependency installation failed." }
 
 if ($WithUiAutomator) {
     python -m pip install -r "$PSScriptRoot\..\requirements-android-optional.txt"
+    if ($LASTEXITCODE -ne 0) { throw "Android helper dependency installation failed." }
 }
 
 Write-Host ""
 Write-Host "Installed."
-Write-Host "GUI:          python $Target\gui.py"
+Write-Host "GUI:          wscript.exe //B $Target\run_gui.vbs"
 Write-Host "Reset state:  python $Target\bot.py --reset-state"
 Write-Host "Native probe: python $Target\native_arm64_poc.py probe"
 Write-Host "MVP verify:   powershell -ExecutionPolicy Bypass -File $Target\scripts\verify_mvp.ps1"
