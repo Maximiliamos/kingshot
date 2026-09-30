@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = (ROOT / "scripts" / "audit_runtime_processes.ps1").read_text(encoding="utf-8-sig")
 RELEASE = (ROOT / "scripts" / "verify_release.ps1").read_text(encoding="utf-8-sig")
+MVP = (ROOT / "scripts" / "verify_mvp.ps1").read_text(encoding="utf-8-sig")
 INSTALL = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8-sig")
 
 
@@ -29,6 +30,12 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("& $ReleasePython -m unittest", RELEASE)
         self.assertIn('"-PythonExe", $ReleasePython', RELEASE)
         self.assertNotIn("& python -m unittest", RELEASE)
+
+    def test_mvp_gate_uses_the_release_selected_python(self):
+        self.assertIn('[string]$PythonExe = ""', MVP)
+        self.assertIn("& $PythonExe @args", MVP)
+        self.assertIn("& $PythonExe .\\warbot_cli.py status", MVP)
+        self.assertNotIn("& python @args", MVP)
 
     def test_copy_installer_ships_hardening_modules(self):
         for name in (
