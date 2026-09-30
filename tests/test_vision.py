@@ -182,16 +182,19 @@ class TutorialVisionTests(unittest.TestCase):
         self.assertEqual(hit["loc"], (188, 390))
 
     def test_animated_first_building_hand_is_found_at_safe_score(self):
-        phone = cv2.imread(
-            str(bot.os.path.join(bot.UNKNOWN_DIR, "unknown_20260926_221258_tutorial_new_character_tutorial_intro.png"))
-        )
-        if phone is None:
-            self.skipTest("live regression frame is unavailable")
+        # Runtime unknown/ is intentionally gitignored. CI must still exercise
+        # the tutorial-hand gate instead of silently skipping the regression.
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_building.png")
+        height, width = template.shape[:2]
+        x, y = 126, 352
+        phone[y:y + height, x:x + width] = template
 
         hit = bot.match_tutorial_hand(phone)
 
         self.assertIsNotNone(hit)
         self.assertEqual(hit["variant"], "tutorial_hand_building.png")
+        self.assertGreaterEqual(hit["score"], 0.99)
 
     def test_roof_hand_variant_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
