@@ -1,0 +1,601 @@
+﻿[
+    {
+        "ID":  "a4964056-6d1f-41bc-934f-c549ca0de451",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "ABC22D9E-BE3D-4BFA-AEFA-BB6319D20347",
+                                 "SwitchPortId":  "5B4C53AB-B722-4115-B0FE-C4ADFFED5C8B"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  false,
+                                                 "EndpointPortGuid":  "30EE8D20-61D8-4BA9-A8A4-6C823FDAB78B",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352505461176097
+                                                            },
+                                                 "ID":  "5B4C53AB-B722-4115-B0FE-C4ADFFED5C8B",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-3C-F5-7A",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "7AACEED3-2632-47FD-8715-837A3B73284A--7D57AA76-1AA6-5C8F-82F0-E4F0819422B9",
+                                                 "PreferredPortFriendlyName":  "A4964056-6D1F-41BC-934F-C549CA0DE451",
+                                                 "State":  3,
+                                                 "SwitchId":  "ABC22D9E-BE3D-4BFA-AEFA-BB6319D20347",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352505461539802
+                                                            },
+                                                 "ID":  "2314AF85-2D77-4F8F-9E34-1F8FDDA3DA74",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352505461176097
+                                     },
+                          "ID":  "F1B2965E-3FB8-455C-8178-D63BCDE079FA",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "B5ED3508-A7DA-4402-B7CC-3D4BD175C397"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "b95d0c5e-57d4-412b-b571-18a81a16e005",
+        "VirtualNetworkName":  "WSL",
+        "MacAddress":  "00-15-5D-3C-F5-7A",
+        "IPAddress":  "172.22.152.95",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.22.144.1",
+        "IPSubnetId":  "13ca26c5-f182-47c2-864b-41c155a5dd5e",
+        "DNSServerList":  "172.22.144.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "7AACEED3-2632-47FD-8715-837A3B73284A"
+    },
+    {
+        "ID":  "63ff65d8-6108-46d2-8318-c57c41723c8b",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                 "SwitchPortId":  "E1049008-E4AE-4AC4-82A3-0765CBCCBD57"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  true,
+                                                 "EndpointPortGuid":  "F0F5C7A9-7E56-4A2B-8A65-6B8C22310B95",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352579216754396
+                                                            },
+                                                 "ID":  "E1049008-E4AE-4AC4-82A3-0765CBCCBD57",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-8A-22-77",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "BF3C3995-BD25-42EA-ADBA-A0B1D8E2B95C--B11AF0CD-4D33-5595-9D9E-E0337806CDCB",
+                                                 "PreferredPortFriendlyName":  "eth0",
+                                                 "State":  3,
+                                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352579216935182
+                                                            },
+                                                 "ID":  "8049F7F5-3483-42F5-9784-153348B56B39",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352579216742280
+                                     },
+                          "ID":  "9FC0AFB2-886E-47A8-9957-F980662CE134",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "72405694-B864-4796-B627-100012E83B27"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "87e92d53-d351-42e8-b1da-463b728434bc",
+        "VirtualNetworkName":  "WSLCore",
+        "PortFriendlyName":  "eth0",
+        "MacAddress":  "00-15-5D-8A-22-77",
+        "IPAddress":  "172.18.246.117",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.18.240.1",
+        "IPSubnetId":  "7d8869fc-a5b8-42f5-8c34-d3994fdcbc12",
+        "DNSServerList":  "172.18.240.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "BF3C3995-BD25-42EA-ADBA-A0B1D8E2B95C"
+    },
+    {
+        "ID":  "34893657-7434-4641-9bc1-d30bbf16143e",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                 "SwitchPortId":  "A2E59103-3DB7-49B2-A1B4-95901FC6A133"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  false,
+                                                 "EndpointPortGuid":  "EAFFB32C-9715-4971-B026-1445865C1A2F",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352516916484284
+                                                            },
+                                                 "ID":  "A2E59103-3DB7-49B2-A1B4-95901FC6A133",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-8A-20-7C",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "869F1FA5-2104-4615-A49C-A3EEC7F6AA10--FD666FEC-660E-540F-9BFD-97D60679DD02",
+                                                 "PreferredPortFriendlyName":  "eth0",
+                                                 "State":  3,
+                                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352516916977468
+                                                            },
+                                                 "ID":  "9CC5C14B-DBFE-4431-B63A-5DA523756930",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352516916454240
+                                     },
+                          "ID":  "19C7C1E5-8618-4AAF-9065-E459D06DE0C4",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "72405694-B864-4796-B627-100012E83B27"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "87e92d53-d351-42e8-b1da-463b728434bc",
+        "VirtualNetworkName":  "WSLCore",
+        "PortFriendlyName":  "eth0",
+        "MacAddress":  "00-15-5D-8A-20-7C",
+        "IPAddress":  "172.18.255.82",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.18.240.1",
+        "IPSubnetId":  "7d8869fc-a5b8-42f5-8c34-d3994fdcbc12",
+        "DNSServerList":  "172.18.240.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "869F1FA5-2104-4615-A49C-A3EEC7F6AA10"
+    },
+    {
+        "ID":  "061d84fb-83ee-456e-b207-67ab65f2d6ce",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                 "SwitchPortId":  "AF28CEB1-8F5E-4086-9B00-1C3FCB707B74"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  true,
+                                                 "EndpointPortGuid":  "282735DF-7A87-4359-A678-6C9D1A8FE3B8",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352580188248390
+                                                            },
+                                                 "ID":  "AF28CEB1-8F5E-4086-9B00-1C3FCB707B74",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-8A-25-A5",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "854B9BA5-1AD1-4257-90B9-09653D945B2C--6BB4789D-FA74-5CCC-A7FE-42DC4F7273EB",
+                                                 "PreferredPortFriendlyName":  "eth0",
+                                                 "State":  3,
+                                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352580188393906
+                                                            },
+                                                 "ID":  "844E30E9-3A71-4037-AB2E-31CB1A806EE8",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352580188238410
+                                     },
+                          "ID":  "998ECC83-22BE-4806-AF2F-07109C930262",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "72405694-B864-4796-B627-100012E83B27"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "87e92d53-d351-42e8-b1da-463b728434bc",
+        "VirtualNetworkName":  "WSLCore",
+        "PortFriendlyName":  "eth0",
+        "MacAddress":  "00-15-5D-8A-25-A5",
+        "IPAddress":  "172.18.242.7",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.18.240.1",
+        "IPSubnetId":  "7d8869fc-a5b8-42f5-8c34-d3994fdcbc12",
+        "DNSServerList":  "172.18.240.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "854B9BA5-1AD1-4257-90B9-09653D945B2C"
+    },
+    {
+        "ID":  "5c7de340-d175-4c20-97db-0253844f6b24",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                 "SwitchPortId":  "85DD6C8D-D19A-40AC-84F6-732B656942E7"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  true,
+                                                 "EndpointPortGuid":  "96776FA4-21D7-4CF1-8023-871CD4A08676",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352584823582738
+                                                            },
+                                                 "ID":  "85DD6C8D-D19A-40AC-84F6-732B656942E7",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-8A-21-01",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "74D237A8-20A3-48E8-B3C0-B416F0A5D81B--15985078-F24D-50C2-A0B3-8E79F1AF4D4A",
+                                                 "PreferredPortFriendlyName":  "eth0",
+                                                 "State":  3,
+                                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352584823720496
+                                                            },
+                                                 "ID":  "6DEF535B-C084-4467-BEA0-B9F93FC74A9E",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352584823577247
+                                     },
+                          "ID":  "06BC67F6-F002-4E8C-95A8-12DBF1A2FFFF",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "72405694-B864-4796-B627-100012E83B27"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "87e92d53-d351-42e8-b1da-463b728434bc",
+        "VirtualNetworkName":  "WSLCore",
+        "PortFriendlyName":  "eth0",
+        "MacAddress":  "00-15-5D-8A-21-01",
+        "IPAddress":  "172.18.248.73",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.18.240.1",
+        "IPSubnetId":  "7d8869fc-a5b8-42f5-8c34-d3994fdcbc12",
+        "DNSServerList":  "172.18.240.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "74D237A8-20A3-48E8-B3C0-B416F0A5D81B"
+    },
+    {
+        "ID":  "1d8fb4f9-5e3d-4f49-b5e6-390130d90116",
+        "Name":  "Ethernet",
+        "Version":  47244640267,
+        "AdditionalParams":  {
+                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                 "SwitchPortId":  "033E5FC3-0B40-4445-97FF-C989768CB551"
+                             },
+        "Resources":  {
+                          "AdditionalParams":  {
+
+                                               },
+                          "AllocationOrder":  2,
+                          "Allocators":  [
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  0,
+                                                 "Connected":  true,
+                                                 "EndpointPortGuid":  "43706801-8268-40D7-A9E6-B938958E040D",
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352585622944975
+                                                            },
+                                                 "ID":  "033E5FC3-0B40-4445-97FF-C989768CB551",
+                                                 "IsPolicy":  false,
+                                                 "IsolationId":  0,
+                                                 "MacAddress":  "00-15-5D-8A-29-9C",
+                                                 "ManagementPort":  false,
+                                                 "NicId":  "ABBA9568-C38A-46BC-B215-2F5788C427DD--448C73B8-9B3B-52C4-A456-5DFBE0C124A0",
+                                                 "PreferredPortFriendlyName":  "eth0",
+                                                 "State":  3,
+                                                 "SwitchId":  "F4B2D878-851C-49B7-A838-0C1E5AA86E22",
+                                                 "Tag":  "VM Port",
+                                                 "nonPersistentPort":  true
+                                             },
+                                             {
+                                                 "AdditionalParams":  {
+
+                                                                      },
+                                                 "AllocationOrder":  1,
+                                                 "Flags":  0,
+                                                 "Health":  {
+                                                                "LastErrorCode":  0,
+                                                                "LastUpdateTime":  134352585623055008
+                                                            },
+                                                 "ID":  "83F5B635-E14B-4A03-B5D5-DAE3028C2CBA",
+                                                 "IsPolicy":  true,
+                                                 "Rules":  [
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "In",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               },
+                                                               {
+                                                                   "Action":  "Allow",
+                                                                   "Direction":  "Out",
+                                                                   "Flags":  1,
+                                                                   "Priority":  65500,
+                                                                   "RemoteAddresses":  "0.0.0.0/0",
+                                                                   "Type":  "ACL"
+                                                               }
+                                                           ],
+                                                 "State":  2,
+                                                 "Tag":  "ACL Policy"
+                                             }
+                                         ],
+                          "CompartmentOperationTime":  0,
+                          "Flags":  0,
+                          "Health":  {
+                                         "LastErrorCode":  0,
+                                         "LastUpdateTime":  134352585622935030
+                                     },
+                          "ID":  "96FC06F1-39C4-4ABE-ADCB-85B4F369E402",
+                          "PortOperationTime":  0,
+                          "State":  1,
+                          "SwitchOperationTime":  0,
+                          "VfpOperationTime":  0,
+                          "parentId":  "72405694-B864-4796-B627-100012E83B27"
+                      },
+        "State":  2,
+        "VirtualNetwork":  "87e92d53-d351-42e8-b1da-463b728434bc",
+        "VirtualNetworkName":  "WSLCore",
+        "PortFriendlyName":  "eth0",
+        "MacAddress":  "00-15-5D-8A-29-9C",
+        "IPAddress":  "172.18.243.110",
+        "PrefixLength":  20,
+        "GatewayAddress":  "172.18.240.1",
+        "IPSubnetId":  "7d8869fc-a5b8-42f5-8c34-d3994fdcbc12",
+        "DNSServerList":  "172.18.240.1",
+        "SharedContainers":  [
+
+                             ],
+        "VirtualMachine":  "ABBA9568-C38A-46BC-B215-2F5788C427DD"
+    }
+]

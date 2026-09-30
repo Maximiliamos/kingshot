@@ -1,0 +1,25 @@
+﻿Endpoint         : a4964056-6d1f-41bc-934f-c549ca0de451
+    Name             : Ethernet        
+    IP Address       : 172.22.152.95   
+
+Endpoint         : 63ff65d8-6108-46d2-8318-c57c41723c8b
+    Name             : Ethernet        
+    IP Address       : 172.18.246.117  
+
+Endpoint         : 34893657-7434-4641-9bc1-d30bbf16143e
+    Name             : Ethernet        
+    IP Address       : 172.18.255.82   
+
+Endpoint         : 061d84fb-83ee-456e-b207-67ab65f2d6ce
+    Name             : Ethernet        
+    IP Address       : 172.18.242.7    
+
+Endpoint         : 5c7de340-d175-4c20-97db-0253844f6b24
+    Name             : Ethernet        
+    IP Address       : 172.18.248.73   
+
+Endpoint         : 1d8fb4f9-5e3d-4f49-b5e6-390130d90116
+    Name             : Ethernet        
+    IP Address       : 172.18.243.110  
+
+

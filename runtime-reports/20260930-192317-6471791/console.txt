@@ -1,0 +1,101 @@
+﻿[2026-09-30T19:19:23.5531447+03:00] Starting WSA LTS 8 PoC installer.
+[2026-09-30T19:19:24.9288090+03:00] Selected WSABuilds LTS 8 NoGApps package for Windows 10 22H2 (19045.6456).
+[2026-09-30T19:19:24.9952705+03:00] Windows developer package registration is enabled.
+[2026-09-30T19:19:25.9386931+03:00] TUGARIN BOTS NoGApps WSA package is already registered; keeping it.
+[2026-09-30T19:19:27.3174609+03:00] Could not fully inspect WSA package preflight: Не удается преобразовать значение "{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "ANDROID_AUTHORIZATION_REQUIRED",
+    "exit_code":  24,
+    "commit":  "6471791903d1ef29c713d22e81529f1c48dc01f0",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-30T19:17:15.2986608+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "attempted_serials":  [
+                              "172.18.246.117:58526",
+                              "172.22.152.95:5555",
+                              "172.18.248.73:58526",
+                              "172.18.246.117:5555",
+                              "172.19.0.1:58526",
+                              "172.18.255.255:58526",
+                              "172.18.243.110:58526",
+                              "172.22.159.255:5555",
+                              "192.168.1.101:58526",
+                              "172.22.159.255:58526",
+                              "172.18.255.82:58526",
+                              "172.18.243.110:5555",
+                              "127.0.0.1:58526",
+                              "172.18.255.255:5555",
+                              "172.18.240.1:5555",
+                              "172.18.255.82:5555",
+                              "172.18.242.7:5555",
+                              "172.18.242.7:58526",
+                              "172.18.240.1:58526",
+                              "172.22.144.1:58526",
+                              "172.22.144.1:5555",
+                              "172.22.152.95:58526",
+                              "172.18.248.73:5555"
+                          ],
+    "authorization_required":  true,
+    "loopback_exemption_ok":  false,
+    "installed_version":  "2407.40000.4.0",
+    "port_reservation_ok":  true
+}
+" в тип "System.Xml.XmlDocument". Ошибка: "Невозможно вставить указанный узел в качестве действительного дочернего узла данного узла, т.к. указанный узел имеет неверный тип."
+[2026-09-30T19:19:27.4561287+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-09-30T19:19:27.4828966+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-09-30T19:19:27.5188757+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-09-30T19:19:28.5612461+03:00] Could not enumerate WSA AUMIDs from package manifest: Не удается преобразовать значение "{
+    "schema":  1,
+    "kind":  "wsa-poc",
+    "state":  "ANDROID_AUTHORIZATION_REQUIRED",
+    "exit_code":  24,
+    "commit":  "6471791903d1ef29c713d22e81529f1c48dc01f0",
+    "source_branch":  "feature/unified-android-backend",
+    "created_at":  "2026-09-30T19:17:15.2986608+03:00",
+    "wsa_release":  "Windows_10_2407.40000.4.0_LTS_8",
+    "archive":  "WSA_2407.40000.4.0_x64_Release-Nightly-NoGApps-NoAmazon_Windows_10.7z",
+    "archive_sha256":  "366c344eee70e610e905c7588f661ce028faef8ae55ec9cc6c8dd348ec2cb7c8",
+    "serial":  "127.0.0.1:58526",
+    "install_root":  "C:\\warbot_wsa\\WSA_LTS8_Windows10",
+    "attempted_serials":  [
+                              "172.18.246.117:58526",
+                              "172.22.152.95:5555",
+                              "172.18.248.73:58526",
+                              "172.18.246.117:5555",
+                              "172.19.0.1:58526",
+                              "172.18.255.255:58526",
+                              "172.18.243.110:58526",
+                              "172.22.159.255:5555",
+                              "192.168.1.101:58526",
+                              "172.22.159.255:58526",
+                              "172.18.255.82:58526",
+                              "172.18.243.110:5555",
+                              "127.0.0.1:58526",
+                              "172.18.255.255:5555",
+                              "172.18.240.1:5555",
+                              "172.18.255.82:5555",
+                              "172.18.242.7:5555",
+                              "172.18.242.7:58526",
+                              "172.18.240.1:58526",
+                              "172.22.144.1:58526",
+                              "172.22.144.1:5555",
+                              "172.22.152.95:58526",
+                              "172.18.248.73:5555"
+                          ],
+    "authorization_required":  true,
+    "loopback_exemption_ok":  false,
+    "installed_version":  "2407.40000.4.0",
+    "port_reservation_ok":  true
+}
+" в тип "System.Xml.XmlDocument". Ошибка: "Невозможно вставить указанный узел в качестве действительного дочернего узла данного узла, т.к. указанный узел имеет неверный тип."
+[2026-09-30T19:19:28.5682541+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-09-30T19:19:28.7254474+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=24328).
+[2026-09-30T19:19:28.7944727+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=30520).
+[2026-09-30T19:19:39.2552361+03:00] WSA control channel accepted on 127.0.0.1:58526 from explicit (model=Subsystem for Android(TM), boot_completed=1).
+[2026-09-30T19:19:42.0400684+03:00] Android control channel is online at 127.0.0.1:58526.
+[2026-09-30T19:19:42.8198740+03:00] Installing/launching Kingshot through WSA backend.
