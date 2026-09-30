@@ -4,7 +4,12 @@ import unittest
 
 import numpy as np
 
-from frame_stream import AutoPreviewCapture, ContinuousFrameStream, FallbackCapture
+from frame_stream import (
+    AutoPreviewCapture,
+    ContinuousFrameStream,
+    FallbackCapture,
+    H264ScreenrecordCapture,
+)
 
 
 class FakeCapture:
@@ -40,6 +45,28 @@ class NamedFallbackCapture(FakeCapture):
 
 
 class FrameStreamTests(unittest.TestCase):
+    def test_h264_preview_downscales_1080p_to_720p(self):
+        self.assertEqual(
+            H264ScreenrecordCapture._fit_preview_size(1920, 1080, 1280, 720),
+            (1280, 720),
+        )
+
+    def test_h264_preview_keeps_smaller_framebuffer_native(self):
+        self.assertEqual(
+            H264ScreenrecordCapture._fit_preview_size(960, 540, 1280, 720),
+            (960, 540),
+        )
+
+    def test_h264_preview_size_is_even_and_preserves_aspect(self):
+        width, height = H264ScreenrecordCapture._fit_preview_size(
+            2376, 1060, 1280, 720
+        )
+        self.assertEqual(width % 2, 0)
+        self.assertEqual(height % 2, 0)
+        self.assertLessEqual(width, 1280)
+        self.assertLessEqual(height, 720)
+        self.assertAlmostEqual(width / height, 2376 / 1060, delta=0.02)
+
     def test_fallback_capture_demotes_after_primary_failure(self):
         preferred = FailingOnceCapture()
         fallback = NamedFallbackCapture()
