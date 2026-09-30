@@ -420,8 +420,16 @@ def finish_tutorial(state):
     origin = state.get("tutorial_origin", "new_character")
     if origin == "initial":
         log("Начальное обучение завершено: перехожу к созданию персонажа в государстве №3.")
+        try:
+            emit_event("tutorial_complete", origin="initial")
+        except Exception:
+            pass
         set_phase(state, "create_character", "home")
         return
+    try:
+        emit_event("tutorial_complete", origin="new_character")
+    except Exception:
+        pass
     begin_next_character_cycle(state)
 
 
@@ -1203,6 +1211,15 @@ def handle_create_step(phone, state):
             "Подтверждены и диалог «Государство №3», и его конкретная кнопка "
             "подтверждения. Создаю персонажа."
         )
+        try:
+            emit_event(
+                "state3_confirmed",
+                target_state=3,
+                modal_score=round(float(modal["score"]), 4),
+                confirm_score=round(float(confirm["score"]), 4),
+            )
+        except Exception:
+            pass
         tap_match(phone, confirm)
         begin_tutorial(state, "new_character")
         return True
@@ -1281,8 +1298,17 @@ def handle_rename_governor(phone, state):
             modal = match(phone, tpl("governor_rename_dialog_large.png"), 0.94)
         if modal:
             return False
+        committed_nickname = f"Тугарин{int(state.get('pending_nickname', 1))}"
         state["next_nickname"] = int(state.get("pending_nickname", 1)) + 1
         state["characters_created"] = int(state.get("characters_created", 0)) + 1
+        try:
+            emit_event(
+                "nickname_committed",
+                nickname=committed_nickname,
+                characters_created=int(state["characters_created"]),
+            )
+        except Exception:
+            pass
         state["characters_created_cycle"] = int(state.get("characters_created_cycle", 0)) + 1
         limit = max(1, int(state.get("characters_per_cycle", 4)))
         if state.get("auto_reset_data", False) and state["characters_created_cycle"] >= limit:
