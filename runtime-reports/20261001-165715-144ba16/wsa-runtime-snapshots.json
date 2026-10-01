@@ -1,0 +1,109 @@
+﻿[
+    {
+        "timestamp":  "2026-10-01T16:54:48.7848411+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  25580,
+                              "ParentProcessId":  24276,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          },
+                          {
+                              "Name":  "WsaSettings.exe",
+                              "ProcessId":  11776,
+                              "ParentProcessId":  1180,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe",
+                              "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe\" -ServerName:SettingsApp.AppXe5xfar8kfrnsjyxycsqtgfxc6xgc0zed.mca"
+                          },
+                          {
+                              "Name":  "WsaClient.exe",
+                              "ProcessId":  38300,
+                              "ParentProcessId":  37724,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe",
+                              "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe\" /launch wsa://com.android.settings "
+                          },
+                          {
+                              "Name":  "WSACrashUploader.exe",
+                              "ProcessId":  25912,
+                              "ParentProcessId":  38300,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WSACrashUploader\\WSACrashUploader.exe",
+                              "CommandLine":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                          },
+                          {
+                              "Name":  "WsaService.exe",
+                              "ProcessId":  18344,
+                              "ParentProcessId":  620,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          },
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  33056,
+                              "ParentProcessId":  23224,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+
+                      ],
+        "runtime_alive":  true
+    },
+    {
+        "timestamp":  "2026-10-01T16:54:59.0909876+03:00",
+        "processes":  [
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  25580,
+                              "ParentProcessId":  24276,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          },
+                          {
+                              "Name":  "WsaSettings.exe",
+                              "ProcessId":  11776,
+                              "ParentProcessId":  1180,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe",
+                              "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe\" -ServerName:SettingsApp.AppXe5xfar8kfrnsjyxycsqtgfxc6xgc0zed.mca"
+                          },
+                          {
+                              "Name":  "WsaClient.exe",
+                              "ProcessId":  38300,
+                              "ParentProcessId":  37724,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe",
+                              "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe\" /launch wsa://com.android.settings "
+                          },
+                          {
+                              "Name":  "WSACrashUploader.exe",
+                              "ProcessId":  25912,
+                              "ParentProcessId":  38300,
+                              "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WSACrashUploader\\WSACrashUploader.exe",
+                              "CommandLine":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                          },
+                          {
+                              "Name":  "WsaService.exe",
+                              "ProcessId":  18344,
+                              "ParentProcessId":  620,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          },
+                          {
+                              "Name":  "vmmem",
+                              "ProcessId":  33056,
+                              "ParentProcessId":  23224,
+                              "ExecutablePath":  null,
+                              "CommandLine":  null
+                          }
+                      ],
+        "listeners":  [
+                          {
+                              "LocalAddress":  "::",
+                              "LocalPort":  58526,
+                              "OwningProcess":  38300,
+                              "State":  2
+                          }
+                      ],
+        "runtime_alive":  true
+    }
+]

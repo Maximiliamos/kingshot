@@ -1,0 +1,47 @@
+﻿[
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:54:52.2606911+03:00",
+        "serial":  "127.0.0.1:58526",
+        "source":  "explicit",
+        "tcp_open":  false,
+        "connect_exit":  0,
+        "connect":  "tcp_closed",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "tcp_closed",
+        "model":  "",
+        "boot_completed":  "",
+        "is_wsa":  false
+    },
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:54:53.5117967+03:00",
+        "serial":  "127.0.0.1:58526",
+        "source":  "preferred-final-check",
+        "tcp_open":  true,
+        "connect_exit":  0,
+        "connect":  "connected to 127.0.0.1:58526",
+        "state_exit":  0,
+        "state":  "device",
+        "state_error":  "",
+        "model":  "Subsystem for Android(TM)",
+        "boot_completed":  "",
+        "is_wsa":  true
+    },
+    {
+        "round":  2,
+        "timestamp":  "2026-10-01T16:55:00.4067375+03:00",
+        "serial":  "127.0.0.1:58526",
+        "source":  "explicit",
+        "tcp_open":  true,
+        "connect_exit":  0,
+        "connect":  "already connected to 127.0.0.1:58526",
+        "state_exit":  0,
+        "state":  "device",
+        "state_error":  "",
+        "model":  "Subsystem for Android(TM)",
+        "boot_completed":  "1",
+        "is_wsa":  true
+    }
+]
