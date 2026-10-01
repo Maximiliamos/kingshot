@@ -1,0 +1,1 @@
+TUGARIN BOTS CLI ERROR: ADB timeout after 30s on 172.22.144.1:58526: exec-out screencap -p

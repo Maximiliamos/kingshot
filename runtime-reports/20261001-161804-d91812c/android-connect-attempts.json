@@ -1,0 +1,62 @@
+﻿[
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:12:47.9388776+03:00",
+        "serial":  "127.0.0.1:58526",
+        "source":  "explicit",
+        "tcp_open":  true,
+        "connect_exit":  0,
+        "connect":  "connected to 127.0.0.1:58526",
+        "state_exit":  0,
+        "state":  "device",
+        "state_error":  "",
+        "model":  "Subsystem for Android(TM)",
+        "boot_completed":  "",
+        "is_wsa":  true
+    },
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:12:48.6577164+03:00",
+        "serial":  "172.18.252.136:5555",
+        "source":  "adb-mdns",
+        "tcp_open":  false,
+        "connect_exit":  0,
+        "connect":  "tcp_closed",
+        "state_exit":  1,
+        "state":  "",
+        "state_error":  "tcp_closed",
+        "model":  "",
+        "boot_completed":  "",
+        "is_wsa":  false
+    },
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:12:49.6813208+03:00",
+        "serial":  "172.18.240.1:58526",
+        "source":  "host-ip:vEthernet (WSLCore)",
+        "tcp_open":  true,
+        "connect_exit":  0,
+        "connect":  "connected to 172.18.240.1:58526",
+        "state_exit":  0,
+        "state":  "device",
+        "state_error":  "",
+        "model":  "Subsystem for Android(TM)",
+        "boot_completed":  "",
+        "is_wsa":  true
+    },
+    {
+        "round":  1,
+        "timestamp":  "2026-10-01T16:12:50.4849948+03:00",
+        "serial":  "172.22.144.1:58526",
+        "source":  "host-ip:vEthernet (WSL)",
+        "tcp_open":  true,
+        "connect_exit":  0,
+        "connect":  "connected to 172.22.144.1:58526",
+        "state_exit":  0,
+        "state":  "device",
+        "state_error":  "",
+        "model":  "Subsystem for Android(TM)",
+        "boot_completed":  "1",
+        "is_wsa":  true
+    }
+]

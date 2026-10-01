@@ -1,0 +1,15 @@
+﻿[2026-10-01T16:12:27.2894526+03:00] Starting WSA LTS 8 PoC installer.
+[2026-10-01T16:12:28.7971417+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-10-01T16:12:28.8017046+03:00] RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks.
+[2026-10-01T16:12:28.9953145+03:00] Starting WSA runtime verification in the normal interactive user session.
+[2026-10-01T16:12:30.6288258+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-10-01T16:12:30.6632787+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-10-01T16:12:30.7078127+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-10-01T16:12:35.4081863+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-10-01T16:12:36.7573469+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=20052).
+[2026-10-01T16:12:36.8148677+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=14400).
+[2026-10-01T16:12:47.9475221+03:00] WSA endpoint 127.0.0.1:58526 is connected but Android boot is not complete yet.
+[2026-10-01T16:12:49.6813208+03:00] WSA endpoint 172.18.240.1:58526 is connected but Android boot is not complete yet.
+[2026-10-01T16:12:50.4866740+03:00] WSA control channel accepted on 172.22.144.1:58526 from host-ip:vEthernet (WSL) (model=Subsystem for Android(TM), boot_completed=1).
+[2026-10-01T16:12:53.5145534+03:00] Android control channel is online at 172.22.144.1:58526.
+[2026-10-01T16:12:54.7427770+03:00] Installing/launching Kingshot through WSA backend.

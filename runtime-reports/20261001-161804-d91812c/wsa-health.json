@@ -1,0 +1,20 @@
+{
+  "backend": "wsa",
+  "serial": "172.22.144.1:58526",
+  "state": "device",
+  "boot_completed": "1",
+  "android": "13",
+  "abi": "x86_64",
+  "abilist": "x86_64,arm64-v8a,x86,armeabi-v7a,armeabi",
+  "native_bridge": "libhoudini.so",
+  "package_running": false,
+  "model": "Subsystem for Android(TM)",
+  "resolution": "Physical size: 1920x1080",
+  "network_ready": true,
+  "internet_reachable": true,
+  "audio_service_ready": true,
+  "package_manager_ready": true,
+  "data_free_mb": 122111,
+  "ready": true,
+  "native_arm64": false
+}

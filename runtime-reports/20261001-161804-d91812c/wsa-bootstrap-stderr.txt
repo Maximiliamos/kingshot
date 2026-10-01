@@ -1,0 +1,1 @@
+TUGARIN BOTS CLI ERROR: ADB transport stayed unavailable during the 120s stability gate; game crash log: C:\warbot_wsa_runtime\game-crash.txt
