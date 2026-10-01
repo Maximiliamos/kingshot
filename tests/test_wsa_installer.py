@@ -229,6 +229,14 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertNotIn('Source ("host-ip:"', discovery)
         self.assertIn('Add-WsaCandidate -Endpoint "127.0.0.1:58526"', discovery)
 
+    def test_p0_does_not_probe_historical_neighbor_cache(self):
+        discovery_start = self.source.index("function Get-WsaEndpointCandidates")
+        discovery_end = self.source.index("function Invoke-WsaCandidateProbe", discovery_start)
+        discovery = self.source[discovery_start:discovery_end]
+        self.assertNotIn("Get-NetNeighbor -AddressFamily IPv4", discovery)
+        self.assertIn("Get-HnsEndpoint", discovery)
+        self.assertIn('Invoke-AdbSafe -Arguments @("mdns", "services")', discovery)
+
     def test_p0_rechecks_preferred_endpoint_before_repairing_wsa(self):
         final_check = self.source.index('Source "preferred-final-check"')
         developer_repair = self.source.index("Enable-DeveloperModeFallback -ReportStage $stage", final_check)

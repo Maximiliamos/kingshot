@@ -1526,15 +1526,9 @@ function Get-WsaEndpointCandidates {
     }
     catch {}
 
-    try {
-        Get-NetNeighbor -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object {
-            $_.InterfaceAlias -match "(?i)WSA|vEthernet|Hyper-V" -and
-            (Test-PrivateIPv4 -Address $_.IPAddress)
-        } | ForEach-Object {
-            [void]$guestIps.Add($_.IPAddress)
-        }
-    }
-    catch {}
+    # NetNeighbor is intentionally diagnostics-only. It retains historical
+    # Hyper-V/WSL peers and made one discovery round take more than two minutes
+    # on the real host. Live guest fallbacks come from HNS/hnsdiag and mDNS.
 
     foreach ($ip in $guestIps) {
         Add-WsaCandidate -Endpoint ($ip + ":5555") -Source "guest-ip:5555"
