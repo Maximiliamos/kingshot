@@ -1,0 +1,66 @@
+﻿
+
+TimeCreated      : 01.10.2026 15:52:44
+Id               : 1001
+LevelDisplayName : Сведения
+ProviderName     : Windows Error Reporting
+Message          : Контейнер ошибки 1856951314291252257, тип 5
+                   Имя события: MoBEX
+                   Отклик: Нет данных
+                   Идентификатор CAB: 0
+                   
+                   Сигнатура проблемы:
+                   P1: MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8wekyb3d8bbwe
+                   P2: praid:App
+                   P3: 2407.40000.4.0
+                   P4: 67527b33
+                   P5: WsaClient.exe
+                   P6: 2407.40000.4.0
+                   P7: 67527b33
+                   P8: 0000000000023ba7
+                   P9: c0000409
+                   P10: 0000000000000007
+                   
+                   Вложенные файлы:
+                   \\?\C:\Users\10963~1\AppData\Local\Temp\wsa7798.dmp
+                   \\?\C:\Users\Программист1\AppData\Local\Packages\MicrosoftCorporationII.WindowsSubsystemForAndroid_8
+                   wekyb3d8bbwe\LocalState\diagnostics\logcat\20260930210633.log
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1A03.tmp.dmp
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1E2A.tmp.WERInternalMetadata.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1E6A.tmp.xml
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1E68.tmp.csv
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER1EA7.tmp.txt
+                   
+                   Эти файлы можно найти здесь:
+                   \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_MicrosoftCorpora_505820d24f84ec96591
+                   527c9623f4cffe2c1c9af_f9dc0030_08a388f3-4dc9-41dc-9ddc-d901e908ed10
+                   
+                   Символ анализа: 
+                   Повторный поиск решения: 0
+                   Идентификатор отчета: 26dcdb41-5ea1-477c-97d9-9c833d6279df
+                   Состояние отчета: 268435456
+                   Хэшированный контейнер: e3ccf9bf30e571d1a9c53761bd865c21
+                   Идентификатор GUID CAB: 0
+
+TimeCreated      : 01.10.2026 15:52:41
+Id               : 1000
+LevelDisplayName : Ошибка
+ProviderName     : Application Error
+Message          : Имя сбойного приложения: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Имя сбойного модуля: WsaClient.exe, версия: 2407.40000.4.0, метка времени: 0x67527b33
+                   Код исключения: 0xc0000409
+                   Смещение ошибки: 0x0000000000023ba7
+                   Идентификатор сбойного процесса: 0x259c
+                   Время запуска сбойного приложения: 0x01dd511f91141ad9
+                   Путь сбойного приложения: C:\warbot_wsa\WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\WsaClient\Ws
+                   aClient.exe
+                   Путь сбойного модуля: C:\warbot_wsa\WSA_LTS8_Windows10_GApps\WSA_2407.40000.4.0_x64\WsaClient\WsaCli
+                   ent.exe
+                   Идентификатор отчета: 26dcdb41-5ea1-477c-97d9-9c833d6279df
+                   Полное имя сбойного пакета: MicrosoftCorporationII.WindowsSubsystemForAndroid_2407.40000.4.0_x64__8w
+                   ekyb3d8bbwe
+                   Код приложения, связанного со сбойным пакетом: App
+
+
+
+

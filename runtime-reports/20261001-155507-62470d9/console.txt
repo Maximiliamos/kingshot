@@ -1,0 +1,19 @@
+﻿[2026-10-01T15:50:54.1545410+03:00] Starting WSA LTS 8 PoC installer.
+[2026-10-01T15:50:55.7753545+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-10-01T15:50:55.8767219+03:00] Windows developer package registration is enabled.
+[2026-10-01T15:51:04.8992418+03:00] TUGARIN BOTS GApps WSA package is already registered; keeping it.
+[2026-10-01T15:51:09.2819902+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-10-01T15:51:09.3233636+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-10-01T15:51:09.3632877+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-10-01T15:51:10.7336524+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-10-01T15:51:13.6534374+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=25704).
+[2026-10-01T15:51:13.7260119+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=29236).
+[2026-10-01T15:51:57.9087649+03:00] WSA runtime is alive but ADB is not exposed yet; requesting Developer settings through packaged WsaClient activation.
+[2026-10-01T15:51:57.9342960+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=25704).
+[2026-10-01T15:51:57.9703516+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=23880).
+[2026-10-01T15:54:31.1854666+03:00] ADB is still unavailable after runtime/network discovery; applying one reversible Developer-mode repair before the final packaged relaunch.
+[2026-10-01T15:54:31.1940391+03:00] Preparing reversible Developer-mode settings fallback.
+[2026-10-01T15:54:34.4101053+03:00] Developer-mode fallback applied; original settings preserved at C:\warbot_wsa\developer-mode-fallback\settings.dat.backup-20261001-155431.
+[2026-10-01T15:54:34.8109241+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=36288).
+[2026-10-01T15:54:34.8410215+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/deeplink wsa-client://developer-settings' (pid=38184).
+[2026-10-01T15:55:06.3099809+03:00] Developer-mode repair did not recover ADB; original settings were restored.
