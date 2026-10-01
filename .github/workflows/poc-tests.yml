@@ -1,0 +1,62 @@
+name: PoC tests
+
+on:
+  push:
+    branches:
+      - feature/emulator-poc
+      - feature/bluestacks-poc
+      - feature/native-arm64-emulator
+      - feature/unified-android-backend
+  pull_request:
+    branches:
+      - feature/emulator-poc
+      - main
+      - feature/native-arm64-emulator
+      - feature/unified-android-backend
+
+jobs:
+  windows-poc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-ci.txt
+      - name: Compile application modules
+        run: python -m py_compile emulator_poc.py bluestacks_poc.py native_arm64_poc.py device_backend.py scrcpy_transport.py frame_stream.py runtime_events.py runtime_recovery.py runtime_watchdog.py warbot_cli.py bot.py gui.py
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          [scriptblock]::Create((Get-Content -Raw install_tugarin_bots.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/install.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/install_wsa_poc.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/audit_runtime_processes.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_release.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_preview.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_gui.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_operator_io.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_recovery.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_game_flow.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_soak.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/verify_mvp_full.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/provision_scrcpy_server.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/run_and_report.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/upload_runtime_report.ps1)) | Out-Null
+          [scriptblock]::Create((Get-Content -Raw scripts/setup_dedicated_wsa_user.ps1)) | Out-Null
+      - name: Run application unit tests
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $output = @(& python -m unittest discover -s tests -v 2>&1)
+          $exitCode = $LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          if ($exitCode -ne 0) {
+            $tail = (($output | Select-Object -Last 30) -join "`n")
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Python unittest failure::$escaped"
+            exit $exitCode
+          }
