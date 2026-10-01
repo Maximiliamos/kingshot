@@ -1,0 +1,51 @@
+﻿{
+    "timestamp":  "2026-10-01T16:34:46.9546342+03:00",
+    "processes":  [
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  25580,
+                          "ParentProcessId":  24276,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "WsaSettings.exe",
+                          "ProcessId":  30548,
+                          "ParentProcessId":  1180,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe\" -ServerName:SettingsApp.AppXe5xfar8kfrnsjyxycsqtgfxc6xgc0zed.mca"
+                      },
+                      {
+                          "Name":  "WsaClient.exe",
+                          "ProcessId":  37248,
+                          "ParentProcessId":  32240,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe\" /launch wsa://com.android.settings "
+                      },
+                      {
+                          "Name":  "WSACrashUploader.exe",
+                          "ProcessId":  26252,
+                          "ParentProcessId":  37248,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WSACrashUploader\\WSACrashUploader.exe",
+                          "CommandLine":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                      },
+                      {
+                          "Name":  "WsaService.exe",
+                          "ProcessId":  38160,
+                          "ParentProcessId":  620,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  37548,
+                          "ParentProcessId":  29580,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      }
+                  ],
+    "listeners":  [
+
+                  ],
+    "runtime_alive":  true
+}

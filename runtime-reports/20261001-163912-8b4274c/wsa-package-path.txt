@@ -1,0 +1,3 @@
+﻿package:/data/app/~~rOnJl8wlVkpGvfcBvN2HBA==/com.got.globalru-KoXHzSMB4f94N2gRyewGug==/base.apk
+package:/data/app/~~rOnJl8wlVkpGvfcBvN2HBA==/com.got.globalru-KoXHzSMB4f94N2gRyewGug==/split_config.arm64_v8a.apk
+package:/data/app/~~rOnJl8wlVkpGvfcBvN2HBA==/com.got.globalru-KoXHzSMB4f94N2gRyewGug==/split_game_asset.apk

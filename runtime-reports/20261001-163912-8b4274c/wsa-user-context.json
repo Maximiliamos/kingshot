@@ -1,0 +1,17 @@
+﻿{
+    "current_account":  "COMPUTER\\Программист1",
+    "current_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "current_session_id":  4,
+    "is_admin":  false,
+    "explorer_owners":  [
+                            {
+                                "process_id":  11552,
+                                "session_id":  4,
+                                "account":  "COMPUTER\\Программист1",
+                                "sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007"
+                            }
+                        ],
+    "package_users":  [
+
+                      ]
+}

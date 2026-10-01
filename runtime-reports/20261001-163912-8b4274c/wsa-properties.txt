@@ -1,0 +1,6 @@
+﻿ro.build.version.release=13
+ro.product.cpu.abi=x86_64
+ro.product.cpu.abilist=x86_64,arm64-v8a,x86,armeabi-v7a,armeabi
+ro.dalvik.vm.native.bridge=libhoudini.so
+ro.product.model=Subsystem for Android(TM)
+sys.boot_completed=1

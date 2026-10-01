@@ -1,0 +1,26 @@
+Game process 4493 started; verifying stability for 120s...
+Game stability/loading gate passed: PID 4493; startup_loading=False final_loading=False
+{
+  "ready": true,
+  "backend": "wsa",
+  "native_arm64": false,
+  "native_bridge": "libhoudini.so",
+  "serial": "127.0.0.1:58526",
+  "android": "13",
+  "abi": "x86_64",
+  "model": "Subsystem for Android(TM)",
+  "resolution": "Physical size: 1920x1080",
+  "network_ready": true,
+  "internet_reachable": true,
+  "audio_service_ready": true,
+  "package_manager_ready": true,
+  "data_free_mb": 122111,
+  "installed_now": false,
+  "clean_game": false,
+  "game_pid": "4493",
+  "game_stability_seconds": 120,
+  "startup_loading_logo": false,
+  "final_loading_logo": false,
+  "startup_screenshot": "C:\\warbot_wsa\\reports\\wsa-p0-20261001-163432-32240\\wsa-bootstrap-startup.png",
+  "screenshot": "C:\\warbot_wsa\\reports\\wsa-p0-20261001-163432-32240\\wsa-bootstrap.png"
+}

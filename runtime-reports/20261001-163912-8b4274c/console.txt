@@ -1,0 +1,13 @@
+﻿[2026-10-01T16:34:32.8463886+03:00] Starting WSA LTS 8 PoC installer.
+[2026-10-01T16:34:34.2149825+03:00] Selected WSABuilds LTS 8 GApps package for Windows 10 22H2 (19045.6456).
+[2026-10-01T16:34:34.2196777+03:00] RuntimeOnly: skipping admin-only registry, Windows feature, and BCD setup checks.
+[2026-10-01T16:34:34.4333671+03:00] Starting WSA runtime verification in the normal interactive user session.
+[2026-10-01T16:34:36.0349998+03:00] WSA ADB port 58526 is already reserved from the Windows dynamic/Hyper-V port pool.
+[2026-10-01T16:34:36.0651499+03:00] Adding WSA loopback exemption for localhost ADB forwarding.
+[2026-10-01T16:34:36.1141014+03:00] WARNING: WSA loopback exemption could not be verified; guest-IP ADB discovery will remain enabled.
+[2026-10-01T16:34:37.2230827+03:00] Launching WSA through registered AppX AUMIDs so WsaClient keeps package identity.
+[2026-10-01T16:34:37.7836843+03:00] Packaged activation succeeded for SettingsApp AUMID 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp' (pid=30548).
+[2026-10-01T16:34:37.8765799+03:00] Packaged WsaClient activation succeeded for 'MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App' args='/launch wsa://com.android.settings' (pid=37248).
+[2026-10-01T16:36:59.2440223+03:00] WSA control channel accepted on 127.0.0.1:58526 during the final pre-repair check.
+[2026-10-01T16:37:01.8803852+03:00] Android control channel is online at 127.0.0.1:58526.
+[2026-10-01T16:37:02.6341698+03:00] Installing/launching Kingshot through WSA backend.
