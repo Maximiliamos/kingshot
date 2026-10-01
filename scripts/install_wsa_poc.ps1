@@ -1497,16 +1497,10 @@ function Get-WsaEndpointCandidates {
     }
     catch {}
 
-    try {
-        Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object {
-            $_.IPAddress -and
-            $_.IPAddress -ne "127.0.0.1" -and
-            -not $_.IPAddress.StartsWith("169.254.")
-        } | ForEach-Object {
-            Add-WsaCandidate -Endpoint ($_.IPAddress + ":58526") -Source ("host-ip:" + $_.InterfaceAlias)
-        }
-    }
-    catch {}
+    # Do not probe the WSA loopback-forwarded port through arbitrary Windows
+    # adapter addresses. Hyper-V/WSL host aliases can initially fingerprint as
+    # WSA but are not a stable ADB transport for the 120-second game gate. The
+    # canonical host route is localhost; actual guest addresses come from HNS.
 
     $guestIps = New-Object System.Collections.Generic.HashSet[string]
     try {
