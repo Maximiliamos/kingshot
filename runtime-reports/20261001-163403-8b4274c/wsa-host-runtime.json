@@ -1,0 +1,56 @@
+﻿{
+    "timestamp":  "2026-10-01T16:24:55.0544165+03:00",
+    "processes":  [
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  25580,
+                          "ParentProcessId":  24276,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "WsaSettings.exe",
+                          "ProcessId":  20052,
+                          "ParentProcessId":  1180,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe\" -ServerName:SettingsApp.AppXe5xfar8kfrnsjyxycsqtgfxc6xgc0zed.mca"
+                      },
+                      {
+                          "Name":  "WSACrashUploader.exe",
+                          "ProcessId":  37524,
+                          "ParentProcessId":  25296,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WSACrashUploader\\WSACrashUploader.exe",
+                          "CommandLine":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                      },
+                      {
+                          "Name":  "WsaClient.exe",
+                          "ProcessId":  33444,
+                          "ParentProcessId":  25296,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe\" /partiallyrunning"
+                      },
+                      {
+                          "Name":  "WsaService.exe",
+                          "ProcessId":  30740,
+                          "ParentProcessId":  620,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  9848,
+                          "ParentProcessId":  29008,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      }
+                  ],
+    "listeners":  [
+                      {
+                          "LocalAddress":  "::",
+                          "LocalPort":  58526,
+                          "OwningProcess":  33444,
+                          "State":  2
+                      }
+                  ],
+    "runtime_alive":  true
+}

@@ -1,0 +1,1 @@
+TUGARIN BOTS CLI ERROR: ADB timeout after 300s on 127.0.0.1:58526: install-multiple -r C:\warbot_emulator_poc\apks_1.12.10\base.apk C:\warbot_emulator_poc\apks_1.12.10\split_config.arm64_v8a.apk C:\warbot_emulator_poc\apks_1.12.10\split_game_asset.apk

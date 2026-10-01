@@ -1,0 +1,14 @@
+﻿[
+    {
+        "id":  "App",
+        "executable":  "WsaClient\\WsaClient.exe",
+        "entry_point":  "Windows.FullTrustApplication",
+        "aumid":  "MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!App"
+    },
+    {
+        "id":  "SettingsApp",
+        "executable":  "WsaSettings.exe",
+        "entry_point":  "WsaSettings.App",
+        "aumid":  "MicrosoftCorporationII.WindowsSubsystemForAndroid_8wekyb3d8bbwe!SettingsApp"
+    }
+]

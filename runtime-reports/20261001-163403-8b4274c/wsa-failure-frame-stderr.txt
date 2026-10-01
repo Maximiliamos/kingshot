@@ -1,0 +1,1 @@
+TUGARIN BOTS CLI ERROR: ADB timeout after 30s on 127.0.0.1:58526: exec-out screencap -p
