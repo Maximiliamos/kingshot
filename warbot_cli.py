@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -25,6 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(
             "status", "screenshot", "bootstrap", "install-game", "launch-game", "stop-game",
             "restart-game", "preview-smoke", "preview-probe",
+            "google-services-smoke",
             "restriction-check",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
             "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
@@ -173,6 +175,112 @@ def probe_h264_transport(backend) -> dict:
         json.dumps(report, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    report["report_path"] = str(report_path.resolve())
+    return report
+
+
+GOOGLE_PACKAGES = {
+    "play_services": "com.google.android.gms",
+    "play_store": "com.android.vending",
+    "framework": "com.google.android.gsf",
+}
+
+
+def google_services_smoke(backend, output: str) -> dict:
+    """Verify a usable, signed-in GApps runtime without exposing account data."""
+    backend.require_ready(native_arm64=False)
+    packages = {}
+    for label, package in GOOGLE_PACKAGES.items():
+        path_output = backend.shell(["pm", "path", package], timeout=30)
+        package_dump = backend.shell(["dumpsys", "package", package], timeout=45)
+        enabled_output = backend.shell(["pm", "list", "packages", "-e", package], timeout=30)
+        version_name = re.search(r"(?m)^\s*versionName=([^\s]+)", package_dump)
+        version_code = re.search(r"(?m)^\s*versionCode=(\d+)", package_dump)
+        installed = any(line.startswith("package:") for line in path_output.splitlines())
+        enabled = f"package:{package}" in enabled_output
+        packages[label] = {
+            "package": package,
+            "installed": installed,
+            "enabled": enabled,
+            "version_name": version_name.group(1) if version_name else "",
+            "version_code": version_code.group(1) if version_code else "",
+        }
+
+    required_packages_ok = all(
+        entry["installed"] and entry["enabled"] and entry["version_code"]
+        for entry in packages.values()
+    )
+
+    # AccountManager output includes the account name. Inspect it only in
+    # memory and persist a boolean so email addresses and tokens never enter
+    # console logs, JSON evidence or the runtime-reports branch.
+    try:
+        account_output = backend.shell(["cmd", "account", "list"], timeout=30)
+    except BackendError:
+        account_output = backend.shell(["dumpsys", "account"], timeout=30)
+    account_present = bool(re.search(r"(?i)type\s*=\s*com\.google|com\.google", account_output))
+
+    backend.shell(
+        [
+            "monkey", "-p", GOOGLE_PACKAGES["play_store"],
+            "-c", "android.intent.category.LAUNCHER", "1",
+        ],
+        timeout=30,
+    )
+    observed_pids = []
+    foreground = False
+    deadline = time.monotonic() + 15.0
+    while time.monotonic() < deadline:
+        pid = backend.shell(["pidof", GOOGLE_PACKAGES["play_store"]], timeout=10).strip()
+        if pid and (not observed_pids or observed_pids[-1] != pid):
+            observed_pids.append(pid)
+        focus = backend.shell(["dumpsys", "window", "windows"], timeout=15)
+        foreground = GOOGLE_PACKAGES["play_store"] in focus and bool(pid)
+        if foreground:
+            break
+        time.sleep(1.0)
+
+    crash_loop = len(observed_pids) > 1
+    anr_dump = backend.shell(["dumpsys", "activity", "lastanr"], timeout=20)
+    play_store_anr = bool(
+        GOOGLE_PACKAGES["play_store"] in anr_dump
+        and re.search(r"(?i)\bANR\b", anr_dump)
+    )
+
+    frame = backend.frame()
+    screenshot = Path(output)
+    screenshot.parent.mkdir(parents=True, exist_ok=True)
+    frame_ok = bool(
+        frame is not None
+        and frame.size > 0
+        and float(np.std(frame)) > 1.0
+        and cv2.imwrite(str(screenshot), frame)
+    )
+    passed = bool(
+        required_packages_ok
+        and account_present
+        and observed_pids
+        and foreground
+        and not crash_loop
+        and not play_store_anr
+        and frame_ok
+    )
+    report = {
+        "pass": passed,
+        "play_services": bool(packages["play_services"]["installed"] and packages["play_services"]["enabled"]),
+        "play_store": bool(packages["play_store"]["installed"] and packages["play_store"]["enabled"]),
+        "framework": bool(packages["framework"]["installed"] and packages["framework"]["enabled"]),
+        "account_present": account_present,
+        "play_store_launch": bool(observed_pids),
+        "play_store_foreground": foreground,
+        "play_store_crash_loop": crash_loop,
+        "play_store_anr": play_store_anr,
+        "ui_frame": frame_ok,
+        "screenshot": str(screenshot.resolve()) if frame_ok else "",
+        "packages": packages,
+    }
+    report_path = screenshot.with_suffix(".json")
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     report["report_path"] = str(report_path.resolve())
     return report
 
@@ -619,6 +727,11 @@ def main(argv=None) -> int:
         report = probe_h264_transport(backend)
         print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
         return 0 if report["pass"] else 3
+
+    if args.action == "google-services-smoke":
+        report = google_services_smoke(backend, args.output)
+        print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
+        return 0 if report["pass"] else 5
 
     if args.action == "preview-smoke":
         backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))

@@ -15,6 +15,49 @@ from device_backend import BackendError, DeviceHealth
 
 
 class WarBotCliTests(unittest.TestCase):
+    def test_google_services_smoke_is_fail_closed_and_redacts_account_name(self):
+        backend = MagicMock()
+        backend.require_ready.return_value = DeviceHealth(
+            backend="wsa",
+            serial="127.0.0.1:58526",
+            state="device",
+            boot_completed="1",
+        )
+
+        def shell(args, timeout=60):
+            if args[:2] == ["pm", "path"]:
+                return f"package:/data/app/{args[2]}/base.apk"
+            if args[:2] == ["dumpsys", "package"]:
+                return "  versionCode=123 minSdk=23\n  versionName=1.2.3\n"
+            if args[:4] == ["pm", "list", "packages", "-e"]:
+                return f"package:{args[4]}"
+            if args[:3] == ["cmd", "account", "list"]:
+                return "Account {name=private@example.com, type=com.google}"
+            if args[0] == "monkey":
+                return "Events injected: 1"
+            if args[0] == "pidof":
+                return "1234"
+            if args[:3] == ["dumpsys", "window", "windows"]:
+                return "mCurrentFocus=com.android.vending/.AssetBrowserActivity"
+            if args[:3] == ["dumpsys", "activity", "lastanr"]:
+                return "No ANR"
+            raise AssertionError(args)
+
+        backend.shell.side_effect = shell
+        frame = np.zeros((20, 10, 3), dtype=np.uint8)
+        frame[:, 5:] = 255
+        backend.frame.return_value = frame
+        with TemporaryDirectory() as td:
+            output = Path(td) / "google.png"
+            report = warbot_cli.google_services_smoke(backend, str(output))
+            persisted = output.with_suffix(".json").read_text(encoding="utf-8")
+
+        self.assertTrue(report["pass"])
+        self.assertTrue(report["account_present"])
+        self.assertTrue(report["play_store_foreground"])
+        self.assertNotIn("private@example.com", persisted)
+        self.assertNotIn("account_output", report)
+
     def test_status_prints_backend_health(self):
         backend = MagicMock()
         backend.health.return_value = DeviceHealth(
