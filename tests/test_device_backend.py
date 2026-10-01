@@ -11,6 +11,23 @@ import device_backend as db
 
 
 class DeviceBackendTests(unittest.TestCase):
+    def test_launch_app_does_not_wait_for_unity_window_draw(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        with patch.object(backend, "shell", return_value="Starting") as shell:
+            self.assertEqual(backend.launch_app(), "Starting")
+        shell.assert_called_once_with(
+            [
+                "am",
+                "start",
+                "-n",
+                f"{backend.package}/{backend.activity}",
+            ],
+            timeout=30,
+        )
+
     def test_health_native_arm64_gate(self):
         health = db.DeviceHealth(
             backend="native_arm64",

@@ -135,9 +135,13 @@ class DeviceBackend(ABC):
         self.keyevent("KEYCODE_VOLUME_MUTE")
 
     def launch_app(self) -> str:
+        # Do not use `am start -W` here. Unity/WSA can create the process while
+        # keeping ActivityTaskManager's wait-for-draw request blocked for
+        # minutes. PID, framebuffer and stability are verified independently
+        # immediately after this fire-and-observe launch request.
         return self.shell(
-            ["am", "start", "-W", "-n", f"{self.package}/{self.activity}"],
-            timeout=120,
+            ["am", "start", "-n", f"{self.package}/{self.activity}"],
+            timeout=30,
         )
 
     def stop_app(self) -> str:
