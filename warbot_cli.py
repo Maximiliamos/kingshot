@@ -777,11 +777,6 @@ def main(argv=None) -> int:
         native_gate = isinstance(backend, NativeArm64Backend)
         health = backend.require_ready(native_arm64=native_gate)
 
-        # P0 runtime acceptance: do not install/launch the game until Android
-        # has a real framebuffer, validated networking and an audio service.
-        if hasattr(backend, "wait_runtime_services"):
-            health = backend.wait_runtime_services(timeout=90)
-
         installed_now = False
         if not backend.package_installed():
             backend.install_verified_game(args.apks_dir)
@@ -793,6 +788,15 @@ def main(argv=None) -> int:
 
         backend.launch_app()
         pid = backend.wait_package_running(timeout=180)
+
+        # A freshly migrated WSA can have no active Android surface until the
+        # first application is launched.  Package-manager readiness is already
+        # part of require_ready()/health; install and launch the verified APK
+        # first, then require the real framebuffer/network/audio gates before
+        # accepting the running game.
+        if hasattr(backend, "wait_runtime_services"):
+            health = backend.wait_runtime_services(timeout=90)
+
         stability = max(1, int(args.game_stability_seconds))
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)

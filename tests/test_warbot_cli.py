@@ -367,6 +367,18 @@ class WarBotCliTests(unittest.TestCase):
             self.assertIn('"backend": "wsa"', out.getvalue())
             self.assertIn('"native_bridge": "libhoudini.so"', out.getvalue())
 
+    def test_bootstrap_launches_game_before_framebuffer_service_gate(self):
+        import inspect
+
+        source = inspect.getsource(warbot_cli.main)
+        install = source.index("backend.install_verified_game(args.apks_dir)")
+        launch = source.index("backend.launch_app()", install)
+        pid = source.index("backend.wait_package_running(timeout=180)", launch)
+        services = source.index("backend.wait_runtime_services(timeout=90)", pid)
+        self.assertLess(install, launch)
+        self.assertLess(launch, pid)
+        self.assertLess(pid, services)
+
     def test_bootstrap_fails_if_game_remains_on_loading_screen(self):
         backend = warbot_cli.WsaBackend(
             serial="127.0.0.1:58526",
