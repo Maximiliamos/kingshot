@@ -1,0 +1,1 @@
+TUGARIN BOTS CLI ERROR: ADB timeout after 120s on 127.0.0.1:58526: shell am start -W -n com.got.globalru/com.unity3d.player.MyMainPlayerActivity
