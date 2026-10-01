@@ -1478,7 +1478,11 @@ function Get-WsaEndpointCandidates {
 
     try {
         $devices = Invoke-AdbSafe -Arguments @("devices") -TimeoutSeconds 5
-        foreach ($line in (($devices.Stdout -split "`r?`n") | Where-Object { $_ -match "\t(device|unauthorized|offline)$" })) {
+        # `adb devices` retains disconnected WSA endpoints as `offline`.  They are
+        # historical observations, not viable discovery candidates, and probing
+        # each one can consume the whole startup deadline before localhost is
+        # checked again.
+        foreach ($line in (($devices.Stdout -split "`r?`n") | Where-Object { $_ -match "\t(device|unauthorized)$" })) {
             $deviceSerial = ($line -split "\s+")[0]
             Add-WsaCandidate -Endpoint $deviceSerial -Source "adb-devices"
         }
@@ -1572,7 +1576,18 @@ function Invoke-WsaCandidateProbe {
         }
     }
 
-    $stateResult = Invoke-AdbSafe -Arguments @("-s", $Endpoint, "get-state") -TimeoutSeconds 5
+    if ($tcpOpen -eq $false -and -not $alreadyKnown) {
+        $stateResult = [pscustomobject]@{
+            ExitCode = 1
+            Stdout = ""
+            Stderr = "tcp_closed"
+            Text = "tcp_closed"
+            TimedOut = $false
+        }
+    }
+    else {
+        $stateResult = Invoke-AdbSafe -Arguments @("-s", $Endpoint, "get-state") -TimeoutSeconds 5
+    }
     $stateText = ([string]$stateResult.Stdout).Trim()
     $model = ""
     $boot = ""
@@ -1690,6 +1705,33 @@ while (-not $onlineSerial -and (Get-Date) -lt $connectDeadline) {
     }
 
     if ($onlineSerial) { break }
+
+    # Candidate discovery may include stale HNS/neighbour addresses.  Re-probe
+    # the authoritative loopback endpoint immediately before any repair that
+    # stops or relaunches WSA, because the port can become ready while the
+    # candidate list is being evaluated.
+    $preferredEndpoint = if ($Serial) { [string]$Serial } else { "127.0.0.1:58526" }
+    $preferredProbe = Invoke-WsaCandidateProbe -Endpoint $preferredEndpoint -Source "preferred-final-check"
+    $attempts += [ordered]@{
+        round = $round
+        timestamp = (Get-Date).ToString("o")
+        serial = $preferredEndpoint
+        source = "preferred-final-check"
+        tcp_open = $preferredProbe.tcp_open
+        connect_exit = $preferredProbe.connect_exit
+        connect = $preferredProbe.connect
+        state_exit = $preferredProbe.state_exit
+        state = $preferredProbe.state
+        state_error = $preferredProbe.state_error
+        model = $preferredProbe.model
+        boot_completed = $preferredProbe.boot_completed
+        is_wsa = $preferredProbe.is_wsa
+    }
+    if ($preferredProbe.is_wsa -and $preferredProbe.boot_completed -eq "1") {
+        $onlineSerial = $preferredEndpoint
+        Write-Log "WSA control channel accepted on $preferredEndpoint during the final pre-repair check."
+        break
+    }
 
     $elapsed = ((Get-Date) - $probeStartedAt).TotalSeconds
 

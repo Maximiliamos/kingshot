@@ -214,6 +214,21 @@ class WsaInstallerTests(unittest.TestCase):
         self.assertIn('($ip + ":5555")', self.source)
         self.assertIn('($ip + ":58526")', self.source)
 
+    def test_p0_excludes_stale_offline_adb_devices(self):
+        discovery_start = self.source.index("function Get-WsaEndpointCandidates")
+        discovery_end = self.source.index("function Invoke-WsaCandidateProbe", discovery_start)
+        discovery = self.source[discovery_start:discovery_end]
+        self.assertIn(r'\t(device|unauthorized)$', discovery)
+        self.assertNotIn(r'\t(device|unauthorized|offline)$', discovery)
+
+    def test_p0_rechecks_preferred_endpoint_before_repairing_wsa(self):
+        final_check = self.source.index('Source "preferred-final-check"')
+        developer_repair = self.source.index("Enable-DeveloperModeFallback -ReportStage $stage", final_check)
+        recycle = self.source.index('Write-Log "All non-destructive startup routes were exhausted', final_check)
+        self.assertLess(final_check, developer_repair)
+        self.assertLess(final_check, recycle)
+        self.assertIn('tcpOpen -eq $false -and -not $alreadyKnown', self.source)
+
     def test_p0_fingerprints_wsa_before_accepting_device(self):
         self.assertIn('"ro.product.model"', self.source)
         self.assertIn('"sys.boot_completed"', self.source)
