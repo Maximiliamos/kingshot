@@ -1,0 +1,104 @@
+﻿{
+    "schema":  1,
+    "product":  "TUGARIN BOTS",
+    "overall":  "running",
+    "head":  "0193bd0d945adc250e017fff5347773dcdec9dea",
+    "run_id":  "7139b92223af42ad895af83a089d83ca",
+    "windows_user":  "COMPUTER\\Программист1",
+    "windows_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "started_at_utc":  "2026-10-05T23:44:10.3242477+00:00",
+    "finished_at_utc":  null,
+    "failed_gate":  "",
+    "exit_code":  0,
+    "gates":  [
+                  {
+                      "name":  "Clean tracked worktree",
+                      "script":  "git status --porcelain --untracked-files=no",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:44:10.4934958+00:00",
+                      "finished_at_utc":  "2026-10-05T23:44:10.5014957+00:00"
+                  },
+                  {
+                      "name":  "Published branch head",
+                      "script":  "git rev-parse @{u}",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:44:10.6552460+00:00",
+                      "finished_at_utc":  "2026-10-05T23:44:10.6552460+00:00",
+                      "detail":  "origin/feature/unified-android-backend@0193bd0d945adc250e017fff5347773dcdec9dea"
+                  },
+                  {
+                      "name":  "Infrastructure / WSA / Kingshot / process audit",
+                      "script":  "verify_release.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:44:10.7750720+00:00",
+                      "finished_at_utc":  "2026-10-05T23:48:42.6294105+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_wsa\\reports\\LATEST-LOCAL.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Google Services / Play Store / account",
+                      "script":  "verify_google_services.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:48:42.6410653+00:00",
+                      "finished_at_utc":  "2026-10-05T23:48:47.5197461+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\google-services.json",
+                                       "C:\\warbot_git\\debug\\google-services.png"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Production PrintWindow preview",
+                      "script":  "verify_preview.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:48:47.5307456+00:00",
+                      "finished_at_utc":  "2026-10-05T23:49:05.2472698+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\preview-production.json",
+                                       "C:\\warbot_git\\debug\\preview-production.png"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Consoleless GUI render",
+                      "script":  "verify_gui.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:49:05.2585494+00:00",
+                      "finished_at_utc":  "2026-10-05T23:49:21.6994987+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\gui-host-smoke.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Operator Unicode/UI/audio channel",
+                      "script":  "verify_operator_io.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:49:21.7135694+00:00",
+                      "finished_at_utc":  "2026-10-05T23:49:25.5090704+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\operator-io-smoke.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  }
+              ]
+}
