@@ -8,6 +8,20 @@ import bot
 
 
 class TutorialVisionTests(unittest.TestCase):
+    def test_action_gate_supports_bounded_local_change_threshold(self):
+        before = np.zeros((100, 100, 3), dtype=np.uint8)
+        after = before.copy()
+        after[40:60, 40:60] = 20
+        gate = bot.ActionGate()
+        gate.arm(before, "resident assignment", change_threshold=0.5)
+        gate.started_at -= bot.ACTION_MIN_SETTLE + 0.1
+        self.assertEqual(gate.observe(after), "changed")
+
+        strict_gate = bot.ActionGate()
+        strict_gate.arm(before, "scene transition")
+        strict_gate.started_at -= bot.ACTION_MIN_SETTLE + 0.1
+        self.assertEqual(strict_gate.observe(after), "waiting")
+
     def test_offline_confirm_accepts_wsa_anisotropic_scaling_in_safe_zone(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         template = bot.tpl("offline_confirm.png")

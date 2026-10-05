@@ -319,15 +319,17 @@ class ActionGate:
         self.before = None
         self.label = None
         self.started_at = 0.0
+        self.change_threshold = ACTION_CHANGE_DIFF
 
     @property
     def pending(self):
         return self.before is not None
 
-    def arm(self, phone, label):
+    def arm(self, phone, label, change_threshold=ACTION_CHANGE_DIFF):
         self.before = phone.copy()
         self.label = label
         self.started_at = time.monotonic()
+        self.change_threshold = float(change_threshold)
         log(f"Действие отправлено: {label}; жду смену кадра.")
 
     def observe(self, phone):
@@ -337,7 +339,7 @@ class ActionGate:
         if elapsed < ACTION_MIN_SETTLE:
             return "waiting"
         delta = diff(phone, self.before)
-        if delta >= ACTION_CHANGE_DIFF:
+        if delta >= self.change_threshold:
             log(f"Кадр изменился после {self.label}: diff={delta:.1f}, {elapsed:.2f} сек.")
             self.before = None
             return "changed"
@@ -1841,6 +1843,10 @@ def handle_tutorial(phone, state):
         debug(phone, resident_plus, "tutorial_assign_resident_plus")
         log("Туториал: подтверждена панель жителей каменоломни; назначаю рабочего кнопкой +.")
         tap_match(phone, resident_plus)
+        # Assigning one resident changes only a small portrait/counter region.
+        # Keep the action fail-closed, but use a local-action threshold instead
+        # of the scene-transition threshold used by full-screen tutorial steps.
+        state["action_change_threshold"] = 0.5
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
@@ -2319,7 +2325,15 @@ def main():
 
             if acted:
                 heartbeat.mark_action()
-                gate.arm(phone, f"{state['phase']}/{state['step']}")
+                change_threshold = float(
+                    state.pop("action_change_threshold", ACTION_CHANGE_DIFF)
+                )
+                gate.arm(
+                    phone,
+                    f"{state['phase']}/{state['step']}",
+                    change_threshold=change_threshold,
+                )
+                save_state(state)
                 unknown_since = None
                 continue
 
