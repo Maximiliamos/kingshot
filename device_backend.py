@@ -817,6 +817,9 @@ class WsaBackend(AdbDeviceBackend):
         self,
         points: list[tuple[int, int]],
         duration_ms: int = 50,
+        *,
+        user32_api=None,
+        sleep_fn=None,
     ) -> bool:
         """Inject client-relative pointer coordinates into the real WSA HWND.
 
@@ -843,7 +846,7 @@ class WsaBackend(AdbDeviceBackend):
 
         button_down = False
         try:
-            time.sleep(0.15)
+            sleep_fn(0.15)
             first_x, first_y = normalized[0]
             if not user32.SetCursorPos(left + first_x, top + first_y):
                 return False
@@ -853,15 +856,15 @@ class WsaBackend(AdbDeviceBackend):
             if len(normalized) > 1:
                 delay = max(0.001, duration_ms / 1000.0 / max(1, len(normalized) - 1))
                 for x, y in normalized[1:]:
-                    time.sleep(delay)
+                    sleep_fn(delay)
                     if not user32.SetCursorPos(left + x, top + y):
                         return False
             else:
-                time.sleep(max(0.03, duration_ms / 1000.0))
+                sleep_fn(max(0.03, duration_ms / 1000.0))
 
             user32.mouse_event(0x0004, 0, 0, 0, 0)
             button_down = False
-            time.sleep(0.20)
+            sleep_fn(0.20)
             return True
         finally:
             if button_down:
