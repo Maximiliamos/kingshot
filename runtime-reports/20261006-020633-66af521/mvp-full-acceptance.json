@@ -1,0 +1,54 @@
+﻿{
+    "schema":  1,
+    "product":  "TUGARIN BOTS",
+    "overall":  "fail",
+    "head":  "66af521d9130550cabd690e0f697e712cc1bcf23",
+    "run_id":  "5a7231b150f84ed2bc8c8f478486bdd1",
+    "windows_user":  "COMPUTER\\Программист1",
+    "windows_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "started_at_utc":  "2026-10-05T23:01:06.6444456+00:00",
+    "finished_at_utc":  "2026-10-05T23:06:32.8362169+00:00",
+    "failed_gate":  "Infrastructure / WSA / Kingshot / process audit",
+    "exit_code":  1,
+    "gates":  [
+                  {
+                      "name":  "Clean tracked worktree",
+                      "script":  "git status --porcelain --untracked-files=no",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:01:06.9228280+00:00",
+                      "finished_at_utc":  "2026-10-05T23:01:06.9438937+00:00"
+                  },
+                  {
+                      "name":  "Published branch head",
+                      "script":  "git rev-parse @{u}",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:01:07.1112161+00:00",
+                      "finished_at_utc":  "2026-10-05T23:01:07.1112161+00:00",
+                      "detail":  "origin/feature/unified-android-backend@66af521d9130550cabd690e0f697e712cc1bcf23"
+                  },
+                  {
+                      "name":  "Infrastructure / WSA / Kingshot / process audit",
+                      "script":  "verify_release.ps1",
+                      "pass":  false,
+                      "exit_code":  1,
+                      "started_at_utc":  "2026-10-05T23:01:07.3100626+00:00",
+                      "finished_at_utc":  "2026-10-05T23:06:12.6953626+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_wsa\\reports\\LATEST-LOCAL.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Failure-path process audit",
+                      "script":  "audit_runtime_processes.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:06:32.8362169+00:00",
+                      "finished_at_utc":  "2026-10-05T23:06:32.8362169+00:00"
+                  }
+              ]
+}
