@@ -106,6 +106,9 @@ $stale = @(
         if ($name -in @("python", "pythonw", "cmd", "conhost", "ffmpeg")) {
             return $projectOwned
         }
+        if ($name -in @("powershell", "pwsh")) {
+            return ($_.pid -ne $PID -and $projectOwned)
+        }
         if ($name -eq "adb") {
             return (
                 $line -match "tugarin-scrcpy-server" -or
@@ -116,7 +119,17 @@ $stale = @(
     }
 )
 
-$pass = $AllowGuiProcesses -or ($stale.Count -eq 0)
+$staleTasks = @(
+    $tasks | Where-Object {
+        $name = [string]$_.task_name
+        $state = [string]$_.state
+        $enabled = [bool]$_.enabled
+        $legacySetupTask = $name -match "(?i)GApps Migration|WSA.*Continue|Setup.*Continue|Migration"
+        return ($state -eq "Running") -or ($enabled -and $legacySetupTask)
+    }
+)
+
+$pass = $AllowGuiProcesses -or (($stale.Count -eq 0) -and ($staleTasks.Count -eq 0))
 $result = [ordered]@{
     schema = 1
     checked_at = (Get-Date).ToString("o")
@@ -126,6 +139,7 @@ $result = [ordered]@{
     processes = $processes
     stale_processes = $stale
     scheduled_tasks = $tasks
+    stale_scheduled_tasks = $staleTasks
 }
 
 $parent = Split-Path -Parent $Output
@@ -134,7 +148,7 @@ $result | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $Output
 $result | ConvertTo-Json -Depth 8 | Write-Host
 
 if (-not $pass) {
-    Write-Error "Production-user stale Python/console/video transport processes remain after GUI/setup should be closed."
+    Write-Error "Production-user stale project processes or active migration/continuation tasks remain after GUI/setup should be closed."
     exit 21
 }
 exit 0
