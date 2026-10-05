@@ -8,7 +8,7 @@ Open PowerShell in the normal interactive `Программист1` session:
 
 ```powershell
 cd C:\warbot_git
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run_full_mvp_and_report.ps1" -ExpectedCommit 669ee3a2ce2f0b864d3256ea754495abfb73b144
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run_full_mvp_and_report.ps1" -ExpectedCommit <RELEASE_SHA>
 ```
 
 Do not edit tracked files before the run. The runner requires the local HEAD to
