@@ -39,10 +39,6 @@ if ($existing) {
     exit 50
 }
 
-$provision = Join-Path $Root "scripts\provision_scrcpy_server.ps1"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $provision
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 $report = Join-Path $Root "debug\gui-host-smoke.json"
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $report) | Out-Null
 Remove-Item -LiteralPath $report -Force -ErrorAction SilentlyContinue

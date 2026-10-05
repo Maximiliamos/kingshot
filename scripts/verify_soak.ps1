@@ -36,10 +36,6 @@ if ($existing) {
     exit 41
 }
 
-$provision = Join-Path $Root "scripts\provision_scrcpy_server.ps1"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $provision
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 $env:PYTHONIOENCODING = "utf-8"
 New-Item -ItemType Directory -Force -Path (Join-Path $Root "debug") | Out-Null
 $stdout = Join-Path $Root "debug\mvp-soak.stdout.log"
