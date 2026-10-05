@@ -207,23 +207,28 @@ class WarBotCliTests(unittest.TestCase):
         with TemporaryDirectory() as td:
             screenshot = Path(td) / "rename.png"
             screenshot.write_bytes(b"evidence")
+            run_id = "test-flow-run"
             events = [
                 {
                     "event": "mvp_flow_start",
+                    "run_id": run_id,
                     "expected_nickname": "Тугарин7",
                     "next_nickname_before": 7,
                     "characters_before": 6,
                 },
-                {"event": "tutorial_complete", "origin": "initial"},
-                {"event": "state3_confirmed", "target_state": 3},
-                {"event": "tutorial_complete", "origin": "new_character"},
+                {"event": "tutorial_complete", "run_id": run_id, "origin": "initial"},
+                {"event": "state3_confirmed", "run_id": run_id, "target_state": 3},
+                {"event": "tutorial_complete", "run_id": run_id, "origin": "new_character"},
                 {
                     "event": "nickname_committed",
+                    "run_id": run_id,
                     "nickname": "Тугарин7",
                     "evidence_screenshot": str(screenshot),
+                    "nickname_ocr_confirmed": True,
                 },
             ]
-            with patch("bot.load_state", return_value=state), \
+            with patch.dict(os.environ, {"TUGARIN_ACCEPTANCE_RUN_ID": run_id}), \
+                    patch("bot.load_state", return_value=state), \
                     patch("runtime_events.read_recent_events", return_value=events):
                 result = warbot_cli.collect_mvp_flow_evidence()
         self.assertTrue(result["pass"])
@@ -296,26 +301,33 @@ class WarBotCliTests(unittest.TestCase):
             second = Path(td) / "rename4.png"
             first.write_bytes(b"one")
             second.write_bytes(b"two")
+            run_id = "test-soak-run"
             events = [
                 {
                     "event": "mvp_soak_start",
+                    "run_id": run_id,
                     "next_nickname_before": 3,
                     "characters_before": 2,
                     "current_cycle": 1,
                 },
                 {
                     "event": "nickname_committed",
+                    "run_id": run_id,
                     "nickname": "Тугарин3",
                     "evidence_screenshot": str(first),
+                    "nickname_ocr_confirmed": True,
                 },
-                {"event": "cycle_reset"},
+                {"event": "cycle_reset", "run_id": run_id},
                 {
                     "event": "nickname_committed",
+                    "run_id": run_id,
                     "nickname": "Тугарин4",
                     "evidence_screenshot": str(second),
+                    "nickname_ocr_confirmed": True,
                 },
             ]
-            with patch("bot.load_state", return_value=state), \
+            with patch.dict(os.environ, {"TUGARIN_ACCEPTANCE_RUN_ID": run_id}), \
+                    patch("bot.load_state", return_value=state), \
                     patch("runtime_events.read_recent_events", return_value=events):
                 result = warbot_cli.collect_mvp_soak_evidence(2)
         self.assertTrue(result["pass"])
