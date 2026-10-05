@@ -1,108 +1,96 @@
 # TUGARIN BOTS progress
 
-Updated: 2026-09-30
+Updated: 2026-10-05
 
-## Proven on the real Windows host
+## Source of truth
 
-Latest infrastructure host acceptance: **PASS** on 2026-09-30 at
-commit `6471791903d1ef29c713d22e81529f1c48dc01f0`, running entirely as
-`COMPUTER\Программист1` (SID ending `-1007`).
+Integration branch: `feature/unified-android-backend` / Draft PR #6.
 
-This is not the full MVP acceptance. The unified full-host orchestrator has
-not yet produced `MVP 1.0 HOST ACCEPTANCE PASS` on the current release
-candidate from the exact interactive `Программист1` Windows SID.
+The branch is code-complete only when hosted Windows CI is green. Product-ready
+1.0 additionally requires `MVP 1.0 HOST ACCEPTANCE PASS` from the exact
+published branch HEAD on the real `COMPUTER\Программист1` WSA host.
 
-Evidence:
+## Proven real-host baseline
 
-- production runtime Python `C:\warbot_wsa\tugarin-venv\Scripts\python.exe`;
-- 237 hosted-equivalent tests passed locally with `OK`;
-- Windows 10 WSA / Android 13 ready on `127.0.0.1:58526`;
-- framebuffer resolution 1920×1080;
-- network ready and Internet reachable;
-- Android audio service ready;
-- package manager ready;
-- free `/data` space ~121790 MiB;
-- Kingshot remained on one PID for 120 seconds;
-- startup/final loading-logo checks both false;
-- interactive-user stale-process audit passed with no Python/CMD/conhost process;
-- old GApps migration task exists only in disabled state.
+Latest published infrastructure report before the final PrintWindow hardening:
 
-Earlier P0 evidence at `b565c8d` is now superseded by this current-head
-release acceptance.
+- report: `runtime-reports/20261005-144548-144ba16`;
+- commit: `144ba1607f0717e615d9ede41845ca0380c665cc`;
+- WSA LTS 8 / Android 13 / GApps;
+- ADB `127.0.0.1:58526` = `device`, `boot_completed=1`;
+- Kingshot PID 4350 remained stable for 120 seconds;
+- 1920×1080 framebuffer;
+- network, Internet, audio and package manager ready;
+- startup/final loading-logo checks false;
+- result: `WSA_GAME_PASS`.
 
-## Implemented on feature/unified-android-backend
+This proves the infrastructure baseline, not the current final-head MVP.
 
-### P0 hardening
+## Implemented after that baseline
 
-- fixed Windows PowerShell XML parsing by reading AppxManifest with `-Raw`;
-- primary AUMID discovery now reads the installed AppxManifest directly;
-- critical WSA installer is parsed by CI;
-- CI installs PySide6 and constructs/closes the real GUI offscreen;
-- tutorial vision regression no longer silently skips;
-- runtime and CI dependency versions are pinned.
+- exact Kingshot HWND capture via Win32 `PrintWindow`;
+- `wsa-window` is now the production capture for both GUI and bot vision;
+- no MSS desktop-rectangle dependency for production capture;
+- GDI handles are released on success and failure paths;
+- WSA game input is client-relative host input with cursor/foreground restore;
+- tap/hold/swipe are fail-closed when the real game HWND/input path is absent;
+- bot-shared GUI frames publish matching WSA-client geometry;
+- Google Services acceptance checks Play Services, Play Store, account presence,
+  foreground launch, ANR/crash-loop state and UI evidence without persisting
+  account identity;
+- release preview requires exact PrintWindow transport, >=15 FPS, zero capture
+  errors and persists JSON + PNG evidence;
+- recovery acceptance uses the same production capture as automation;
+- Google/preview/GUI/operator/recovery/flow/soak/process-audit evidence paths are
+  recorded by the full orchestrator;
+- full acceptance rejects a local SHA that is not the published upstream SHA;
+- scrcpy-server is diagnostic only and is no longer a production host-gate
+  dependency;
+- `run_full_mvp_and_report.ps1` performs the entire real-host acceptance and
+  uploads PASS or FAIL evidence to `runtime-reports`.
 
-### P1 application
+## Product-flow safeguards already in code
 
-- WSA is the explicit production backend;
-- same-session `wsa-window` client-area capture is the production fast path; pinned scrcpy-server v4.1 remains an optional diagnostic transport and PNG screencap is recovery/diagnostics only;
-- single continuous GUI frame worker;
-- FPS/latency transport metrics in the GUI;
-- click/swipe/hold/wheel/right-click input;
-- ASCII input plus optional Unicode clipboard/paste;
-- Android volume up/down/mute controls;
-- network/Internet/audio/P0/runtime identity health panel.
+- exact State #3 row + modal + confirm evidence;
+- `state3_confirmed` is emitted only after the modal disappears and the
+  new-character tutorial is visible;
+- unknown screens and account/server restrictions stop fail-closed;
+- no blind generic close/confirm actions;
+- nickname `Тугарин<N>` commits only after exact OCR evidence;
+- each nickname commit stores screenshot/crop evidence and SHA-256;
+- PC-side nickname counter advances only after confirmed commit;
+- soak requires at least two ordered nickname commits, screenshots and a reset;
+- `pm clear` preserves the PC-side nickname counter.
 
-### P2 resilience
+## Current release gates
 
-- bounded capture/runtime/game recovery;
-- atomic state writes plus previous snapshot;
-- corrupt state is preserved and stops fail-closed;
-- structured JSONL event stream;
-- runtime heartbeat file surfaced in GUI;
-- deterministic long-run-lite persistence/event tests.
+| Gate | Code | Exact final-head real host |
+|---|---:|---:|
+| WSA/GApps + Kingshot P0 | DONE | rerun required |
+| Google Services | DONE | rerun required |
+| PrintWindow preview | DONE | rerun required |
+| Consoleless GUI render | DONE | rerun required |
+| host input / Unicode / audio | DONE | game-flow + host smoke required |
+| Kingshot + ADB recovery | DONE | rerun required |
+| exact State #3 flow | DONE | PENDING |
+| `Тугарин<N>` rename evidence | DONE | PENDING |
+| 2+ character soak | DONE | PENDING |
+| final process audit | DONE | PENDING |
+| full `overall=pass` | DONE | PENDING |
+| merge/tag | BLOCKED by host gate | — |
 
-## Current gates
+## Final host command
 
-| Gate | State |
-|---|---|
-| WSA boot/game P0 on real host | PASS |
-| Local hosted-equivalent suite | PASS — 237 tests, zero skips |
-| Latest integration HEAD real-host infrastructure gate | PASS at `6471791` |
-| Interactive-user stale-process audit | PASS — zero stale processes |
-| Full State #3 -> tutorial -> rename real-game cycle | CODE + machine-readable evidence DONE; PENDING HOST |
-| Kingshot restart + ADB reconnect recovery | PASS on real host |
-| Multi-cycle unattended real-game soak | CODE + bounded verifier DONE; PENDING HOST |
-| Production fast capture | PASS — `wsa-window`, 57.7 FPS, avg 14.2 ms, p95 16.3 ms, zero black/errors |
+Preferred command because it also publishes evidence:
 
-The exact State #3 flow is currently blocked by a server/account message that
-requires creating a character in the physical mobile version before entering
-from this platform. The bot now records `account_restriction` evidence and
-stops before any click or `pm clear`; this restriction is not bypassed.
+```powershell
+cd C:\warbot_git
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run_full_mvp_and_report.ps1"
+```
 
-## Current-host findings on 2026-09-30
+The flow/soak stages intentionally clear Kingshot application data. The
+PC-side `Тугарин<N>` counter is preserved.
 
-- a black GUI framebuffer was traced to Android power state `Asleep/OFF` and
-  Kingshot not running, not to a decoder failure;
-- waking Android, enabling stay-awake and starting the declared activity
-  produced a real Kingshot framebuffer and PID;
-- the 1280x720 PNG fallback measured roughly 350 ms per capture while the game
-  was loading; it is explicitly capped at 2 FPS to avoid saturating WSA;
-- GUI and bot no longer run two independent capture/decode pipelines: while
-  automation owns capture, GUI consumes the bot's replaceable JPEG mailbox;
-- expensive runtime health probes are reduced from every 5-10 seconds to a
-  bounded 15/60-second cadence;
-- full acceptance now rejects the wrong Windows SID before evidence creation,
-  stamps one run id through child evidence, and requires exact post-rename OCR
-  before advancing the persistent nickname counter.
-
-## Definition of product-ready 1.0
-
-Code is now organized around one full host orchestrator
-(`scripts/verify_mvp_full.ps1`). A 1.0 tag should require PASS on that exact
-release commit for:
-
-1. consoleless GUI start/stop;
-2. no stale interactive-user probe processes;
-3. complete registration flow through exact State #3 and `Тугарин<N>`;
-4. restart recovery;
-5. multi-cycle soak.
+Only after the exact current-head report has `mvp-full-acceptance.json` with
+`overall = "pass"` should PR #6 move from Draft to Ready, merge to `main`,
+run main CI and receive tag `v1.0.0`.

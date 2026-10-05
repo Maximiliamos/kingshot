@@ -1,138 +1,115 @@
 # TUGARIN BOTS architecture
 
-Updated: 2026-09-30
+Updated: 2026-10-05
 
 ## Production decision
 
-The production Windows runtime is **Windows Subsystem for Android (WSA)**.
-Native ARM64 QEMU, BlueStacks and the old Android Emulator are retained only as
-diagnostic/research paths and must not drive normal product behavior.
+Production runs entirely in the interactive Windows session
+`COMPUTER\Программист1`:
 
 ```text
-TUGARIN BOTS GUI
-  ├─ continuous preview worker + manual input
-  ├─ runtime/game/network/audio health
-  └─ operator controls
-          │
-          ▼
-DeviceBackend
-  ├─ WsaBackend                 <- production
-  ├─ AdbDeviceBackend           <- compatibility/debug
-  └─ NativeArm64Backend         <- experimental fallback
-          │
-          ├─ screenshot/input/app lifecycle
-          └─ optional uiautomator2 system-UI/Unicode channel
-          │
-          ▼
-OpenCV vision + action gate
-          │
-          ▼
-Fail-closed game state machine
+Программист1
+├─ WSA Android 13 + GApps
+│  └─ Kingshot
+├─ ADB 127.0.0.1:58526
+└─ TUGARIN BOTS
+   ├─ PrintWindow capture
+   ├─ WsaBackend host input
+   ├─ OpenCV vision/action gate
+   ├─ fail-closed state machine
+   └─ GUI / evidence / recovery
 ```
 
-## Runtime acceptance
+A separate `TugarinBots` Windows user is not a production dependency.
 
-WSA is accepted only after all required runtime services are proven:
+## Capture
 
-- ADB state is `device`;
-- `sys.boot_completed=1`;
-- a real framebuffer PNG is decoded;
-- package manager responds;
-- at least 1024 MiB is free in `/data`;
-- Android reports a usable network;
-- Internet is validated/reachable;
-- Android audio service responds;
-- Kingshot starts and remains on one PID through the stability gate.
+The production source is the exact visible Kingshot HWND. The
+`WsaGameWindowCapture` transport:
 
-WSA is allowed to expose x86/native-bridge translation. The no-x86/no-bridge
-gate applies only to the experimental Native ARM64 backend.
+1. enumerates the unique Kingshot top-level window;
+2. reads its client rectangle;
+3. renders that HWND through Win32 `PrintWindow` with client/full-content
+   flags;
+4. converts the temporary GDI bitmap to BGR;
+5. restores/deletes every selected object/DC/bitmap on all success/failure
+   paths.
 
-## Capture and preview
+It is reported as `wsa-window` with `capture_method=printwindow`.
+Production automation and GUI both use this path. Overlapping desktop windows
+therefore cannot become the vision source.
 
-Automation consumes frames through the backend contract. The GUI uses
-`ContinuousFrameStream`, a single long-lived preview worker, instead of
-creating a new worker for every Qt timer tick.
+MSS/scrcpy/H.264/ADB PNG remain diagnostic code paths only and are not required
+by production release gates.
 
-WSA, Kingshot and TUGARIN BOTS run in the same interactive
-`COMPUTER\Программист1` session. The production fast path captures only the
-Kingshot client area through `GetClientRect`/`ClientToScreen` and MSS and is
-reported as `wsa-window`. Pinned scrcpy-server H.264 remains optional because
-the current WSA encoder produces no usable stream. `adb-screencap` is bounded
-recovery/diagnostics only and cannot pass the production performance gate.
+## Coordinate model and input
 
-## Input
-
-The backend provides:
+Vision crops the portrait game content from the WSA client frame. Its input
+geometry is kept **client-relative**:
 
 ```text
-tap
-swipe
-hold
-keyevent
-ASCII text
-Unicode clipboard/paste when uiautomator2 is available
-volume up/down/mute
-app launch/stop/clear
+vision normalized point
+→ WSA client content rectangle
+→ WsaBackend
+→ add ClientToScreen window origin
+→ Win32 cursor/down/move/up
 ```
 
-Manual GUI control automatically pauses game automation before sending input.
-Right-click maps to Android Back; mouse hold maps to long-press; wheel maps to a
-vertical swipe.
+`WsaBackend` briefly foregrounds the real Kingshot HWND so Unity accepts the
+pointer, then restores the previous cursor position and foreground window.
+A synthetic left button is always released in `finally`, including a failed
+mid-swipe. If the exact host-input path is unavailable, tap/hold/swipe fail
+closed; they do not silently fall back to an unfocused ADB tap.
 
-## State durability
+While automation owns capture, the GUI reads a replaceable JPEG mailbox plus an
+atomic metadata file containing the same client-relative viewport, preventing a
+second capture pipeline and preventing GUI manual input from reverting to ADB
+framebuffer coordinates.
 
-Runtime state is PC-side and independent of WSA userdata.
+## Android control channel
 
-- writes are atomic through temporary-file replacement;
-- the previous valid snapshot is retained as `state.previous.json`;
-- unreadable/corrupt `state.json` is preserved as
-  `state.corrupt.<timestamp>.json`;
-- corrupt state **stops** the bot instead of silently resetting to defaults;
-- `pm clear` never resets the PC-side nickname counter.
+ADB remains explicit and device-scoped. It is used for:
 
-## Recovery
+- health and `sys.boot_completed`;
+- app lifecycle;
+- package manager and permissions;
+- network/audio diagnostics;
+- UI hierarchy / Unicode clipboard path;
+- controlled recovery.
 
-`RecoveryController` handles transport/game failures with bounded budgets.
+Game pointer input is the host-window path described above.
 
-- transient capture failures retry;
-- repeated failures trigger a runtime health probe;
-- if Android is ready but Kingshot is dead, Kingshot may be relaunched a small
-  bounded number of times;
-- persistent runtime loss or exhausted restart budget stops the bot;
-- unknown game screens are never auto-recovered with blind clicks and remain
-  governed by the visual fail-closed watchdog.
+## State machine safety
 
-## Observability
+- state-specific visual evidence precedes game actions;
+- action gate requires the expected frame transition;
+- exact State #3 needs row + modal + confirm evidence and a tutorial
+  postcondition;
+- unknown UI stops fail-closed;
+- server/account restrictions stop and are never bypassed;
+- `Тугарин<N>` commits only after exact OCR and durable screenshot evidence;
+- `pm clear` preserves the PC-side nickname counter.
 
-Two logs exist for different consumers:
+## Recovery and evidence
 
-- `logs/bot.log` — human-readable operator log;
-- `logs/events.jsonl` — structured events.
+`RecoveryController` uses bounded budgets. Recovery acceptance uses the same
+production PrintWindow capture after game restart and after ADB reconnect.
 
-`debug/runtime-heartbeat.json` records PID, backend, serial, phase, step and
-frame/action ages. The GUI surfaces heartbeat age together with network,
-Internet, audio and P0 state.
+`verify_mvp_full.ps1` is the authoritative release orchestrator. It requires a
+clean tracked tree and exact published upstream SHA, then records per-gate
+evidence in `debug/mvp-full-acceptance.json`.
 
-## Safety rules
+`run_full_mvp_and_report.ps1` packages those files and uploads the result,
+including failures, to the `runtime-reports` branch for remote diagnosis.
 
-- all ADB commands are scoped to one explicit serial;
-- no blind generic confirm/close actions;
-- actions require state-specific visual evidence;
-- action gate requires visual change after click/tap when applicable;
-- server/account restrictions stop the workflow;
-- no Play Integrity spoofing, APK patching, Frida/Magisk-based evasion or
-  character-limit bypass belongs in the automation layer;
-- GUI is single-instance and launched consolelessly through `run_gui.vbs`.
+## Non-production paths
 
-## Legacy paths
+Retained only for research/diagnostics:
 
-The following code is retained for diagnostics/history but is not production:
+- Native ARM64/QEMU;
+- BlueStacks/legacy emulator PoCs;
+- legacy desktop scrcpy capture;
+- WSA scrcpy-server H.264;
+- ADB PNG capture.
 
-- `emulator_poc.py`;
-- `bluestacks_poc.py`;
-- `native_arm64_poc.py`;
-- legacy scrcpy desktop-window capture (diagnostics only);
-- WSA-internal scrcpy-server H.264 transport (optional diagnostics).
-
-These paths should be moved out of the normal operator surface after the final
-WSA host acceptance and repository consolidation.
+They must not block or silently replace the PrintWindow production path.

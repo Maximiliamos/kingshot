@@ -26,8 +26,11 @@ WSA / Native ARM64 PoC / любой готовый ADB Android
 
 По умолчанию используется `wsa` с ADB `127.0.0.1:58526`. WSA может выполнять
 ARM64-библиотеки через штатный Android native bridge; поэтому его критерий
-приёмки — стабильный запуск игры, прямой screenshot и ADB input, а не отсутствие
-трансляции. Собственный ARM64 QEMU сохранён как исследовательский fallback.
+приёмки — стабильный запуск игры и проверяемый framebuffer. Для самой Unity-игры
+production input идёт через реальное окно WSA: TUGARIN BOTS кратко активирует
+Kingshot HWND, отправляет host pointer и возвращает курсор/предыдущее foreground
+окно. ADB остаётся control/lifecycle/system-UI каналом. Собственный ARM64 QEMU
+сохранён как исследовательский fallback.
 
 Доступны режимы:
 
@@ -54,7 +57,7 @@ image-first подход для Unity-интерфейса как в Airtest.
 - GUI + CLI;
 - автоматический bootstrap Android → игра;
 - прямой screenshot/input через Android transport;
-- production fast preview захватывает только client area окна Kingshot в той же сессии (`wsa-window`); pinned `scrcpy-server 4.1` остаётся диагностическим transport, PNG `screencap` — аварийным fallback;
+- production capture для GUI и automation — точный Kingshot HWND через Win32 `PrintWindow` (`wsa-window`), поэтому перекрывающие окна не попадают в кадр; pinned `scrcpy-server 4.1` и PNG `screencap` остаются только диагностикой;
 - один долгоживущий preview-worker вместо создания нового потока на каждый кадр;
 - FPS/latency preview telemetry;
 - интерактивный экран Android внутри GUI: tap/swipe/hold/wheel/right-click Back;
@@ -175,14 +178,15 @@ python C:\warbot\bot.py
 python C:\warbot\bot.py --dry-run
 ```
 
-Production preview использует client-area реального окна Kingshot в той же
-Windows-сессии `Программист1`. Это transport `wsa-window`; рамки, taskbar и
-соседние окна не захватываются. Управление отправляется `DeviceBackend` в WSA
-serial `127.0.0.1:58526`.
+Production capture использует Win32 `PrintWindow` для client-area конкретного
+Kingshot HWND в той же Windows-сессии `Программист1`. Это transport
+`wsa-window`; перекрывающие окна, taskbar и соседние приложения не являются
+источником кадра. Координаты vision/GUI хранятся относительно client area, а
+`WsaBackend` переводит их в desktop pixels только в момент host-input и затем
+возвращает курсор/foreground.
 
-Если H.264 транспорт не поднимается, интерфейс может диагностически перейти на
-PNG `adb exec-out screencap -p`, но такой fallback не считается PASS
-релизного preview-gate.
+Scrcpy/H.264 и PNG `adb exec-out screencap -p` сохранены для диагностики, но
+не могут дать production preview PASS и не являются зависимостью release-gate.
 
 Legacy режим захвата *видимого окна* scrcpy оставлен только для диагностики.
 Для него можно задать `WAR_BOT_BACKEND=scrcpy` и
@@ -295,10 +299,16 @@ ChatGPT пишет код в feature/unified-android-backend
 ChatGPT читает отчёт из GitHub и делает следующий фикс
 ```
 
-Команда для обычного цикла:
+Команда для инфраструктурного/P0 цикла:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\run_and_report.ps1
+```
+
+Финальный MVP-проход с автоматической публикацией всех acceptance evidence:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_full_mvp_and_report.ps1
 ```
 
 Скрипт автоматически обновляет `feature/unified-android-backend`, запускает
@@ -333,12 +343,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify_mvp_full.ps1
 python .\warbot_cli.py bootstrap --output bootstrap-frame.png
 ```
 
-PASS полного MVP-gate означает: clean tracked worktree, готовый WSA/ADB,
-стабильный Kingshot, production fast preview, consoleless GUI render,
-Unicode/UI/audio channel, recovery после остановки игры и ADB reconnect,
-точный State #3 → tutorial → `Тугарин<N>` flow с post-rename screenshot
-evidence и успешный multi-cycle soak. Итог сохраняется в
-`debug/mvp-full-acceptance.json` с точным Git SHA и результатом каждого gate.
+PASS полного MVP-gate означает: clean tracked worktree, локальный HEAD точно
+совпадает с опубликованным upstream HEAD, готовый WSA/GApps/ADB, рабочие Google
+Services + Play Store + Google account, стабильный Kingshot, production
+`PrintWindow` preview >=15 FPS, consoleless GUI render, Unicode/UI/audio
+channel, recovery после остановки игры и ADB reconnect, точный State #3 →
+tutorial → `Тугарин<N>` flow с post-rename screenshot evidence и успешный
+multi-cycle soak. Итог сохраняется в `debug/mvp-full-acceptance.json`, а
+`run_full_mvp_and_report.ps1` публикует весь evidence-пакет в
+`runtime-reports`.
 
 WSA installer и verifier сохраняют отчёты в `runtime-reports`; native ARM64
 fallback дополнительно формирует `C:\warbot_arm64_runtime\zygote-crash.txt`
