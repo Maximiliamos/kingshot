@@ -8,11 +8,13 @@ Open PowerShell in the normal interactive `Программист1` session:
 
 ```powershell
 cd C:\warbot_git
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run_full_mvp_and_report.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run_full_mvp_and_report.ps1" -ExpectedCommit 669ee3a2ce2f0b864d3256ea754495abfb73b144
 ```
 
 Do not edit tracked files before the run. The runner requires the local HEAD to
-match the published upstream HEAD exactly.
+match the pinned release SHA exactly. It will attempt a fast-forward pull first,
+but a transient GitHub/TLS failure no longer blocks validation when local HEAD
+already equals -ExpectedCommit. Any SHA mismatch still fails closed.
 
 ## What it will do
 
