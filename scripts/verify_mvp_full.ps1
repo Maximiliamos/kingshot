@@ -1,7 +1,7 @@
 param(
     [switch]$SkipInfrastructure,
     [switch]$PreflightOnly,
-    [string]$TargetUser = "Программист1",
+    [string]$TargetUser = "",
     [string]$ExpectedSid = "S-1-5-21-1641294696-4270169483-3689275233-1007",
     [int]$FlowTimeoutMinutes = 45,
     [int]$SoakTimeoutMinutes = 90,
@@ -19,20 +19,31 @@ Set-Location $Root
 $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $currentSid = [string]$currentIdentity.User.Value
 $currentName = [string]$currentIdentity.Name
-$targetAccount = "$env:COMPUTERNAME\$TargetUser"
+
+# Windows PowerShell 5.1 treats UTF-8 without BOM as the active ANSI code page.
+# Do not keep a Cyrillic account name as executable source text. The SID is the
+# release identity source of truth; resolve its Unicode NTAccount at runtime.
 try {
-    $resolvedTargetSid = [string]([Security.Principal.NTAccount]$targetAccount).Translate(
-        [Security.Principal.SecurityIdentifier]
+    $expectedSidObject = New-Object Security.Principal.SecurityIdentifier($ExpectedSid)
+    $targetAccount = [string]$expectedSidObject.Translate(
+        [Security.Principal.NTAccount]
     ).Value
 }
 catch {
-    Write-Host "MVP preflight: cannot resolve dedicated account $targetAccount." -ForegroundColor Red
+    Write-Host "MVP preflight: cannot resolve expected SID $ExpectedSid to a Windows account." -ForegroundColor Red
     exit 91
 }
-if ($resolvedTargetSid -ne $ExpectedSid -or $currentSid -ne $ExpectedSid) {
+
+$resolvedTargetUser = ($targetAccount -split '\\')[-1]
+if ($TargetUser -and $TargetUser -ne $resolvedTargetUser) {
+    Write-Host "MVP preflight: requested target user does not match ExpectedSid account." -ForegroundColor Red
+    exit 91
+}
+$TargetUser = $resolvedTargetUser
+
+if ($currentSid -ne $ExpectedSid) {
     $identityError = (
-        "MVP preflight refused before any gate: current={0} sid={1}; required={2} sid={3}. " +
-        "Run this script in the interactive Программист1 session."
+        "MVP preflight refused before any gate: current={0} sid={1}; required={2} sid={3}."
     ) -f $currentName, $currentSid, $targetAccount, $ExpectedSid
     Write-Host $identityError -ForegroundColor Red
     exit 91
