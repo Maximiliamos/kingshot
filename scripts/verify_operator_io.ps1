@@ -22,7 +22,7 @@ if (-not $PythonExe -or -not (Test-Path -LiteralPath $PythonExe -PathType Leaf))
 }
 
 $env:PYTHONIOENCODING = "utf-8"
-$evidence = Join-Path $Root "debug\operator-io-acceptance.json"
+$evidence = Join-Path $Root "debug\operator-io-smoke.json"
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $evidence) | Out-Null
 Remove-Item -LiteralPath $evidence -Force -ErrorAction SilentlyContinue
 
