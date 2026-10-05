@@ -90,8 +90,9 @@ function Invoke-FinalProcessAudit {
     param([string]$Suffix = "final")
     $auditPath = Join-Path $Root "debug\mvp-$Suffix-process-audit.json"
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "scripts\audit_runtime_processes.ps1") `
-        -TargetUser $TargetUser -Output $auditPath
-    return [int]$LASTEXITCODE
+        -TargetUser $TargetUser -Output $auditPath | Out-Host
+    $auditCode = [int]$LASTEXITCODE
+    return $auditCode
 }
 
 function Run-Gate {
