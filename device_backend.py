@@ -773,11 +773,15 @@ class WsaBackend(AdbDeviceBackend):
         super().__init__(**kwargs)
 
     @staticmethod
+    def _window_user32():
+        return ctypes.windll.user32
+
+    @staticmethod
     def _game_window():
         """Return the visible Kingshot HWND and its client rectangle."""
         if os.name != "nt":
             return None
-        user32 = ctypes.windll.user32
+        user32 = WsaBackend._window_user32()
         enum_proc = ctypes.WINFUNCTYPE(
             ctypes.c_bool, wintypes.HWND, wintypes.LPARAM
         )
@@ -814,56 +818,73 @@ class WsaBackend(AdbDeviceBackend):
         points: list[tuple[int, int]],
         duration_ms: int = 50,
     ) -> bool:
-        """Send a real host pointer to WSA and immediately restore user focus.
+        """Inject client-relative pointer coordinates into the real WSA HWND.
 
-        WSA freeform task bounds use desktop pixel coordinates.  ADB input can
-        be discarded when Android focuses Home's PlaceholderActivity while
-        the host window is in the background. Unity also ignores posted mouse
-        messages, so briefly activate the real host window, inject the pointer,
-        then restore both the previous foreground window and cursor position.
+        The bot and GUI map vision into the Kingshot client surface. Convert
+        those client coordinates to desktop pixels only at this final Win32
+        boundary, briefly foreground the game so Unity accepts the input, and
+        restore the user's cursor/foreground window even on a failed swipe.
         """
         target = self._game_window()
         if target is None or not points:
             return False
         hwnd, left, top, width, height = target
-        for x, y in points:
-            cx, cy = int(x) - left, int(y) - top
-            if cx < 0 or cy < 0 or cx >= width or cy >= height:
-                return False
+        normalized = [(int(x), int(y)) for x, y in points]
+        if any(x < 0 or y < 0 or x >= width or y >= height for x, y in normalized):
+            return False
 
-        user32 = ctypes.windll.user32
+        user32 = self._window_user32()
         old_foreground = user32.GetForegroundWindow()
         old_cursor = wintypes.POINT()
         if not user32.GetCursorPos(ctypes.byref(old_cursor)):
             return False
         if not user32.SetForegroundWindow(hwnd):
             return False
+
+        button_down = False
         try:
-            # WSA updates Android focus asynchronously after the host HWND is
-            # activated.  A shorter delay produced visually delivered but
-            # ignored taps on Unity controls.
             time.sleep(0.15)
-            first_x, first_y = points[0]
-            user32.SetCursorPos(int(first_x), int(first_y))
-            user32.mouse_event(0x0002, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTDOWN
-            if len(points) > 1:
-                delay = max(0.001, duration_ms / 1000.0 / len(points))
-                for x, y in points[1:]:
+            first_x, first_y = normalized[0]
+            if not user32.SetCursorPos(left + first_x, top + first_y):
+                return False
+            user32.mouse_event(0x0002, 0, 0, 0, 0)
+            button_down = True
+
+            if len(normalized) > 1:
+                delay = max(0.001, duration_ms / 1000.0 / max(1, len(normalized) - 1))
+                for x, y in normalized[1:]:
                     time.sleep(delay)
-                    user32.SetCursorPos(int(x), int(y))
+                    if not user32.SetCursorPos(left + x, top + y):
+                        return False
             else:
                 time.sleep(max(0.03, duration_ms / 1000.0))
-            user32.mouse_event(0x0004, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTUP
+
+            user32.mouse_event(0x0004, 0, 0, 0, 0)
+            button_down = False
             time.sleep(0.20)
             return True
         finally:
-            user32.SetCursorPos(old_cursor.x, old_cursor.y)
+            if button_down:
+                try:
+                    user32.mouse_event(0x0004, 0, 0, 0, 0)
+                except Exception:
+                    pass
+            try:
+                user32.SetCursorPos(old_cursor.x, old_cursor.y)
+            except Exception:
+                pass
             if old_foreground and old_foreground != hwnd:
-                user32.SetForegroundWindow(old_foreground)
+                try:
+                    user32.SetForegroundWindow(old_foreground)
+                except Exception:
+                    pass
 
     def tap(self, x: int, y: int) -> None:
         if not self._post_window_pointer([(int(x), int(y))]):
-            super().tap(x, y)
+            raise BackendError(
+                "WSA host-input is unavailable; refusing an ADB tap with "
+                "unverified focus/coordinate mapping."
+            )
 
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int) -> None:
         steps = max(4, min(30, int(duration_ms) // 25))
@@ -875,7 +896,10 @@ class WsaBackend(AdbDeviceBackend):
             for index in range(steps + 1)
         ]
         if not self._post_window_pointer(points, duration_ms):
-            super().swipe(x1, y1, x2, y2, duration_ms)
+            raise BackendError(
+                "WSA host-input is unavailable; refusing an ADB swipe with "
+                "unverified focus/coordinate mapping."
+            )
 
     @property
     def runtime_root(self) -> Path:

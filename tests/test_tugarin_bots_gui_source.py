@@ -114,7 +114,10 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
         self.assertIn("class WsaGameWindowCapture", bot_source)
         self.assertIn("GetClientRect", bot_source)
         self.assertIn('transport_name = "wsa-window"', bot_source)
+        self.assertIn('capture_method = "printwindow"', bot_source)
+        self.assertIn("return WsaGameWindowCapture()", bot_source)
         self.assertIn("bot.WsaGameWindowCapture()", self.gui)
+        self.assertIn('getattr(capture, "transport_name", "") == "wsa-window"', self.gui)
 
 
 if __name__ == "__main__":

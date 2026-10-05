@@ -136,15 +136,16 @@ class DeviceBackendTests(unittest.TestCase):
         post.assert_called_once_with([(914, 885)])
         adb_tap.assert_not_called()
 
-    def test_wsa_tap_falls_back_to_adb_without_game_window(self):
+    def test_wsa_tap_fails_closed_without_game_window(self):
         backend = db.WsaBackend(
             serial="127.0.0.1:58526",
             adb_path=r"C:\\fake\\adb.exe",
         )
         with patch.object(backend, "_post_window_pointer", return_value=False), \
                 patch.object(db.AdbDeviceBackend, "tap") as adb_tap:
-            backend.tap(914, 885)
-        adb_tap.assert_called_once_with(914, 885)
+            with self.assertRaises(db.BackendError):
+                backend.tap(914, 885)
+        adb_tap.assert_not_called()
 
     def test_health_does_not_probe_package_before_boot_complete(self):
         backend = db.AdbDeviceBackend(

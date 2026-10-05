@@ -160,10 +160,23 @@ class ScrcpyCapture:
 
 
 class WsaGameWindowCapture(ScrcpyCapture):
-    """Capture only the client area of a visible Kingshot WSA host window."""
+    """Capture the exact Kingshot WSA HWND through Win32 PrintWindow."""
 
     transport_name = "wsa-window"
+    capture_method = "printwindow"
     TITLE_MARKERS = ("война за трон", "kingshot")
+
+    def __init__(self):
+        # This transport never samples desktop pixels, so it must not allocate
+        # an MSS screen-grabber. Keeping it HWND-only makes overlap safety
+        # explicit: another desktop window cannot become the source frame.
+        self.hwnd = None
+        self.rect = None
+
+    def close(self):
+        # Every GDI object is scoped to one grab() and released in its finally
+        # block. There is no persistent native capture object to close.
+        return None
 
     @staticmethod
     def _visible_scrcpy_windows():
@@ -207,16 +220,14 @@ class WsaGameWindowCapture(ScrcpyCapture):
         self.rect = {"left": point.x, "top": point.y, "width": width, "height": height}
         return title
 
-    def grab(self):
-        """Capture the WSA HWND even when another desktop window overlaps it."""
-        title = self._refresh_rect()
-        width = int(self.rect["width"])
-        height = int(self.rect["height"])
-        gdi32 = ctypes.windll.gdi32
-        window_dc = user32.GetDC(self.hwnd)
-        memory_dc = gdi32.CreateCompatibleDC(window_dc)
-        bitmap = gdi32.CreateCompatibleBitmap(window_dc, width, height)
-        old_bitmap = gdi32.SelectObject(memory_dc, bitmap)
+    def _capture_client(self, width, height, *, user32_api=None, gdi32_api=None):
+        """Return one BGR client frame and release every GDI handle on all paths."""
+        user32_api = user32_api or user32
+        gdi32_api = gdi32_api or ctypes.windll.gdi32
+        window_dc = 0
+        memory_dc = 0
+        bitmap = 0
+        old_bitmap = 0
 
         class BitmapInfoHeader(ctypes.Structure):
             _fields_ = [
@@ -234,10 +245,24 @@ class WsaGameWindowCapture(ScrcpyCapture):
             ]
 
         try:
-            # PW_CLIENTONLY | PW_RENDERFULLCONTENT. WSA's custom title bar is
-            # part of the client surface and is removed by crop_phone().
-            if not user32.PrintWindow(self.hwnd, memory_dc, 0x00000003):
+            window_dc = user32_api.GetDC(self.hwnd)
+            if not window_dc:
+                raise RuntimeError("GetDC не смог открыть окно WSA.")
+            memory_dc = gdi32_api.CreateCompatibleDC(window_dc)
+            if not memory_dc:
+                raise RuntimeError("CreateCompatibleDC не смог создать GDI context.")
+            bitmap = gdi32_api.CreateCompatibleBitmap(window_dc, width, height)
+            if not bitmap:
+                raise RuntimeError("CreateCompatibleBitmap не смог создать кадр WSA.")
+            old_bitmap = gdi32_api.SelectObject(memory_dc, bitmap)
+            if not old_bitmap or int(old_bitmap) == -1:
+                raise RuntimeError("SelectObject не смог выбрать bitmap WSA.")
+
+            # PW_CLIENTONLY | PW_RENDERFULLCONTENT renders the target HWND
+            # itself rather than the desktop rectangle above or below it.
+            if not user32_api.PrintWindow(self.hwnd, memory_dc, 0x00000003):
                 raise RuntimeError("PrintWindow не смог захватить окно WSA.")
+
             header = BitmapInfoHeader()
             header.biSize = ctypes.sizeof(BitmapInfoHeader)
             header.biWidth = width
@@ -245,17 +270,42 @@ class WsaGameWindowCapture(ScrcpyCapture):
             header.biPlanes = 1
             header.biBitCount = 32
             pixels = (ctypes.c_ubyte * (width * height * 4))()
-            if not gdi32.GetDIBits(
+            if not gdi32_api.GetDIBits(
                 memory_dc, bitmap, 0, height, pixels, ctypes.byref(header), 0
             ):
                 raise RuntimeError("GetDIBits не смог прочитать окно WSA.")
             bgra = np.frombuffer(pixels, dtype=np.uint8).reshape(height, width, 4)
-            return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR), title, dict(self.rect)
+            return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
         finally:
-            gdi32.SelectObject(memory_dc, old_bitmap)
-            gdi32.DeleteObject(bitmap)
-            gdi32.DeleteDC(memory_dc)
-            user32.ReleaseDC(self.hwnd, window_dc)
+            if old_bitmap and memory_dc:
+                try:
+                    gdi32_api.SelectObject(memory_dc, old_bitmap)
+                except Exception:
+                    pass
+            if bitmap:
+                try:
+                    gdi32_api.DeleteObject(bitmap)
+                except Exception:
+                    pass
+            if memory_dc:
+                try:
+                    gdi32_api.DeleteDC(memory_dc)
+                except Exception:
+                    pass
+            if window_dc:
+                try:
+                    user32_api.ReleaseDC(self.hwnd, window_dc)
+                except Exception:
+                    pass
+
+    def grab(self):
+        """Capture the WSA HWND even when another desktop window overlaps it."""
+        title = self._refresh_rect()
+        width = int(self.rect["width"])
+        height = int(self.rect["height"])
+        frame = self._capture_client(width, height)
+        return frame, title, dict(self.rect)
+
 
 
 class ActionGate:
@@ -641,9 +691,16 @@ def get_device_backend():
 
 
 def create_capture():
-    """Use the low-latency WSA stream for vision, with PNG fallback."""
+    """Return the production capture for the automation state machine.
+
+    WSA automation is deliberately fail-closed on the exact Kingshot HWND.
+    Diagnostic scrcpy/PNG fallbacks remain available to CLI preview tooling,
+    but the bot must never continue vision against an unrelated desktop area.
+    """
     if BACKEND_NAME == "scrcpy":
         return ScrcpyCapture()
+    if BACKEND_NAME == "wsa":
+        return WsaGameWindowCapture()
     return create_preview_capture(get_device_backend())
 
 

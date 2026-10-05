@@ -1206,7 +1206,15 @@ class WarBotWindow(QMainWindow):
                 capture = create_preview_capture(backend)
 
             def on_frame(frame, title, rect, metrics):
-                phone, viewport = self._crop_for_render(frame, rect, android_viewport)
+                # PrintWindow input is client-relative. Do not replace that
+                # geometry with ADB framebuffer coordinates; host-input adds
+                # the desktop window origin only at the Win32 boundary.
+                viewport_hint = (
+                    None
+                    if getattr(capture, "transport_name", "") == "wsa-window"
+                    else android_viewport
+                )
+                phone, viewport = self._crop_for_render(frame, rect, viewport_hint)
                 self.capture_ready.emit(phone, title, viewport)
                 self.stream_metrics_ready.emit(metrics.to_dict())
 
