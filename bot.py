@@ -48,6 +48,7 @@ CONTROL_FILE = os.path.join(ROOT, "control.json")
 PID_FILE = os.path.join(ROOT, "bot.pid")
 LOCK_FILE = os.path.join(ROOT, "bot.lock")
 LIVE_FRAME_FILE = os.path.join(DEBUG_DIR, "bot-live-frame.jpg")
+LIVE_FRAME_META_FILE = os.path.join(DEBUG_DIR, "bot-live-frame.json")
 INSTANCE_LOCK = None
 
 PHONE_W = 1060
@@ -414,23 +415,36 @@ def save_img(path, img):
     return ok
 
 
-def publish_live_frame(img):
-    """Publish one replaceable GUI frame without creating a second encoder."""
+def publish_live_frame(img, viewport=None):
+    """Publish one replaceable GUI frame plus client-relative input geometry."""
     ok, encoded = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 72])
     if not ok:
         return False
-    tmp = LIVE_FRAME_FILE + ".tmp"
+    frame_tmp = LIVE_FRAME_FILE + ".tmp"
+    meta_tmp = LIVE_FRAME_META_FILE + ".tmp"
+    metadata = {
+        "schema": 1,
+        "written_at": datetime.now().astimezone().isoformat(),
+        "viewport": dict(viewport or {}),
+        "frame_width": int(img.shape[1]),
+        "frame_height": int(img.shape[0]),
+        "coordinate_space": "wsa-client" if BACKEND_NAME == "wsa" else "android-frame",
+    }
     try:
-        with open(tmp, "wb") as stream:
+        with open(frame_tmp, "wb") as stream:
             stream.write(encoded.tobytes())
-        os.replace(tmp, LIVE_FRAME_FILE)
+        with open(meta_tmp, "w", encoding="utf-8") as stream:
+            json.dump(metadata, stream, ensure_ascii=False, indent=2)
+        os.replace(frame_tmp, LIVE_FRAME_FILE)
+        os.replace(meta_tmp, LIVE_FRAME_META_FILE)
         return True
     except OSError:
-        try:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
-        except OSError:
-            pass
+        for tmp in (frame_tmp, meta_tmp):
+            try:
+                if os.path.exists(tmp):
+                    os.unlink(tmp)
+            except OSError:
+                pass
         return False
 
 
@@ -2150,7 +2164,15 @@ def main():
             sync_input_geometry(frame, rect)
             phone, left, right = crop_phone(frame)
             if now_mono - last_live_frame_at >= 0.5:
-                publish_live_frame(phone)
+                publish_live_frame(
+                    phone,
+                    viewport={
+                        "left": round(INPUT_CONTENT_LEFT),
+                        "top": round(INPUT_CONTENT_TOP),
+                        "width": round(INPUT_CONTENT_W),
+                        "height": round(INPUT_CONTENT_H),
+                    },
+                )
                 last_live_frame_at = now_mono
 
             if not stream_ok(frame, left, right):
