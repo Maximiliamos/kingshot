@@ -59,10 +59,12 @@ GitHub Actions rerun before handing the branch to the local host.
   recorded by the full orchestrator;
 - full acceptance rejects a local SHA that is not the published upstream SHA;
 - every successful host gate must leave its declared evidence file(s), otherwise the full run fails closed;
+- final process audit now rejects project-owned stale Python/CMD/conhost/FFmpeg/PowerShell helpers and active legacy migration/continuation tasks;
 - scrcpy-server is diagnostic only and is no longer a production host-gate
   dependency;
-- `run_full_mvp_and_report.ps1` performs the entire real-host acceptance and
-  uploads PASS or FAIL evidence to `runtime-reports`.
+- `run_full_mvp_and_report.ps1` performs the entire real-host acceptance,
+  inventories every collected evidence file with size + SHA-256, and uploads
+  PASS or FAIL evidence to `runtime-reports`.
 
 ## Product-flow safeguards already in code
 
