@@ -30,8 +30,12 @@ Write-Host "=== TUGARIN BOTS RECOVERY ACCEPTANCE ==="
 Write-Host "This test stops only Kingshot, then reconnects ADB and verifies recovery."
 Write-Host ""
 
-& $PythonExe .\warbot_cli.py recovery-smoke --backend wsa --serial 127.0.0.1:58526 --with-adb-reconnect
+$report = Join-Path $Root "debug\recovery-smoke.json"
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $report) | Out-Null
+$reportText = (& $PythonExe .\warbot_cli.py recovery-smoke --backend wsa --serial 127.0.0.1:58526 --with-adb-reconnect | Out-String)
 $code = [int]$LASTEXITCODE
+$reportText | Set-Content -LiteralPath $report -Encoding UTF8
+$reportText | Write-Host
 if ($code -ne 0) {
     Write-Host ""
     Write-Host "RECOVERY HOST GATE FAIL"
@@ -40,4 +44,5 @@ if ($code -ne 0) {
 
 Write-Host ""
 Write-Host "RECOVERY HOST GATE PASS"
+Write-Host "Evidence: $report"
 exit 0
