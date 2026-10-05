@@ -40,6 +40,12 @@ class FullMvpReporterTests(unittest.TestCase):
         ):
             self.assertIn(name, SOURCE)
 
+    def test_runner_hashes_collected_evidence(self):
+        self.assertIn("Get-FileHash", SOURCE)
+        self.assertIn("evidence_files", SOURCE)
+        self.assertIn("sha256", SOURCE)
+        self.assertIn("size_bytes", SOURCE)
+
     def test_runner_uploads_failed_or_passed_run_to_runtime_reports(self):
         self.assertIn("upload_runtime_report.ps1", SOURCE)
         self.assertIn('kind = "mvp-full-host"', SOURCE)
