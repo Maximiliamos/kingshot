@@ -78,7 +78,13 @@ $process = Start-Process @startArgs
 
 $deadline = (Get-Date).AddMinutes([Math]::Max(1, $TimeoutMinutes))
 $targetReached = $false
+$initialWorkingSetMb = $null
+$lastWorkingSetMb = 0.0
 $maxWorkingSetMb = 0.0
+$heartbeatPath = Join-Path $Root "debug\runtime-heartbeat.json"
+$heartbeatSeen = $false
+$maxHeartbeatAgeSeconds = 0.0
+$staleHeartbeatDetected = $false
 $lastSummary = ""
 
 while (-not $process.HasExited -and (Get-Date) -lt $deadline) {
@@ -86,9 +92,32 @@ while (-not $process.HasExited -and (Get-Date) -lt $deadline) {
     $process.Refresh()
     try {
         $working = [Math]::Round($process.WorkingSet64 / 1MB, 1)
+        if ($null -eq $initialWorkingSetMb) { $initialWorkingSetMb = $working }
+        $lastWorkingSetMb = $working
         if ($working -gt $maxWorkingSetMb) { $maxWorkingSetMb = $working }
     }
     catch {}
+
+    if (Test-Path -LiteralPath $heartbeatPath -PathType Leaf) {
+        try {
+            $heartbeatSeen = $true
+            $heartbeatAge = [Math]::Max(
+                0.0,
+                ((Get-Date) - (Get-Item -LiteralPath $heartbeatPath).LastWriteTime).TotalSeconds
+            )
+            if ($heartbeatAge -gt $maxHeartbeatAgeSeconds) {
+                $maxHeartbeatAgeSeconds = [Math]::Round($heartbeatAge, 3)
+            }
+            if ($heartbeatAge -gt 30.0) {
+                $staleHeartbeatDetected = $true
+                Write-Host ("SOAK heartbeat stale: {0:N1}s" -f $heartbeatAge)
+                break
+            }
+        }
+        catch {
+            Write-Host "Heartbeat read warning: $($_.Exception.Message)"
+        }
+    }
 
     $statePath = Join-Path $Root "state.json"
     if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { continue }
@@ -151,10 +180,42 @@ if ($forcedTermination -or [int]$process.ExitCode -ne 0) {
 
 $evidenceText = & $PythonExe .\warbot_cli.py soak-evidence --backend wsa --serial 127.0.0.1:58526 --min-characters $MinCharacters
 $evidenceCode = [int]$LASTEXITCODE
-$evidenceText | Set-Content -LiteralPath $evidence -Encoding UTF8
-$evidenceText | ForEach-Object { Write-Host $_ }
+
+if ($evidenceCode -eq 0) {
+    try {
+        $evidenceObject = ($evidenceText | Out-String) | ConvertFrom-Json
+        $resources = [ordered]@{
+            initial_bot_working_set_mb = $initialWorkingSetMb
+            final_observed_bot_working_set_mb = $lastWorkingSetMb
+            peak_bot_working_set_mb = $maxWorkingSetMb
+            heartbeat_seen = $heartbeatSeen
+            max_heartbeat_age_seconds = [Math]::Round($maxHeartbeatAgeSeconds, 3)
+            stale_heartbeat_detected = $staleHeartbeatDetected
+            forced_termination = $forcedTermination
+            process_exit_code = [int]$process.ExitCode
+        }
+        $evidenceObject | Add-Member -NotePropertyName resource_metrics -NotePropertyValue $resources -Force
+        $resourcePass = [bool]($heartbeatSeen -and -not $staleHeartbeatDetected -and -not $forcedTermination)
+        $evidenceObject.pass = [bool]($evidenceObject.pass -and $resourcePass)
+        $evidenceObject | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $evidence -Encoding UTF8
+        if (-not [bool]$evidenceObject.pass) { $evidenceCode = 45 }
+    }
+    catch {
+        Write-Host "MVP SOAK FAIL: could not augment resource evidence: $($_.Exception.Message)"
+        $evidenceCode = 46
+        $evidenceText | Set-Content -LiteralPath $evidence -Encoding UTF8
+    }
+}
+else {
+    $evidenceText | Set-Content -LiteralPath $evidence -Encoding UTF8
+}
+
+if (Test-Path -LiteralPath $evidence) {
+    Get-Content -LiteralPath $evidence | ForEach-Object { Write-Host $_ }
+}
 
 Write-Host "Peak bot working set: $maxWorkingSetMb MB"
+Write-Host "Heartbeat seen: $heartbeatSeen; max age: $([Math]::Round($maxHeartbeatAgeSeconds, 3))s"
 if ($evidenceCode -ne 0) {
     Write-Host ""
     Write-Host "MVP SOAK FAIL"
