@@ -18,9 +18,11 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 import ctypes
 from ctypes import wintypes
+import json
 import os
 from pathlib import Path
 import subprocess
+import threading
 import time
 from typing import Any, Iterable
 
@@ -40,7 +42,7 @@ class BackendError(RuntimeError):
 
 
 
-def _parse_df_available_mb(output: str, mount: str = "/data") -> int:
+def _parse_df_available_mb(output: str, mount: str = "/data") -> int | None:
     """Parse Android/toybox df output even when the filesystem name wraps.
 
     WSA may print a long /dev/block/... filesystem on its own line and the
@@ -63,7 +65,19 @@ def _parse_df_available_mb(output: str, mount: str = "/data") -> int:
             except ValueError:
                 break
             return max(0, available_kb // 1024)
-    return 0
+    return None
+
+
+def _parse_statfs_available_mb(available_blocks: str, block_size: str) -> int | None:
+    """Convert ``stat -f`` available blocks and block size into MiB."""
+    try:
+        blocks = int(available_blocks.strip())
+        size = int(block_size.strip())
+    except (TypeError, ValueError):
+        return None
+    if blocks < 0 or size <= 0:
+        return None
+    return (blocks * size) // (1024 * 1024)
 
 
 @dataclass(frozen=True)
@@ -84,6 +98,8 @@ class DeviceHealth:
     audio_service_ready: bool = False
     package_manager_ready: bool = False
     data_free_mb: int = 0
+    data_free_status: str = "not_checked"
+    data_free_probe: str = ""
 
     @property
     def ready(self) -> bool:
@@ -317,6 +333,76 @@ class AdbDeviceBackend(DeviceBackend):
     def _getprop(self, name: str) -> str:
         return self.shell(["getprop", name], timeout=15).strip()
 
+    def _write_data_free_evidence(self, payload: dict[str, Any]) -> None:
+        """Persist the exact free-space probe result for host acceptance reports."""
+        debug_dir = Path(os.environ.get("WAR_BOT_DEBUG_DIR", "debug"))
+        try:
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            target = debug_dir / "android-data-free-space.json"
+            temporary = target.with_name(
+                f"{target.name}.tmp-{os.getpid()}-{threading.get_ident()}"
+            )
+            temporary.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            os.replace(temporary, target)
+        except OSError:
+            # Evidence persistence must not hide the actual health result.
+            pass
+
+    def _probe_data_free_space(self) -> tuple[int, str, str]:
+        attempts: list[dict[str, Any]] = []
+
+        def run(command: list[str], timeout: int) -> str | None:
+            try:
+                output = self.shell(command, timeout=timeout)
+                attempts.append(
+                    {"command": command, "status": "ok", "stdout": output, "stderr": ""}
+                )
+                return output
+            except BackendError as exc:
+                attempts.append(
+                    {"command": command, "status": "error", "stdout": "", "stderr": str(exc)}
+                )
+                return None
+
+        # WSA's toybox df may block indefinitely while statfs remains immediate.
+        # Query the two stat fields separately because adb argument forwarding
+        # does not preserve the space in a combined "%a %S" format string.
+        available_blocks = run(["stat", "-f", "-c", "%a", "/data"], timeout=5)
+        block_size = run(["stat", "-f", "-c", "%S", "/data"], timeout=5)
+        stat_mb = (
+            _parse_statfs_available_mb(available_blocks, block_size)
+            if available_blocks is not None and block_size is not None
+            else None
+        )
+        if stat_mb is not None:
+            status, probe, value = "ok", "statfs", stat_mb
+        else:
+            df_output = run(["df", "-k", "/data"], timeout=5)
+            df_mb = _parse_df_available_mb(df_output, "/data") if df_output is not None else None
+            if df_mb is not None:
+                status, probe, value = "ok", "df", df_mb
+            elif any(item["status"] == "error" for item in attempts):
+                status, probe, value = "command_error", "", 0
+            else:
+                status, probe, value = "unrecognized", "", 0
+
+        self._write_data_free_evidence(
+            {
+                "schema": 1,
+                "checked_at_epoch": time.time(),
+                "serial": self.serial,
+                "mount": "/data",
+                "status": status,
+                "probe": probe,
+                "data_free_mb": value,
+                "attempts": attempts,
+            }
+        )
+        return value, status, probe
+
     def health(self) -> DeviceHealth:
         try:
             state = self._run(["get-state"], timeout=5, check=False).stdout.strip()
@@ -352,6 +438,8 @@ class AdbDeviceBackend(DeviceBackend):
         audio_service_ready = False
         package_manager_ready = False
         data_free_mb = 0
+        data_free_status = "not_checked"
+        data_free_probe = ""
         if boot_completed == "1":
             try:
                 running = bool(self.shell(["pidof", self.package], timeout=5).strip())
@@ -368,11 +456,7 @@ class AdbDeviceBackend(DeviceBackend):
                 )
             except BackendError:
                 package_manager_ready = False
-            try:
-                df_output = self.shell(["df", "-k", "/data"], timeout=8)
-                data_free_mb = _parse_df_available_mb(df_output, "/data")
-            except BackendError:
-                data_free_mb = 0
+            data_free_mb, data_free_status, data_free_probe = self._probe_data_free_space()
 
             # Runtime service probes are intentionally read-only. WSA can
             # expose a fully usable virtual Ethernet connection even when
@@ -445,6 +529,8 @@ class AdbDeviceBackend(DeviceBackend):
             audio_service_ready=audio_service_ready,
             package_manager_ready=package_manager_ready,
             data_free_mb=data_free_mb,
+            data_free_status=data_free_status,
+            data_free_probe=data_free_probe,
         )
 
     def wait_ready(self, timeout: int = 180) -> DeviceHealth:
@@ -486,6 +572,7 @@ class AdbDeviceBackend(DeviceBackend):
                 and last.internet_reachable
                 and last.audio_service_ready
                 and last.package_manager_ready
+                and last.data_free_status == "ok"
                 and last.data_free_mb >= 1024
             ):
                 return last
@@ -493,7 +580,7 @@ class AdbDeviceBackend(DeviceBackend):
         raise BackendError(
             "Android runtime services did not become ready: "
             f"health={last.to_dict()} framebuffer_error={last_frame_error!r}; "
-            "requires package manager and at least 1024 MiB free in /data"
+            "requires a successful /data free-space probe and at least 1024 MiB free"
         )
 
     def frame(self) -> np.ndarray:

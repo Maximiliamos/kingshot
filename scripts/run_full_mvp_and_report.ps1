@@ -135,6 +135,7 @@ $debugEvidence = @(
     "mvp-soak-evidence.json",
     "mvp-final-process-audit.json",
     "runtime-heartbeat.json"
+    "android-data-free-space.json"
 )
 foreach ($name in $debugEvidence) {
     Copy-IfExists -Source (Join-Path $Root "debug\$name") -Destination (Join-Path $stage $name)

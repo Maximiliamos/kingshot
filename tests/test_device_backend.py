@@ -205,6 +205,8 @@ Current Networks:
                 ("pidof", backend.package): "",
                 ("wm", "size"): "Physical size: 1920x1080",
                 ("pm", "path", "com.android.settings"): "package:/system/priv-app/Settings/Settings.apk",
+                ("stat", "-f", "-c", "%a", "/data"): "37250000\n",
+                ("stat", "-f", "-c", "%S", "/data"): "4096\n",
                 ("df", "-k", "/data"): (
                     "Filesystem 1K-blocks Used Available Use% Mounted on\n"
                     "/dev/block/dm-1 150000000 1000000 149000000 1% /data\n"
@@ -226,6 +228,8 @@ Current Networks:
         self.assertTrue(health.internet_reachable)
         self.assertTrue(health.audio_service_ready)
         self.assertEqual(health.data_free_mb, 145507)
+        self.assertEqual(health.data_free_status, "ok")
+        self.assertEqual(health.data_free_probe, "statfs")
 
     def test_parse_df_available_mb_accepts_wrapped_wsa_filesystem_row(self):
         output = (
@@ -241,6 +245,16 @@ Current Networks:
             "/dev/block/dm-1 150000000 1000000 149000000 1% /data\n"
         )
         self.assertEqual(db._parse_df_available_mb(output), 145507)
+
+    def test_parse_df_available_mb_distinguishes_unrecognized_output(self):
+        self.assertIsNone(db._parse_df_available_mb("df: timed out\n"))
+
+    def test_parse_statfs_available_mb_uses_available_blocks_and_block_size(self):
+        self.assertEqual(db._parse_statfs_available_mb("30808546\n", "4096\n"), 120345)
+
+    def test_parse_statfs_available_mb_rejects_invalid_output(self):
+        self.assertIsNone(db._parse_statfs_available_mb("", "4096"))
+        self.assertIsNone(db._parse_statfs_available_mb("10", "0"))
 
     def test_run_converts_adb_timeout_to_backend_error(self):
         backend = db.AdbDeviceBackend(
@@ -394,6 +408,8 @@ Current Networks:
             audio_service_ready=True,
             package_manager_ready=True,
             data_free_mb=4096,
+            data_free_status="ok",
+            data_free_probe="statfs",
         )
         with patch.object(backend, "health", return_value=ready), \
                 patch.object(backend, "frame", return_value=np.zeros((20, 10, 3), dtype=np.uint8)):
