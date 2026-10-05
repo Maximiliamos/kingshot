@@ -23,6 +23,11 @@ class SoakAcceptanceScriptTests(unittest.TestCase):
 
     def test_soak_records_resource_and_evidence_output(self):
         self.assertIn("WorkingSet64", SOURCE)
+        self.assertIn("initial_bot_working_set_mb", SOURCE)
+        self.assertIn("peak_bot_working_set_mb", SOURCE)
+        self.assertIn("runtime-heartbeat.json", SOURCE)
+        self.assertIn("stale_heartbeat_detected", SOURCE)
+        self.assertIn("max_heartbeat_age_seconds", SOURCE)
         self.assertIn("mvp-soak-evidence.json", SOURCE)
         self.assertIn("MVP SOAK PASS", SOURCE)
         self.assertIn("MVP SOAK FAIL", SOURCE)
