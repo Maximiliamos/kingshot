@@ -48,7 +48,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
 
     def test_preflight_is_windows_powershell_51_safe_for_unicode_account_name(self):
         self.assertIn('[string]$TargetUser = ""', SOURCE)
-        self.assertIn("SecurityIdentifier($ExpectedSid)", SOURCE)
+        self.assertIn("SecurityIdentifier -ArgumentList $ExpectedSid", SOURCE)
         self.assertIn("Translate(", SOURCE)
         self.assertIn("$resolvedTargetUser", SOURCE)
         self.assertNotIn('TargetUser = "Программист1"', SOURCE)
