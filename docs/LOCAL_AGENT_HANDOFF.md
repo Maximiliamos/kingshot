@@ -32,7 +32,7 @@ WSA/GApps/Kingshot infrastructure
 → clean reset
 → next Тугарин<N+1>
 → minimum two-character soak
-→ final process audit
+→ final process + migration-task audit
 ```
 
 The game-flow/soak stages intentionally run `pm clear` on Kingshot. The
@@ -51,8 +51,9 @@ patch.
 
 ## Result
 
-The script uploads one report folder to the `runtime-reports` branch. The
-critical file is:
+The script uploads one report folder to the `runtime-reports` branch. Its
+manifest contains size + SHA-256 for every collected evidence file. The
+critical acceptance file is:
 
 ```text
 mvp-full-acceptance.json
