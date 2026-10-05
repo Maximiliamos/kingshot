@@ -1,0 +1,10 @@
+{
+  "pass": true,
+  "has_rendered_frame": true,
+  "fast_transport": true,
+  "stream": "wsa-window · 21.5 FPS · 11 ms",
+  "device_status": "● Война за трон · 1400×787",
+  "frame_stream_running": true,
+  "backend": "wsa",
+  "serial": "127.0.0.1:58526"
+}
