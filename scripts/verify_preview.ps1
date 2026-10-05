@@ -44,7 +44,13 @@ $args = @(
     "--serial", "127.0.0.1:58526",
     "--preview-seconds", ([string]$PreviewSeconds)
 )
-if (-not $AllowFallback) { $args += @("--require-fast", "--min-preview-fps", "15") }
+$args += @(
+    "--output", ".\debug\preview-production.png",
+    "--report", ".\debug\preview-production.json"
+)
+if (-not $AllowFallback) {
+    $args += @("--require-fast", "--require-printwindow", "--min-preview-fps", "15")
+}
 
 & $PythonExe @args
 $code = [int]$LASTEXITCODE
@@ -68,4 +74,6 @@ if ($code -ne 0) {
 
 Write-Host ""
 Write-Host "PREVIEW HOST GATE PASS"
+Write-Host "Evidence: C:\warbot_git\debug\preview-production.json"
+Write-Host "Frame: C:\warbot_git\debug\preview-production.png"
 exit 0
