@@ -18,7 +18,10 @@ class GuiHostAcceptanceTests(unittest.TestCase):
 
     def test_gui_smoke_requires_rendered_fast_frame(self):
         self.assertIn('"has_rendered_frame"', GUI)
-        self.assertIn('("wsa-window", "scrcpy-h264")', GUI)
+        self.assertIn('metrics.get("transport") == "wsa-window"', GUI)
+        self.assertIn('float(metrics.get("fps", 0.0) or 0.0) >= 15.0', GUI)
+        self.assertIn('int(metrics.get("errors", 0) or 0) == 0', GUI)
+        self.assertIn('"printwindow_transport"', GUI)
         self.assertIn('"fast_transport"', GUI)
         self.assertIn("gui-host-smoke.json", SOURCE)
 
