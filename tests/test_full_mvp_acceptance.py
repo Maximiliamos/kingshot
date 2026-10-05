@@ -78,6 +78,12 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn('symbolic-full-name "@{u}"', SOURCE)
         self.assertIn("exit 92", SOURCE)
 
+    def test_failure_process_audit_returns_only_numeric_exit_code(self):
+        self.assertIn("audit_runtime_processes.ps1", SOURCE)
+        self.assertIn("| Out-Host", SOURCE)
+        self.assertIn("$auditCode = [int]$LASTEXITCODE", SOURCE)
+        self.assertIn("return $auditCode", SOURCE)
+
     def test_gate_pass_requires_expected_evidence_files(self):
         self.assertIn("missing_evidence", SOURCE)
         self.assertIn("required evidence file(s) missing", SOURCE)
