@@ -1,12 +1,15 @@
 param(
     [string]$PythonExe = "",
     [string]$Serial = "127.0.0.1:58526",
-    [string]$Output = "C:\warbot_git\debug\google-services.png"
+    [string]$Output = ""
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
+if (-not $Output) {
+    $Output = Join-Path $Root "debug\google-services.png"
+}
 
 if (-not $PythonExe) {
     foreach ($candidate in @(
