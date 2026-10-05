@@ -13,6 +13,10 @@ class GoogleServicesAcceptanceTests(unittest.TestCase):
         self.assertIn("google-services.png", SCRIPT)
         self.assertIn("GOOGLE SERVICES HOST GATE PASS", SCRIPT)
 
+    def test_gate_writes_evidence_relative_to_repo_root(self):
+        self.assertIn('Join-Path $Root "debug\\google-services.png"', SCRIPT)
+        self.assertNotIn(r"C:\warbot_git\debug\google-services.png", SCRIPT)
+
     def test_gate_checks_all_required_packages_and_account_privately(self):
         for package in (
             "com.google.android.gms",
