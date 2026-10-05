@@ -21,6 +21,14 @@ class FullMvpReporterTests(unittest.TestCase):
         self.assertIn("Local HEAD must equal published upstream", SOURCE)
         self.assertIn("TUGARIN_FULL_REPORT_REEXEC", SOURCE)
 
+    def test_runner_can_continue_after_transient_git_tls_failure_only_on_pinned_sha(self):
+        self.assertIn('[string]$ExpectedCommit = ""', SOURCE)
+        self.assertIn("local HEAD exactly matches pinned release SHA", SOURCE)
+        self.assertIn("git pull --ff-only failed and local HEAD is not protected by -ExpectedCommit", SOURCE)
+        self.assertIn("unexpected SHA", SOURCE)
+        self.assertIn("Published branch moved away from pinned release SHA", SOURCE)
+        self.assertIn("expected_commit = $ExpectedCommit", SOURCE)
+
     def test_runner_executes_full_acceptance_not_p0_only(self):
         self.assertIn("verify_mvp_full.ps1", SOURCE)
         self.assertNotIn("install_wsa_poc.ps1", SOURCE)
