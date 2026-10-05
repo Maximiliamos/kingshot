@@ -26,6 +26,20 @@ Latest published infrastructure report before the final PrintWindow hardening:
 
 This proves the infrastructure baseline, not the current final-head MVP.
 
+## Hosted code checkpoint
+
+The complete Windows CI suite passed at code checkpoint
+`89ea4b04466f9c700c745f44aaa1bb163693f0cb`:
+
+- **279/279 tests OK**;
+- zero test failures;
+- PrintWindow cleanup/failure-path tests green;
+- WSA client-relative tap/hold/swipe + cursor/foreground restoration tests green;
+- Google/full-MVP/recovery/soak acceptance contracts green.
+
+Documentation-only commits after this checkpoint still require their normal
+GitHub Actions rerun before handing the branch to the local host.
+
 ## Implemented after that baseline
 
 - exact Kingshot HWND capture via Win32 `PrintWindow`;
@@ -44,6 +58,7 @@ This proves the infrastructure baseline, not the current final-head MVP.
 - Google/preview/GUI/operator/recovery/flow/soak/process-audit evidence paths are
   recorded by the full orchestrator;
 - full acceptance rejects a local SHA that is not the published upstream SHA;
+- every successful host gate must leave its declared evidence file(s), otherwise the full run fails closed;
 - scrcpy-server is diagnostic only and is no longer a production host-gate
   dependency;
 - `run_full_mvp_and_report.ps1` performs the entire real-host acceptance and
@@ -60,6 +75,7 @@ This proves the infrastructure baseline, not the current final-head MVP.
 - each nickname commit stores screenshot/crop evidence and SHA-256;
 - PC-side nickname counter advances only after confirmed commit;
 - soak requires at least two ordered nickname commits, screenshots and a reset;
+- soak evidence records initial/final-observed/peak bot working set and heartbeat freshness, and fails on a >30-second stale heartbeat;
 - `pm clear` preserves the PC-side nickname counter.
 
 ## Current release gates
