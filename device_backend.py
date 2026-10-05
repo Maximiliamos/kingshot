@@ -39,6 +39,33 @@ class BackendError(RuntimeError):
     pass
 
 
+
+def _parse_df_available_mb(output: str, mount: str = "/data") -> int:
+    """Parse Android/toybox df output even when the filesystem name wraps.
+
+    WSA may print a long /dev/block/... filesystem on its own line and the
+    numeric columns on the next line. In that layout a fixed column index on
+    the final physical line mistakes Use% for Available and reports 0 MiB.
+    Anchor on the requested mount point and its preceding Use% token instead.
+    """
+    tokens = [token for line in output.splitlines() for token in line.split()]
+    mount_indexes = [index for index, token in enumerate(tokens) if token == mount]
+    for mount_index in reversed(mount_indexes):
+        for percent_index in range(mount_index - 1, max(-1, mount_index - 5), -1):
+            token = tokens[percent_index]
+            if not token.endswith("%"):
+                continue
+            available_index = percent_index - 1
+            if available_index < 0:
+                break
+            try:
+                available_kb = int(tokens[available_index].replace(",", ""))
+            except ValueError:
+                break
+            return max(0, available_kb // 1024)
+    return 0
+
+
 @dataclass(frozen=True)
 class DeviceHealth:
     backend: str
@@ -343,10 +370,8 @@ class AdbDeviceBackend(DeviceBackend):
                 package_manager_ready = False
             try:
                 df_output = self.shell(["df", "-k", "/data"], timeout=8)
-                df_lines = [line.split() for line in df_output.splitlines() if line.strip()]
-                if len(df_lines) >= 2 and len(df_lines[-1]) >= 4:
-                    data_free_mb = max(0, int(df_lines[-1][3]) // 1024)
-            except (BackendError, ValueError, IndexError):
+                data_free_mb = _parse_df_available_mb(df_output, "/data")
+            except BackendError:
                 data_free_mb = 0
 
             # Runtime service probes are intentionally read-only. WSA can
