@@ -121,11 +121,15 @@ $stale = @(
         $name = $_.name.ToLowerInvariant()
         $line = ([string]$_.command_line) + " " + ([string]$_.parent_command_line)
         $projectOwned = $line -match "(?i)warbot_git|warbot_wsa\\.*venv|tugarin bots|gui\.py|bot\.py|warbot_cli\.py|run_gui|scrcpy-server"
-        if ($name -in @("python", "pythonw", "cmd", "conhost", "ffmpeg")) {
+        $inVerifierChain = (
+            $allowedVerifierPids.Contains([int]$_.pid) -or
+            $allowedVerifierPids.Contains([int]$_.parent_process_id)
+        )
+        if ($name -in @("python", "pythonw", "ffmpeg")) {
             return $projectOwned
         }
-        if ($name -in @("powershell", "pwsh")) {
-            return (-not $allowedVerifierPids.Contains([int]$_.pid) -and $projectOwned)
+        if ($name -in @("cmd", "conhost", "powershell", "pwsh")) {
+            return (-not $inVerifierChain -and $projectOwned)
         }
         if ($name -eq "adb") {
             return (
