@@ -227,6 +227,21 @@ Current Networks:
         self.assertTrue(health.audio_service_ready)
         self.assertEqual(health.data_free_mb, 145507)
 
+    def test_parse_df_available_mb_accepts_wrapped_wsa_filesystem_row(self):
+        output = (
+            "Filesystem     1K-blocks   Used Available Use% Mounted on\n"
+            "/dev/block/mapper/data-long-name\n"
+            "               150000000 1000000 149000000   1% /data\n"
+        )
+        self.assertEqual(db._parse_df_available_mb(output), 145507)
+
+    def test_parse_df_available_mb_accepts_single_line_android_row(self):
+        output = (
+            "Filesystem 1K-blocks Used Available Use% Mounted on\n"
+            "/dev/block/dm-1 150000000 1000000 149000000 1% /data\n"
+        )
+        self.assertEqual(db._parse_df_available_mb(output), 145507)
+
     def test_run_converts_adb_timeout_to_backend_error(self):
         backend = db.AdbDeviceBackend(
             serial="device-1",
