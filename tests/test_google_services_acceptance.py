@@ -24,6 +24,9 @@ class GoogleServicesAcceptanceTests(unittest.TestCase):
         self.assertNotIn('"account_output": account_output', CLI)
         self.assertIn('"play_store_foreground": foreground', CLI)
         self.assertIn('"ui_frame": frame_ok', CLI)
+        self.assertIn('"play_store_closed_after_evidence": play_store_closed', CLI)
+        self.assertIn("close_auxiliary_android_windows(backend)", CLI)
+        self.assertIn('"com.android.settings"', CLI)
 
 
 if __name__ == "__main__":

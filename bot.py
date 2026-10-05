@@ -207,6 +207,56 @@ class WsaGameWindowCapture(ScrcpyCapture):
         self.rect = {"left": point.x, "top": point.y, "width": width, "height": height}
         return title
 
+    def grab(self):
+        """Capture the WSA HWND even when another desktop window overlaps it."""
+        title = self._refresh_rect()
+        width = int(self.rect["width"])
+        height = int(self.rect["height"])
+        gdi32 = ctypes.windll.gdi32
+        window_dc = user32.GetDC(self.hwnd)
+        memory_dc = gdi32.CreateCompatibleDC(window_dc)
+        bitmap = gdi32.CreateCompatibleBitmap(window_dc, width, height)
+        old_bitmap = gdi32.SelectObject(memory_dc, bitmap)
+
+        class BitmapInfoHeader(ctypes.Structure):
+            _fields_ = [
+                ("biSize", wintypes.DWORD),
+                ("biWidth", wintypes.LONG),
+                ("biHeight", wintypes.LONG),
+                ("biPlanes", wintypes.WORD),
+                ("biBitCount", wintypes.WORD),
+                ("biCompression", wintypes.DWORD),
+                ("biSizeImage", wintypes.DWORD),
+                ("biXPelsPerMeter", wintypes.LONG),
+                ("biYPelsPerMeter", wintypes.LONG),
+                ("biClrUsed", wintypes.DWORD),
+                ("biClrImportant", wintypes.DWORD),
+            ]
+
+        try:
+            # PW_CLIENTONLY | PW_RENDERFULLCONTENT. WSA's custom title bar is
+            # part of the client surface and is removed by crop_phone().
+            if not user32.PrintWindow(self.hwnd, memory_dc, 0x00000003):
+                raise RuntimeError("PrintWindow не смог захватить окно WSA.")
+            header = BitmapInfoHeader()
+            header.biSize = ctypes.sizeof(BitmapInfoHeader)
+            header.biWidth = width
+            header.biHeight = -height
+            header.biPlanes = 1
+            header.biBitCount = 32
+            pixels = (ctypes.c_ubyte * (width * height * 4))()
+            if not gdi32.GetDIBits(
+                memory_dc, bitmap, 0, height, pixels, ctypes.byref(header), 0
+            ):
+                raise RuntimeError("GetDIBits не смог прочитать окно WSA.")
+            bgra = np.frombuffer(pixels, dtype=np.uint8).reshape(height, width, 4)
+            return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR), title, dict(self.rect)
+        finally:
+            gdi32.SelectObject(memory_dc, old_bitmap)
+            gdi32.DeleteObject(bitmap)
+            gdi32.DeleteDC(memory_dc)
+            user32.ReleaseDC(self.hwnd, window_dc)
+
 
 class ActionGate:
     """Require visual evidence before the state machine may click again."""
@@ -518,8 +568,10 @@ def perform_cycle_reset(state):
     )
     backend.stop_app()
     result = backend.clear_app_data()
+    runtime_permissions = backend.grant_runtime_permissions()
     if result.strip():
         log("pm clear: " + result.strip())
+    log("Runtime permissions restored: " + ", ".join(runtime_permissions))
     state["current_cycle"] = int(state.get("current_cycle", 1)) + 1
     state["characters_created_cycle"] = 0
     state["last_stop_reason"] = ""
@@ -977,6 +1029,33 @@ def match(phone, image, threshold, allow_scale=True):
     return best if best["score"] >= threshold else None
 
 
+def loading_screen_visible(phone):
+    """Recognize both the legacy logo and the current progress-bar splash."""
+    legacy = match(phone, tpl("loading_logo.png"), 0.82)
+    if legacy:
+        return True
+    if phone is None or phone.size == 0:
+        return False
+
+    height, width = phone.shape[:2]
+    hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
+    orange = cv2.inRange(hsv, np.array([5, 120, 100]), np.array([35, 255, 255]))
+    upper = orange[round(height * 0.12):round(height * 0.45), :]
+    lower = orange[round(height * 0.75):round(height * 0.95), :]
+    if int(np.count_nonzero(upper)) < max(500, round(phone.size / 600)):
+        return False
+    contours, _ = cv2.findContours(lower, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        _, _, bar_width, bar_height = cv2.boundingRect(contour)
+        if (
+            bar_width >= round(width * 0.20)
+            and bar_height >= 6
+            and bar_width / max(1, bar_height) >= 2.5
+        ):
+            return True
+    return False
+
+
 def match_tutorial_skip(phone):
     """Find the common Skip control only where the game draws it.
 
@@ -1019,6 +1098,11 @@ def match_tutorial_hand(phone):
         ("tutorial_hand_save_residents.png", (0.25, 0.76), 0.70),
         ("tutorial_hand_chest.png", (0.45, 0.35), 0.70),
         ("tutorial_hand_task_center.png", (0.18, 0.48), 0.62),
+        ("tutorial_hand_assign_quarry.png", (0.40, 0.72), 0.82),
+        ("tutorial_hand_assign_quarry_day.png", (0.40, 0.79), 0.80),
+        ("tutorial_hand_assign_quarry_after_upgrade.png", (0.40, 0.79), 0.80),
+        ("tutorial_hand_assign_resident_slot.png", (0.36, 0.84), 0.82),
+        ("tutorial_hand_quarry_core.png", (0.22, 0.91), 0.62),
     )
     for name, target, threshold in variants:
         image = tpl(name)
@@ -1030,6 +1114,11 @@ def match_tutorial_hand(phone):
                 interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC,
             )
             hit = match(phone, resized, threshold, allow_scale=False)
+            if hit and hit["loc"][1] < round(phone.shape[0] * 0.25):
+                # Animated NPC speech/icons near the top can resemble the old
+                # housing-hand crop. Tutorial pointer targets live in the city
+                # or panels below the HUD, never inside the top status area.
+                continue
             if hit and not tutorial_target_is_lit(phone, hit, target):
                 continue
             if hit and (best is None or hit["score"] > best["score"]):
@@ -1056,7 +1145,10 @@ def tutorial_target_is_lit(phone, hit, target):
 def find_tutorial_primary_button(phone):
     """Find the large turquoise primary action in a construction panel."""
     height, width = phone.shape[:2]
-    top = round(height * 0.65)
+    # Upgrade panels may start directly below the city viewport.  Their
+    # actionable button is around mid-screen, while later tutorial panels put
+    # it near the bottom.
+    top = round(height * 0.40)
     roi = phone[top:]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, (75, 80, 80), (105, 255, 255))
@@ -1066,7 +1158,7 @@ def find_tutorial_primary_button(phone):
     candidates = []
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        if w < width * 0.25 or h < 28 or w / h < 2.0:
+        if w < width * 0.18 or h < 28 or w / h < 1.15:
             continue
         candidates.append({"loc": (x, y + top), "w": w, "h": h, "score": float(cv2.contourArea(contour))})
     return max(candidates, key=lambda item: item["score"], default=None)
@@ -1081,7 +1173,19 @@ def is_construction_panel(phone):
     # Grey section headings are less legible to OCR than the building title.
     # The large cyan button is already required, and this rule runs only in
     # the tutorial state machine.
-    return "кухня" in normalized or "требуется" in normalized
+    if any(word in normalized for word in ("кухня", "требуется", "улучшить", "барак")):
+        return True
+
+    # OCR is unreliable on WSA's scaled Cyrillic text.  Construction and
+    # upgrade panels have a stable parchment area covering most of the lower
+    # screen; require that visual context in addition to the cyan primary
+    # button found by the caller.
+    height = phone.shape[0]
+    panel = phone[round(height * 0.38):]
+    hsv = cv2.cvtColor(panel, cv2.COLOR_BGR2HSV)
+    parchment = cv2.inRange(hsv, (8, 10, 100), (35, 180, 255))
+    coverage = float(np.count_nonzero(parchment)) / max(1.0, float(parchment.size))
+    return coverage >= 0.45
 
 
 def tap_match(phone, hit):
@@ -1205,16 +1309,37 @@ OVERLAYS = [
 ]
 
 
+def match_newbie_offer_close(phone):
+    """Return the offer X only when the current offer panel is also present."""
+    close = match(phone, tpl("newbie_offer_close.png"), 0.74)
+    if not close:
+        return None
+    height, width = phone.shape[:2]
+    x, y = close["loc"]
+    if x < round(width * 0.65) or y > round(height * 0.20):
+        return None
+
+    hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
+    panel = hsv[
+        round(height * 0.25):round(height * 0.82),
+        round(width * 0.10):round(width * 0.90),
+    ]
+    yellow = cv2.inRange(panel, np.array([10, 70, 100]), np.array([40, 255, 255]))
+    coverage = float(np.count_nonzero(yellow)) / max(1.0, float(yellow.size))
+    return close if coverage >= 0.18 else None
+
+
 def handle_overlay(phone):
     hit = match(phone, tpl("newbie_offer_context.png"), 0.86)
-    if hit:
-        close = match(phone, tpl("newbie_offer_close.png"), 0.90)
+    close = match_newbie_offer_close(phone)
+    if hit or close:
         if not close:
             return False
-        debug(phone, hit, "newbie_offer")
+        if hit:
+            debug(phone, hit, "newbie_offer")
         debug(phone, close, "newbie_offer_close")
         log(
-            f"Контекстно найден «Ценный набор новичка» {hit['score']:.3f}; "
+            "Контекстно найден «Ценный набор новичка»; "
             "закрываю только по его конкретному X-шаблону."
         )
         tap_match(phone, close)
@@ -1575,16 +1700,29 @@ def handle_tutorial(phone, state):
 
     primary = find_tutorial_primary_button(phone)
     if primary and is_construction_panel(phone):
+        primary_signature = [
+            round(primary["loc"][0] / max(1, phone.shape[1]) * 100),
+            round(primary["loc"][1] / max(1, phone.shape[0]) * 100),
+            round(primary["w"] / max(1, phone.shape[1]) * 100),
+            round(primary["h"] / max(1, phone.shape[0]) * 100),
+        ]
+        if (
+            state.get("tutorial_primary_locked", False)
+            and state.get("tutorial_primary_signature") != primary_signature
+        ):
+            state["tutorial_primary_locked"] = False
         if not state.get("tutorial_primary_locked", False):
             debug(phone, primary, "tutorial_primary_button")
             log("Туториал: подтверждена панель строительства; нажимаю её основную кнопку.")
             tap_match(phone, primary)
             state["tutorial_primary_locked"] = True
+            state["tutorial_primary_signature"] = primary_signature
             set_step(state, "tutorial_wait_construction")
             return "acted"
         return "wait"
     if state.get("tutorial_primary_locked", False):
         state["tutorial_primary_locked"] = False
+        state.pop("tutorial_primary_signature", None)
         save_state(state)
         log("Туториал: основная кнопка строительства исчезла; действие снова разблокировано.")
 
@@ -1650,10 +1788,19 @@ def handle_tutorial(phone, state):
     # screen and then a skippable intro/cinematic.  Do not look for the task
     # scroll before that intro is gone.
     if step == "tutorial_intro":
-        loading = match(phone, tpl("loading_logo.png"), 0.82)
-        if loading:
+        if loading_screen_visible(phone):
+            loading_started = float(state.get("loading_started_at", 0.0)) or time.time()
+            state["loading_started_at"] = loading_started
+            save_state(state)
+            if time.time() - loading_started > 240:
+                state["last_stop_reason"] = "Загрузочный экран не завершился за 240 сек."
+                save_state(state)
+                return False
             log("Туториал: загрузочный экран, жду.")
             return "wait"
+        if state.get("loading_started_at"):
+            state["loading_started_at"] = 0.0
+            save_state(state)
 
         # Dialogue screens can appear before/after Skip. We do not ship a
         # guessed generic dialogue image; the fallback below only accepts

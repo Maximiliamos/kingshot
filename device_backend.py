@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
+import ctypes
+from ctypes import wintypes
 import os
 from pathlib import Path
 import subprocess
@@ -149,6 +151,17 @@ class DeviceBackend(ABC):
 
     def clear_app_data(self) -> str:
         return self.shell(["pm", "clear", self.package], timeout=120)
+
+    def grant_runtime_permissions(self) -> dict[str, bool]:
+        """Grant deterministic, declared permissions needed after `pm clear`."""
+        results = {}
+        for permission in ("android.permission.POST_NOTIFICATIONS",):
+            self.shell(
+                ["pm", "grant", self.package, permission],
+                timeout=30,
+            )
+            results[permission] = True
+        return results
 
     def close(self) -> None:
         pass
@@ -758,6 +771,111 @@ class WsaBackend(AdbDeviceBackend):
                 "127.0.0.1:58526",
             )
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _game_window():
+        """Return the visible Kingshot HWND and its client rectangle."""
+        if os.name != "nt":
+            return None
+        user32 = ctypes.windll.user32
+        enum_proc = ctypes.WINFUNCTYPE(
+            ctypes.c_bool, wintypes.HWND, wintypes.LPARAM
+        )
+        matches = []
+
+        def visit(hwnd, _):
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            length = user32.GetWindowTextLengthW(hwnd)
+            if not length:
+                return True
+            title = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, title, length + 1)
+            folded = title.value.casefold()
+            if "война за трон" not in folded and "kingshot" not in folded:
+                return True
+            rect = wintypes.RECT()
+            origin = wintypes.POINT(0, 0)
+            if not user32.GetClientRect(hwnd, ctypes.byref(rect)):
+                return True
+            if not user32.ClientToScreen(hwnd, ctypes.byref(origin)):
+                return True
+            width = rect.right - rect.left
+            height = rect.bottom - rect.top
+            if width >= 100 and height >= 100:
+                matches.append((hwnd, origin.x, origin.y, width, height))
+            return True
+
+        user32.EnumWindows(enum_proc(visit), 0)
+        return matches[0] if len(matches) == 1 else None
+
+    def _post_window_pointer(
+        self,
+        points: list[tuple[int, int]],
+        duration_ms: int = 50,
+    ) -> bool:
+        """Send a real host pointer to WSA and immediately restore user focus.
+
+        WSA freeform task bounds use desktop pixel coordinates.  ADB input can
+        be discarded when Android focuses Home's PlaceholderActivity while
+        the host window is in the background. Unity also ignores posted mouse
+        messages, so briefly activate the real host window, inject the pointer,
+        then restore both the previous foreground window and cursor position.
+        """
+        target = self._game_window()
+        if target is None or not points:
+            return False
+        hwnd, left, top, width, height = target
+        for x, y in points:
+            cx, cy = int(x) - left, int(y) - top
+            if cx < 0 or cy < 0 or cx >= width or cy >= height:
+                return False
+
+        user32 = ctypes.windll.user32
+        old_foreground = user32.GetForegroundWindow()
+        old_cursor = wintypes.POINT()
+        if not user32.GetCursorPos(ctypes.byref(old_cursor)):
+            return False
+        if not user32.SetForegroundWindow(hwnd):
+            return False
+        try:
+            # WSA updates Android focus asynchronously after the host HWND is
+            # activated.  A shorter delay produced visually delivered but
+            # ignored taps on Unity controls.
+            time.sleep(0.15)
+            first_x, first_y = points[0]
+            user32.SetCursorPos(int(first_x), int(first_y))
+            user32.mouse_event(0x0002, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTDOWN
+            if len(points) > 1:
+                delay = max(0.001, duration_ms / 1000.0 / len(points))
+                for x, y in points[1:]:
+                    time.sleep(delay)
+                    user32.SetCursorPos(int(x), int(y))
+            else:
+                time.sleep(max(0.03, duration_ms / 1000.0))
+            user32.mouse_event(0x0004, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTUP
+            time.sleep(0.20)
+            return True
+        finally:
+            user32.SetCursorPos(old_cursor.x, old_cursor.y)
+            if old_foreground and old_foreground != hwnd:
+                user32.SetForegroundWindow(old_foreground)
+
+    def tap(self, x: int, y: int) -> None:
+        if not self._post_window_pointer([(int(x), int(y))]):
+            super().tap(x, y)
+
+    def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int) -> None:
+        steps = max(4, min(30, int(duration_ms) // 25))
+        points = [
+            (
+                round(x1 + (x2 - x1) * index / steps),
+                round(y1 + (y2 - y1) * index / steps),
+            )
+            for index in range(steps + 1)
+        ]
+        if not self._post_window_pointer(points, duration_ms):
+            super().swipe(x1, y1, x2, y2, duration_ms)
 
     @property
     def runtime_root(self) -> Path:

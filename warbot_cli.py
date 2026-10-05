@@ -186,6 +186,15 @@ GOOGLE_PACKAGES = {
 }
 
 
+def close_auxiliary_android_windows(backend) -> dict[str, bool]:
+    """Close WSA virtual displays that would contaminate the game framebuffer."""
+    closed = {}
+    for package in (GOOGLE_PACKAGES["play_store"], "com.android.settings"):
+        backend.shell(["am", "force-stop", package], timeout=30)
+        closed[package] = True
+    return closed
+
+
 def google_services_smoke(backend, output: str) -> dict:
     """Verify a usable, signed-in GApps runtime without exposing account data."""
     backend.require_ready(native_arm64=False)
@@ -256,6 +265,23 @@ def google_services_smoke(backend, output: str) -> dict:
         and float(np.std(frame)) > 1.0
         and cv2.imwrite(str(screenshot), frame)
     )
+    auxiliary_cleanup = close_auxiliary_android_windows(backend)
+    cleanup_deadline = time.monotonic() + 5.0
+    play_store_closed = False
+    while time.monotonic() < cleanup_deadline:
+        try:
+            remaining_pid = backend.shell(
+                ["pidof", GOOGLE_PACKAGES["play_store"]], timeout=10
+            ).strip()
+        except BackendError:
+            # Android's pidof exits with status 1 and no output when the
+            # process is absent.  Immediately after force-stop that is the
+            # successful cleanup state, not a transport failure.
+            remaining_pid = ""
+        if not remaining_pid:
+            play_store_closed = True
+            break
+        time.sleep(0.5)
     passed = bool(
         required_packages_ok
         and account_present
@@ -264,6 +290,7 @@ def google_services_smoke(backend, output: str) -> dict:
         and not crash_loop
         and not play_store_anr
         and frame_ok
+        and play_store_closed
     )
     report = {
         "pass": passed,
@@ -276,6 +303,8 @@ def google_services_smoke(backend, output: str) -> dict:
         "play_store_crash_loop": crash_loop,
         "play_store_anr": play_store_anr,
         "ui_frame": frame_ok,
+        "play_store_closed_after_evidence": play_store_closed,
+        "auxiliary_windows_closed": auxiliary_cleanup,
         "screenshot": str(screenshot.resolve()) if frame_ok else "",
         "packages": packages,
     }
@@ -299,7 +328,12 @@ def prepare_mvp_flow(backend) -> dict:
     current_cycle = int(old.get("current_cycle", 1))
 
     backend.stop_app()
+    # Google acceptance opens Play Store in a separate WSA host window. Close
+    # it before launching Kingshot so the screen-coordinate production capture
+    # cannot be occluded by another Android app window.
+    auxiliary_cleanup = close_auxiliary_android_windows(backend)
     clear_result = backend.clear_app_data()
+    runtime_permissions = backend.grant_runtime_permissions()
 
     fresh = dict(bot.DEFAULT_STATE)
     fresh["next_nickname"] = next_nickname
@@ -333,6 +367,8 @@ def prepare_mvp_flow(backend) -> dict:
     return {
         "prepared": True,
         "clear_result": str(clear_result).strip(),
+        "runtime_permissions": runtime_permissions,
+        "auxiliary_windows_closed": auxiliary_cleanup,
         "expected_nickname": expected_nickname,
         "next_nickname_before": next_nickname,
         "characters_before": characters_before,
@@ -557,7 +593,9 @@ def prepare_mvp_soak(backend) -> dict:
     current_cycle = int(old.get("current_cycle", 1))
 
     backend.stop_app()
+    auxiliary_cleanup = close_auxiliary_android_windows(backend)
     clear_result = backend.clear_app_data()
+    runtime_permissions = backend.grant_runtime_permissions()
 
     fresh = dict(bot.DEFAULT_STATE)
     fresh["next_nickname"] = next_nickname
@@ -587,6 +625,8 @@ def prepare_mvp_soak(backend) -> dict:
     return {
         "prepared": True,
         "clear_result": str(clear_result).strip(),
+        "runtime_permissions": runtime_permissions,
+        "auxiliary_windows_closed": auxiliary_cleanup,
         "next_nickname_before": next_nickname,
         "characters_before": characters_before,
         "characters_per_cycle": 1,
@@ -897,6 +937,7 @@ def main(argv=None) -> int:
 
         if args.clean_game:
             backend.clear_app_data()
+            backend.grant_runtime_permissions()
             reset_workflow_for_clean_game()
 
         backend.launch_app()

@@ -28,6 +28,24 @@ class DeviceBackendTests(unittest.TestCase):
             timeout=30,
         )
 
+    def test_runtime_notification_permission_is_restored_after_pm_clear(self):
+        backend = db.AdbDeviceBackend(
+            serial="device-1",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        with patch.object(backend, "shell", return_value="") as shell:
+            result = backend.grant_runtime_permissions()
+        shell.assert_called_once_with(
+            [
+                "pm",
+                "grant",
+                backend.package,
+                "android.permission.POST_NOTIFICATIONS",
+            ],
+            timeout=30,
+        )
+        self.assertTrue(result["android.permission.POST_NOTIFICATIONS"])
+
     def test_health_native_arm64_gate(self):
         health = db.DeviceHealth(
             backend="native_arm64",
@@ -106,6 +124,27 @@ class DeviceBackendTests(unittest.TestCase):
             health = backend.require_ready(native_arm64=False)
         self.assertTrue(health.ready)
         self.assertFalse(health.native_arm64)
+
+    def test_wsa_tap_prefers_background_game_window_input(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post, \
+                patch.object(db.AdbDeviceBackend, "tap") as adb_tap:
+            backend.tap(914, 885)
+        post.assert_called_once_with([(914, 885)])
+        adb_tap.assert_not_called()
+
+    def test_wsa_tap_falls_back_to_adb_without_game_window(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        with patch.object(backend, "_post_window_pointer", return_value=False), \
+                patch.object(db.AdbDeviceBackend, "tap") as adb_tap:
+            backend.tap(914, 885)
+        adb_tap.assert_called_once_with(914, 885)
 
     def test_health_does_not_probe_package_before_boot_complete(self):
         backend = db.AdbDeviceBackend(

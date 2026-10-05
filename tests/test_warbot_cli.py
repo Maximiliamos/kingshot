@@ -24,7 +24,10 @@ class WarBotCliTests(unittest.TestCase):
             boot_completed="1",
         )
 
+        play_store_stopped = False
+
         def shell(args, timeout=60):
+            nonlocal play_store_stopped
             if args[:2] == ["pm", "path"]:
                 return f"package:/data/app/{args[2]}/base.apk"
             if args[:2] == ["dumpsys", "package"]:
@@ -36,7 +39,15 @@ class WarBotCliTests(unittest.TestCase):
             if args[0] == "monkey":
                 return "Events injected: 1"
             if args[0] == "pidof":
+                if play_store_stopped:
+                    raise BackendError(
+                        "ADB command failed (1): no diagnostic output"
+                    )
                 return "1234"
+            if args[:2] == ["am", "force-stop"]:
+                if args[2] == "com.android.vending":
+                    play_store_stopped = True
+                return ""
             if args[:3] == ["dumpsys", "window", "windows"]:
                 return "mCurrentFocus=com.android.vending/.AssetBrowserActivity"
             if args[:3] == ["dumpsys", "activity", "lastanr"]:
@@ -55,6 +66,8 @@ class WarBotCliTests(unittest.TestCase):
         self.assertTrue(report["pass"])
         self.assertTrue(report["account_present"])
         self.assertTrue(report["play_store_foreground"])
+        self.assertTrue(report["play_store_closed_after_evidence"])
+        self.assertTrue(report["auxiliary_windows_closed"]["com.android.settings"])
         self.assertNotIn("private@example.com", persisted)
         self.assertNotIn("account_output", report)
 

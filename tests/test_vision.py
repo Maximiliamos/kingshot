@@ -8,6 +8,31 @@ import bot
 
 
 class TutorialVisionTests(unittest.TestCase):
+    def test_current_loading_splash_is_detected_without_clicking(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (135, 190), (260, 250), (0, 145, 255), -1)
+        cv2.rectangle(frame, (140, 846), (250, 872), (0, 165, 255), -1)
+        self.assertTrue(bot.loading_screen_visible(frame))
+
+    def test_plain_scene_is_not_misclassified_as_loading(self):
+        frame = np.full((944, 421, 3), 80, dtype=np.uint8)
+        self.assertFalse(bot.loading_screen_visible(frame))
+
+    def test_newbie_offer_requires_close_in_safe_zone_and_yellow_panel(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (60, 240), (360, 775), (0, 190, 255), -1)
+        close = {"score": 0.78, "loc": (307, 61), "w": 52, "h": 48}
+        with patch("bot.match", return_value=close):
+            self.assertEqual(bot.match_newbie_offer_close(frame), close)
+
+        close_left = dict(close, loc=(30, 61))
+        with patch("bot.match", return_value=close_left):
+            self.assertIsNone(bot.match_newbie_offer_close(frame))
+
+        no_panel = np.zeros_like(frame)
+        with patch("bot.match", return_value=close):
+            self.assertIsNone(bot.match_newbie_offer_close(no_panel))
+
     def test_direct_android_frame_sets_real_input_geometry(self):
         frame = np.zeros((2376, 1060, 3), dtype=np.uint8)
         old = (
@@ -313,6 +338,14 @@ class TutorialVisionTests(unittest.TestCase):
         hit = {"loc": (20, 700), "w": width, "h": height}
         self.assertFalse(bot.tutorial_target_is_lit(phone, hit, (0.57, 0.74)))
 
+    def test_hand_like_top_hud_match_is_rejected(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_housing.png")
+        height, width = template.shape[:2]
+        phone[40:40 + height, 250:250 + width] = template
+
+        self.assertIsNone(bot.match_tutorial_hand(phone))
+
     def test_bell_hand_variant_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         template = bot.tpl("tutorial_hand_bell.png")
@@ -371,6 +404,63 @@ class TutorialVisionTests(unittest.TestCase):
         self.assertIsNotNone(hit)
         self.assertEqual(hit["variant"], "tutorial_hand_task_center.png")
 
+    def test_assign_quarry_hand_variant_is_found(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_assign_quarry.png")
+        height, width = template.shape[:2]
+        phone[660:660 + height, 105:105 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["variant"], "tutorial_hand_assign_quarry.png")
+
+    def test_assign_quarry_day_hand_variant_is_found(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_assign_quarry_day.png")
+        height, width = template.shape[:2]
+        phone[630:630 + height, 100:100 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["variant"], "tutorial_hand_assign_quarry_day.png")
+
+    def test_assign_quarry_after_upgrade_hand_variant_is_found(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_assign_quarry_after_upgrade.png")
+        height, width = template.shape[:2]
+        phone[630:630 + height, 100:100 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(
+            hit["variant"], "tutorial_hand_assign_quarry_after_upgrade.png"
+        )
+
+    def test_assign_resident_slot_hand_variant_is_found(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_assign_resident_slot.png")
+        height, width = template.shape[:2]
+        phone[640:640 + height, 220:220 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["variant"], "tutorial_hand_assign_resident_slot.png")
+
+    def test_quarry_hand_core_survives_changed_scene_background(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_quarry_core.png")
+        height, width = template.shape[:2]
+        phone[640:640 + height, 140:140 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["variant"], "tutorial_hand_quarry_core.png")
+
     def test_cook_button_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         template = bot.tpl("tutorial_cook_button.png")
@@ -391,6 +481,17 @@ class TutorialVisionTests(unittest.TestCase):
         self.assertIsNotNone(hit)
         self.assertEqual(hit["loc"], (117, 878))
         self.assertGreaterEqual(hit["w"], 180)
+
+    def test_upgrade_panel_mid_screen_button_and_parchment_are_detected(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        phone[360:] = (160, 190, 220)
+        cv2.rectangle(phone, (294, 457), (375, 507), (220, 210, 20), -1)
+
+        hit = bot.find_tutorial_primary_button(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertTrue(bot.is_construction_panel(phone))
+        self.assertEqual(hit["loc"], (294, 457))
 
     def test_ocr_action_is_locked_until_its_text_disappears(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
