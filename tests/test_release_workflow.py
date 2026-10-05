@@ -7,6 +7,7 @@ AUDIT = (ROOT / "scripts" / "audit_runtime_processes.ps1").read_text(encoding="u
 RELEASE = (ROOT / "scripts" / "verify_release.ps1").read_text(encoding="utf-8-sig")
 MVP = (ROOT / "scripts" / "verify_mvp.ps1").read_text(encoding="utf-8-sig")
 INSTALL = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8-sig")
+WORKFLOW = (ROOT / ".github" / "workflows" / "poc-tests.yml").read_text(encoding="utf-8-sig")
 
 
 class ReleaseWorkflowTests(unittest.TestCase):
@@ -26,6 +27,15 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("$projectOwned", AUDIT)
         self.assertIn("warbot_git|warbot_wsa", AUDIT)
         self.assertIn("exit 21", AUDIT)
+
+    def test_ci_parses_all_release_critical_powershell(self):
+        for name in (
+            "verify_google_services.ps1",
+            "run_full_mvp_and_report.ps1",
+            "start_gapps_migration_task.ps1",
+            "stop_gapps_migration_task.ps1",
+        ):
+            self.assertIn(name, WORKFLOW)
 
     def test_release_gate_runs_tests_mvp_and_process_audit(self):
         self.assertIn("unittest discover -s tests -v", RELEASE)
