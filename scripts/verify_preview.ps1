@@ -43,8 +43,12 @@ if (-not $AllowFallback) {
     $args += @("--require-fast", "--require-printwindow", "--min-preview-fps", "15")
 }
 
-& $PythonExe @args
+$previewEvidence = Join-Path $Root "debug\preview-acceptance.json"
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $previewEvidence) | Out-Null
+$previewText = (& $PythonExe @args | Out-String)
 $code = [int]$LASTEXITCODE
+$previewText | Set-Content -LiteralPath $previewEvidence -Encoding UTF8
+$previewText | Write-Host
 if ($code -ne 0) {
     Write-Host ""
     Write-Host "PREVIEW HOST GATE FAIL"
