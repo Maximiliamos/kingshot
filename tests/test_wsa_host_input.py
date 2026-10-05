@@ -77,6 +77,42 @@ class WsaHostInputTests(unittest.TestCase):
         self.assertEqual(api.position_calls, [])
         self.assertEqual(api.events, [])
 
+    def test_public_tap_uses_host_pointer_and_never_adb_fallback(self):
+        backend = self._backend()
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post, \
+                patch.object(db.AdbDeviceBackend, "tap") as adb_tap:
+            backend.tap(25, 30)
+        post.assert_called_once_with([(25, 30)])
+        adb_tap.assert_not_called()
+
+    def test_public_hold_uses_stationary_host_swipe(self):
+        backend = self._backend()
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post:
+            backend.hold(40, 50, 800)
+        points, duration = post.call_args.args
+        self.assertEqual(duration, 800)
+        self.assertGreaterEqual(len(points), 4)
+        self.assertTrue(all(point == (40, 50) for point in points))
+
+    def test_public_swipe_uses_host_pointer_path(self):
+        backend = self._backend()
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post:
+            backend.swipe(10, 20, 110, 220, 500)
+        points, duration = post.call_args.args
+        self.assertEqual(duration, 500)
+        self.assertEqual(points[0], (10, 20))
+        self.assertEqual(points[-1], (110, 220))
+
+    def test_public_pointer_actions_fail_closed_when_host_window_is_unavailable(self):
+        backend = self._backend()
+        with patch.object(backend, "_post_window_pointer", return_value=False):
+            with self.assertRaises(db.BackendError):
+                backend.tap(10, 20)
+            with self.assertRaises(db.BackendError):
+                backend.hold(10, 20, 800)
+            with self.assertRaises(db.BackendError):
+                backend.swipe(10, 20, 30, 40, 300)
+
 
 if __name__ == "__main__":
     unittest.main()
