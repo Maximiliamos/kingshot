@@ -1,0 +1,40 @@
+﻿{
+  "pass": false,
+  "run_id": "2a760ebf4daa4c29960f609ea0388bef",
+  "head": "7545112e03544ca7c95928b109fbf98d5a1822ad",
+  "expected_nickname": "Тугарин1",
+  "checks": {
+    "start_event": true,
+    "initial_tutorial_complete": false,
+    "state3_confirmed": false,
+    "character_tutorial_complete": false,
+    "nickname_committed": false,
+    "nickname_evidence_screenshot": false,
+    "nickname_ocr_confirmed": false,
+    "ordered_flow": false,
+    "final_phase_complete": false,
+    "final_step_done": false,
+    "no_stop_reason": true,
+    "character_delta_one": false,
+    "nickname_counter_advanced": false
+  },
+  "state": {
+    "phase": "tutorial_new_character",
+    "step": "tutorial_intro",
+    "next_nickname": 1,
+    "characters_created": 0,
+    "characters_created_cycle": 0,
+    "last_stop_reason": ""
+  },
+  "evidence_events": [
+    {
+      "ts": "2026-10-05T21:22:50.660949+00:00",
+      "event": "mvp_flow_start",
+      "run_id": "2a760ebf4daa4c29960f609ea0388bef",
+      "expected_nickname": "Тугарин1",
+      "next_nickname_before": 1,
+      "characters_before": 0,
+      "current_cycle": 1
+    }
+  ]
+}
