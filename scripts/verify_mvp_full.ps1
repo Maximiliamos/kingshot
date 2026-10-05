@@ -97,6 +97,19 @@ function Run-Gate {
     $gateStarted = [DateTimeOffset]::UtcNow
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Script @Arguments
     $code = [int]$LASTEXITCODE
+    $missingEvidence = @()
+    if ($code -eq 0) {
+        foreach ($evidencePath in @($EvidencePaths)) {
+            if ($evidencePath -and -not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+                $missingEvidence += [string]$evidencePath
+            }
+        }
+        if ($missingEvidence.Count -gt 0) {
+            $code = 93
+            Write-Host "GATE FAIL: required evidence file(s) missing:" -ForegroundColor Red
+            $missingEvidence | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        }
+    }
     $GateResults.Add([ordered]@{
         name = $Name
         script = [IO.Path]::GetFileName($Script)
@@ -105,6 +118,7 @@ function Run-Gate {
         started_at_utc = $gateStarted.ToString("o")
         finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
         evidence = @($EvidencePaths)
+        missing_evidence = @($missingEvidence)
     })
     if ($code -ne 0) {
         # Every failure path still records whether a GUI/bot/video process was
