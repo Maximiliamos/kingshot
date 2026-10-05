@@ -29,6 +29,12 @@ class FullMvpReporterTests(unittest.TestCase):
         self.assertIn("Published branch moved away from pinned release SHA", SOURCE)
         self.assertIn("expected_commit = $ExpectedCommit", SOURCE)
 
+    def test_runner_does_not_promote_optional_git_stderr_to_terminating_error(self):
+        self.assertIn('$savedErrorAction = $ErrorActionPreference', SOURCE)
+        self.assertIn('$ErrorActionPreference = "Continue"', SOURCE)
+        self.assertIn('$pullCode = [int]$LASTEXITCODE', SOURCE)
+        self.assertIn('$ErrorActionPreference = $savedErrorAction', SOURCE)
+
     def test_runner_executes_full_acceptance_not_p0_only(self):
         self.assertIn("verify_mvp_full.ps1", SOURCE)
         self.assertNotIn("install_wsa_poc.ps1", SOURCE)
