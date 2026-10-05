@@ -13,7 +13,8 @@ WORKFLOW = (ROOT / ".github" / "workflows" / "poc-tests.yml").read_text(encoding
 class ReleaseWorkflowTests(unittest.TestCase):
     def test_process_audit_fails_stale_project_processes_and_setup_tasks(self):
         self.assertIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb", "ffmpeg"', AUDIT)
-        self.assertIn('"python", "pythonw", "cmd", "conhost", "ffmpeg"', AUDIT)
+        self.assertIn('"python", "pythonw", "ffmpeg"', AUDIT)
+        self.assertIn('"cmd", "conhost", "powershell", "pwsh"', AUDIT)
         self.assertIn('"powershell", "pwsh"', AUDIT)
         self.assertIn("$allowedVerifierPids", AUDIT)
         self.assertIn("Contains([int]$_.pid)", AUDIT)
