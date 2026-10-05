@@ -6,6 +6,10 @@ The project is in release-closure mode. WSA/GApps under
 `COMPUTER\Программист1` remains the production Android runtime; no new
 emulator/runtime architecture should be introduced without a concrete failure.
 
+Hosted Windows checkpoint `89ea4b04466f9c700c745f44aaa1bb163693f0cb`:
+**279/279 tests OK**. Remaining work is real-host evidence, not a new runtime
+or capture architecture.
+
 | Priority | Work item | Code | Final-head real host |
 |---|---|---:|---:|
 | P0 | WSA/GApps + Kingshot | DONE | rerun in full gate |
