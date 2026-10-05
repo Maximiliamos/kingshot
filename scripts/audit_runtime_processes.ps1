@@ -16,6 +16,24 @@ if (-not $Output) {
 
 $account = "$env:COMPUTERNAME\$TargetUser"
 $processNames = @("python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb", "ffmpeg")
+
+# The audit itself is normally launched by verify_release.ps1, which in turn
+# may be launched by verify_mvp_full.ps1 / run_full_mvp_and_report.ps1. Those
+# live verifier PowerShell processes are expected. Exclude only this exact
+# ancestor chain; unrelated project-owned PowerShell processes remain stale.
+$allowedVerifierPids = [System.Collections.Generic.HashSet[int]]::new()
+$cursorPid = [int]$PID
+for ($depth = 0; $depth -lt 8 -and $cursorPid -gt 0; $depth++) {
+    [void]$allowedVerifierPids.Add($cursorPid)
+    try {
+        $cursorProcess = Get-CimInstance Win32_Process -Filter "ProcessId=$cursorPid" -ErrorAction Stop
+        $parentPid = [int]$cursorProcess.ParentProcessId
+        if ($parentPid -le 0 -or $parentPid -eq $cursorPid) { break }
+        $cursorPid = $parentPid
+    }
+    catch { break }
+}
+
 $processes = @()
 
 try {
@@ -107,7 +125,7 @@ $stale = @(
             return $projectOwned
         }
         if ($name -in @("powershell", "pwsh")) {
-            return ($_.pid -ne $PID -and $projectOwned)
+            return (-not $allowedVerifierPids.Contains([int]$_.pid) -and $projectOwned)
         }
         if ($name -eq "adb") {
             return (
@@ -140,6 +158,7 @@ $result = [ordered]@{
     stale_processes = $stale
     scheduled_tasks = $tasks
     stale_scheduled_tasks = $staleTasks
+    allowed_verifier_pids = @($allowedVerifierPids)
 }
 
 $parent = Split-Path -Parent $Output
