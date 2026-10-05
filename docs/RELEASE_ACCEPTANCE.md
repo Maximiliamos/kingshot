@@ -21,7 +21,8 @@ The real-host run must start from:
 - local branch HEAD equal to its published upstream HEAD.
 
 `verify_mvp_full.ps1` fails closed before destructive game-flow work if these
-conditions are not met.
+conditions are not met. A gate that exits 0 but fails to leave any declared
+evidence file is also converted to a release failure.
 
 ## 3. Full host sequence
 
@@ -96,7 +97,9 @@ production frame. Persistent loss stops the run.
 
 At least two one-character cycles are required. The evidence must contain
 ordered `Тугарин<N>` commits, a post-rename screenshot for each, at least one
-cycle reset, no terminal stop reason and resource/process telemetry.
+cycle reset, no terminal stop reason and resource/process telemetry. The soak
+records initial/final-observed/peak bot working set, requires a runtime
+heartbeat to be observed, and fails closed if heartbeat age exceeds 30 seconds.
 
 ## 4. Evidence files
 
