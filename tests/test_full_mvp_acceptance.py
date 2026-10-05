@@ -71,6 +71,12 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn('symbolic-full-name "@{u}"', SOURCE)
         self.assertIn("exit 92", SOURCE)
 
+    def test_gate_pass_requires_expected_evidence_files(self):
+        self.assertIn("missing_evidence", SOURCE)
+        self.assertIn("required evidence file(s) missing", SOURCE)
+        self.assertIn("exit_code = $code", SOURCE)
+        self.assertIn("$code = 93", SOURCE)
+
     def test_destructive_gates_are_disclosed(self):
         self.assertIn("intentionally clear Kingshot app data", SOURCE)
         self.assertIn("nickname counter is preserved", SOURCE)
