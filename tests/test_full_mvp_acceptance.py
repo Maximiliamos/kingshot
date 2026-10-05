@@ -10,6 +10,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
     def test_master_runs_all_release_gates(self):
         for name in (
             "verify_release.ps1",
+            "verify_google_services.ps1",
             "verify_preview.ps1",
             "verify_gui.ps1",
             "verify_operator_io.ps1",
@@ -26,7 +27,10 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
 
     def test_master_requires_final_dedicated_user_cleanup(self):
         self.assertIn("Final production-user process audit", SOURCE)
-        self.assertIn("Production fast preview (WSA window or H.264)", SOURCE)
+        self.assertIn("Production PrintWindow preview", SOURCE)
+        self.assertIn("Google Services / Play Store / account", SOURCE)
+        self.assertIn("preview-production.json", SOURCE)
+        self.assertIn("google-services.json", SOURCE)
         self.assertIn("audit_runtime_processes.ps1", SOURCE)
         self.assertIn('"-TargetUser"', SOURCE)
         self.assertIn('"-TargetUser", $TargetUser', SOURCE)
@@ -61,6 +65,11 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("status --porcelain --untracked-files=no", SOURCE)
         self.assertIn("Clean tracked worktree", SOURCE)
         self.assertIn("exit 90", SOURCE)
+
+    def test_master_requires_exact_published_upstream_head(self):
+        self.assertIn("Published branch head", SOURCE)
+        self.assertIn('symbolic-full-name "@{u}"', SOURCE)
+        self.assertIn("exit 92", SOURCE)
 
     def test_destructive_gates_are_disclosed(self):
         self.assertIn("intentionally clear Kingshot app data", SOURCE)
