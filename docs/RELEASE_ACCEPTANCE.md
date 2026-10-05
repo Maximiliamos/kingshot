@@ -37,7 +37,7 @@ Infrastructure / WSA / Kingshot / process audit
 → bounded Kingshot + ADB recovery
 → exact State #3 → tutorial → Тугарин<N>
 → minimum two-character reset/soak
-→ final process audit
+→ final process + migration-task audit
 ```
 
 ### Infrastructure
@@ -119,6 +119,9 @@ debug/mvp-soak-evidence.json
 debug/mvp-final-process-audit.json
 debug/runtime-heartbeat.json
 logs/events.jsonl
+
+The uploaded report manifest also contains an `evidence_files` inventory with
+file size and SHA-256 for every collected artifact.
 ```
 
 ## 5. Recommended one-command run + upload
