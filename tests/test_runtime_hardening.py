@@ -6,6 +6,7 @@ from unittest.mock import patch
 import runtime_events
 import bot
 from runtime_recovery import RecoveryController
+from warbot_cli import _wait_package_stopped, _wait_production_frame
 
 
 class FakeHealth:
@@ -32,6 +33,32 @@ class FakeBackend:
 
 
 class RuntimeHardeningTests(unittest.TestCase):
+    def test_wait_package_stopped_handles_async_force_stop(self):
+        backend = FakeBackend(FakeHealth(ready=True, package_running=True))
+        states = iter((
+            FakeHealth(ready=True, package_running=True),
+            FakeHealth(ready=True, package_running=False),
+        ))
+        backend.health = lambda: next(states)
+        with patch("warbot_cli.time.sleep"):
+            self.assertTrue(_wait_package_stopped(backend, timeout=1.0))
+
+    def test_wait_package_stopped_fails_closed_after_timeout(self):
+        backend = FakeBackend(FakeHealth(ready=True, package_running=True))
+        with patch("warbot_cli.time.monotonic", side_effect=(1.0, 2.0)):
+            self.assertFalse(_wait_package_stopped(backend, timeout=1.0))
+
+    def test_wait_production_frame_retries_until_window_exists(self):
+        frame = type("Frame", (), {"size": 1})()
+        capture = unittest.mock.MagicMock()
+        capture.grab.return_value = (frame, 0.0, {})
+        with patch(
+            "warbot_cli.create_production_capture",
+            side_effect=(RuntimeError("no window"), capture),
+        ), patch("warbot_cli.time.sleep"):
+            self.assertTrue(_wait_production_frame(object(), timeout=1.0))
+        capture.close.assert_called_once_with()
+
     def test_structured_event_log_round_trip(self):
         with tempfile.TemporaryDirectory() as tmp:
             event_path = str(Path(tmp) / "events.jsonl")

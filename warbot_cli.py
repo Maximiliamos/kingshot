@@ -496,6 +496,37 @@ def collect_mvp_flow_evidence() -> dict:
     }
 
 
+def _wait_package_stopped(backend, *, timeout: float = 10.0) -> bool:
+    """Wait for Android's asynchronous ``am force-stop`` to take effect."""
+    deadline = time.monotonic() + max(0.0, float(timeout))
+    while True:
+        if not backend.health().package_running:
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.25)
+
+
+def _wait_production_frame(backend, *, timeout: float = 30.0) -> bool:
+    """Wait until the relaunched game's HWND exists and yields a real frame."""
+    deadline = time.monotonic() + max(0.0, float(timeout))
+    while True:
+        capture = None
+        try:
+            capture = create_production_capture(backend)
+            frame, _, _ = capture.grab()
+            if frame is not None and getattr(frame, "size", 0) > 0:
+                return True
+        except (BackendError, OSError, RuntimeError):
+            pass
+        finally:
+            if capture is not None:
+                capture.close()
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.5)
+
+
 def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
     """Real-host recovery smoke with no game UI clicks."""
     from runtime_recovery import RecoveryController
@@ -507,39 +538,38 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
         backend.launch_app()
         backend.wait_package_running(timeout=90)
 
-    capture = create_production_capture(backend)
     result = {
         "pass": False,
         "baseline_frame": False,
+        "game_stop_observed": False,
         "game_restart_action": "",
         "frame_after_restart": False,
         "adb_reconnect_requested": bool(with_adb_reconnect),
         "adb_reconnect": not with_adb_reconnect,
         "frame_after_adb_reconnect": not with_adb_reconnect,
     }
-    try:
-        frame, _, _ = capture.grab()
-        result["baseline_frame"] = bool(frame is not None and getattr(frame, "size", 0) > 0)
-    finally:
-        capture.close()
+    result["baseline_frame"] = _wait_production_frame(backend)
+    if not result["baseline_frame"]:
+        result["error"] = "Kingshot HWND did not produce a frame before recovery"
+        return result
 
     backend.stop_app()
+    result["game_stop_observed"] = _wait_package_stopped(backend)
+    if not result["game_stop_observed"]:
+        result["error"] = "Kingshot PID did not disappear after force-stop"
+        return result
+
     controller = RecoveryController(max_game_restarts=1)
     decision = controller.probe_runtime(backend)
     result["game_restart_action"] = decision.action
     if decision.terminal or decision.action != "game_restarted":
-        raise BackendError(
-            f"Recovery did not restart stopped Kingshot: {decision.action} {decision.detail}"
+        result["error"] = (
+            f"Recovery did not restart stopped Kingshot: "
+            f"{decision.action} {decision.detail}"
         )
+        return result
 
-    capture = create_production_capture(backend)
-    try:
-        frame, _, _ = capture.grab()
-        result["frame_after_restart"] = bool(
-            frame is not None and getattr(frame, "size", 0) > 0
-        )
-    finally:
-        capture.close()
+    result["frame_after_restart"] = _wait_production_frame(backend)
 
     if with_adb_reconnect:
         adb_path = str(getattr(backend, "adb_path", "") or "")
@@ -569,17 +599,11 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
         if not ready:
             raise BackendError("ADB did not recover within 30 seconds")
 
-        capture = create_production_capture(backend)
-        try:
-            frame, _, _ = capture.grab()
-            result["frame_after_adb_reconnect"] = bool(
-                frame is not None and getattr(frame, "size", 0) > 0
-            )
-        finally:
-            capture.close()
+        result["frame_after_adb_reconnect"] = _wait_production_frame(backend)
 
     result["pass"] = all((
         result["baseline_frame"],
+        result["game_stop_observed"],
         result["game_restart_action"] == "game_restarted",
         result["frame_after_restart"],
         result["adb_reconnect"],
