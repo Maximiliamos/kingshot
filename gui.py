@@ -1059,6 +1059,7 @@ class WarBotWindow(QMainWindow):
         self.device_status.setStyleSheet("color: #ffb454")
 
     def _render_stream_metrics(self, metrics):
+        self.last_stream_metrics = dict(metrics)
         self.stream_value.setText(
             f"{metrics.get('transport', 'video')} · "
             f"{metrics.get('fps', 0.0):.1f} FPS · "
@@ -1375,13 +1376,19 @@ def main():
             has_frame = bool(pixmap is not None and not pixmap.isNull())
             stream_text = window.stream_value.text()
             status_text = window.device_status.text()
-            fast_transport = any(
-                name in stream_text for name in ("wsa-window", "scrcpy-h264")
+            metrics = dict(getattr(window, "last_stream_metrics", {}) or {})
+            printwindow_transport = metrics.get("transport") == "wsa-window"
+            fast_transport = bool(
+                printwindow_transport
+                and float(metrics.get("fps", 0.0) or 0.0) >= 15.0
+                and int(metrics.get("errors", 0) or 0) == 0
             )
             report = {
                 "pass": bool(has_frame and fast_transport),
                 "has_rendered_frame": has_frame,
                 "fast_transport": fast_transport,
+                "printwindow_transport": printwindow_transport,
+                "stream_metrics": metrics,
                 "stream": stream_text,
                 "device_status": status_text,
                 "frame_stream_running": bool(
