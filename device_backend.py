@@ -889,6 +889,53 @@ class WsaBackend(AdbDeviceBackend):
         return ctypes.windll.user32
 
     @staticmethod
+    def _window_kernel32():
+        return ctypes.windll.kernel32
+
+    def _set_foreground_window(self, user32, hwnd: int) -> bool:
+        """Activate one HWND without leaving Win32 input queues attached.
+
+        Windows normally rejects ``SetForegroundWindow`` from the background
+        bot process.  Temporarily joining the current, foreground and target
+        UI threads is the documented Win32 mechanism that lets the already
+        interactive desktop session transfer focus deterministically.
+        """
+        if user32.SetForegroundWindow(hwnd):
+            return True
+
+        kernel32 = self._window_kernel32()
+        current_thread = int(kernel32.GetCurrentThreadId())
+        foreground = int(user32.GetForegroundWindow() or 0)
+        thread_ids = []
+        for window in (foreground, int(hwnd)):
+            if not window:
+                continue
+            thread_id = int(user32.GetWindowThreadProcessId(window, None) or 0)
+            if thread_id and thread_id != current_thread and thread_id not in thread_ids:
+                thread_ids.append(thread_id)
+
+        attached = []
+        try:
+            for thread_id in thread_ids:
+                if user32.AttachThreadInput(current_thread, thread_id, True):
+                    attached.append(thread_id)
+            try:
+                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            except Exception:
+                pass
+            try:
+                user32.BringWindowToTop(hwnd)
+            except Exception:
+                pass
+            return bool(user32.SetForegroundWindow(hwnd))
+        finally:
+            for thread_id in reversed(attached):
+                try:
+                    user32.AttachThreadInput(current_thread, thread_id, False)
+                except Exception:
+                    pass
+
+    @staticmethod
     def _game_window():
         """Return the visible Kingshot HWND and its client rectangle."""
         if os.name != "nt":
@@ -950,7 +997,7 @@ class WsaBackend(AdbDeviceBackend):
         old_cursor = wintypes.POINT()
         if not user32.GetCursorPos(ctypes.byref(old_cursor)):
             return False
-        if not user32.SetForegroundWindow(hwnd):
+        if not self._set_foreground_window(user32, hwnd):
             return False
 
         button_down = False
@@ -987,7 +1034,7 @@ class WsaBackend(AdbDeviceBackend):
                 pass
             if old_foreground and old_foreground != hwnd:
                 try:
-                    user32.SetForegroundWindow(old_foreground)
+                    self._set_foreground_window(user32, old_foreground)
                 except Exception:
                     pass
 

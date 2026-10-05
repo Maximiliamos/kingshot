@@ -34,6 +34,39 @@ class FakeUser32:
         self.events.append(flag)
 
 
+class FakeAttachedUser32(FakeUser32):
+    def __init__(self):
+        super().__init__()
+        self.attached = False
+        self.attach_calls = []
+
+    def SetForegroundWindow(self, hwnd):
+        self.foreground_calls.append(hwnd)
+        if not self.attached:
+            return 0
+        self.foreground = hwnd
+        return 1
+
+    def GetWindowThreadProcessId(self, hwnd, _):
+        return int(hwnd) + 1000
+
+    def AttachThreadInput(self, current, target, attach):
+        self.attach_calls.append((current, target, bool(attach)))
+        self.attached = bool(attach)
+        return 1
+
+    def ShowWindow(self, hwnd, mode):
+        return 1
+
+    def BringWindowToTop(self, hwnd):
+        return 1
+
+
+class FakeKernel32:
+    def GetCurrentThreadId(self):
+        return 77
+
+
 class WsaHostInputTests(unittest.TestCase):
     def _backend(self):
         return db.WsaBackend(
@@ -53,6 +86,15 @@ class WsaHostInputTests(unittest.TestCase):
         self.assertEqual(api.position_calls[-1], (7, 9))
         self.assertEqual(api.foreground_calls, [55, 900])
         self.assertEqual(api.events, [0x0002, 0x0004])
+
+    def test_background_process_temporarily_attaches_ui_threads(self):
+        backend = self._backend()
+        api = FakeAttachedUser32()
+        with patch.object(backend, "_window_kernel32", return_value=FakeKernel32()):
+            self.assertTrue(backend._set_foreground_window(api, 55))
+        self.assertEqual(api.foreground, 55)
+        self.assertTrue(any(call[2] for call in api.attach_calls))
+        self.assertTrue(any(not call[2] for call in api.attach_calls))
 
     def test_failed_swipe_releases_button_and_restores_user_state(self):
         backend = self._backend()
