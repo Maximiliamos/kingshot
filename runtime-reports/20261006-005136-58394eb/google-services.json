@@ -1,0 +1,41 @@
+{
+  "pass": true,
+  "play_services": true,
+  "play_store": true,
+  "framework": true,
+  "account_present": true,
+  "play_store_launch": true,
+  "play_store_foreground": true,
+  "play_store_crash_loop": false,
+  "play_store_anr": false,
+  "ui_frame": true,
+  "play_store_closed_after_evidence": true,
+  "auxiliary_windows_closed": {
+    "com.android.vending": true,
+    "com.android.settings": true
+  },
+  "screenshot": "C:\\warbot_git\\debug\\google-services.png",
+  "packages": {
+    "play_services": {
+      "package": "com.google.android.gms",
+      "installed": true,
+      "enabled": true,
+      "version_name": "26.36.35",
+      "version_code": "263635032"
+    },
+    "play_store": {
+      "package": "com.android.vending",
+      "installed": true,
+      "enabled": true,
+      "version_name": "53.4.34-31",
+      "version_code": "85343430"
+    },
+    "framework": {
+      "package": "com.google.android.gsf",
+      "installed": true,
+      "enabled": true,
+      "version_name": "13",
+      "version_code": "33"
+    }
+  }
+}
