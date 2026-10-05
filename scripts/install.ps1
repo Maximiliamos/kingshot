@@ -48,6 +48,7 @@ if (Test-Path "$PSScriptRoot\..\docs") {
 foreach ($scriptName in @(
     "verify_mvp.ps1",
     "run_and_report.ps1",
+    "run_full_mvp_and_report.ps1",
     "upload_runtime_report.ps1",
     "audit_runtime_processes.ps1",
     "verify_release.ps1",
