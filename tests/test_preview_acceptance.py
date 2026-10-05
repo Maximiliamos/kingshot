@@ -10,7 +10,10 @@ class PreviewAcceptanceScriptTests(unittest.TestCase):
     def test_preview_gate_requires_production_fast_transport_by_default(self):
         self.assertIn("preview-smoke", SOURCE)
         self.assertIn("--require-fast", SOURCE)
+        self.assertIn("--require-printwindow", SOURCE)
         self.assertIn("wsa-window or proven scrcpy H.264", SOURCE)
+        self.assertIn("preview-production.json", SOURCE)
+        self.assertIn("preview-production.png", SOURCE)
         self.assertIn('"15"', SOURCE)
         self.assertIn("PREVIEW HOST GATE PASS", SOURCE)
         self.assertIn("PREVIEW HOST GATE FAIL", SOURCE)
