@@ -1400,6 +1400,42 @@ def match_newbie_offer_close(phone):
     return close if coverage >= 0.18 else None
 
 
+def match_offline_confirm(phone):
+    """Match the explicit offline-income confirmation button on scaled WSA UI.
+
+    WSA can stretch this modal independently on each axis.  The generic
+    template matcher intentionally uses uniform scaling, so keep the
+    anisotropic search local to this known button and require its documented
+    lower-centre position before allowing an action.
+    """
+    image = tpl("offline_confirm.png")
+    if image is None:
+        return None
+    height, width = phone.shape[:2]
+    best = match(phone, image, 0.90)
+    if not best:
+        for scale_x in (0.65, 0.70, 0.75, 0.80, 0.85):
+            for scale_y in (0.90, 1.00, 1.10, 1.20):
+                resized = cv2.resize(
+                    image, None, fx=scale_x, fy=scale_y,
+                    interpolation=cv2.INTER_AREA if scale_x < 1 else cv2.INTER_CUBIC,
+                )
+                hit = match(phone, resized, 0.80, allow_scale=False)
+                if hit and (best is None or hit["score"] > best["score"]):
+                    best = hit
+    if not best:
+        return None
+    x, y = best["loc"]
+    center_x = x + best["w"] / 2
+    center_y = y + best["h"] / 2
+    if not (
+        width * 0.25 <= center_x <= width * 0.75
+        and height * 0.65 <= center_y <= height * 0.90
+    ):
+        return None
+    return best
+
+
 def handle_overlay(phone):
     hit = match(phone, tpl("newbie_offer_context.png"), 0.86)
     close = match_newbie_offer_close(phone)
@@ -1416,7 +1452,7 @@ def handle_overlay(phone):
         tap_match(phone, close)
         return True
 
-    hit = match(phone, tpl("offline_confirm.png"), 0.90)
+    hit = match_offline_confirm(phone)
     if hit:
         debug(phone, hit, "offline_confirm")
         log(f"Найден офлайн-доход {hit['score']:.3f}")

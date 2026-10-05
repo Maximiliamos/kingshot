@@ -8,6 +8,26 @@ import bot
 
 
 class TutorialVisionTests(unittest.TestCase):
+    def test_offline_confirm_accepts_wsa_anisotropic_scaling_in_safe_zone(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("offline_confirm.png")
+        stretched = cv2.resize(template, None, fx=0.75, fy=1.10)
+        height, width = stretched.shape[:2]
+        x, y = (frame.shape[1] - width) // 2, 742
+        frame[y:y + height, x:x + width] = stretched
+        hit = bot.match_offline_confirm(frame)
+        self.assertIsNotNone(hit)
+        self.assertGreaterEqual(hit["score"], 0.80)
+
+    def test_offline_confirm_rejects_same_button_outside_modal_action_zone(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("offline_confirm.png")
+        stretched = cv2.resize(template, None, fx=0.75, fy=1.10)
+        height, width = stretched.shape[:2]
+        x, y = (frame.shape[1] - width) // 2, 120
+        frame[y:y + height, x:x + width] = stretched
+        self.assertIsNone(bot.match_offline_confirm(frame))
+
     def test_current_loading_splash_is_detected_without_clicking(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         cv2.rectangle(frame, (135, 190), (260, 250), (0, 145, 255), -1)
