@@ -17,6 +17,11 @@ function Copy-IfExists {
     }
 }
 
+$currentBranch = (& git branch --show-current | Out-String).Trim()
+if ($currentBranch -ne $Branch) {
+    throw "Refusing full MVP acceptance on branch '$currentBranch'; expected '$Branch'."
+}
+
 if (-not $SkipPull) {
     $dirty = (& git status --porcelain)
     if ($dirty) {
