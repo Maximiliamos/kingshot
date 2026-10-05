@@ -21,12 +21,8 @@ if (-not $PythonExe -or -not (Test-Path -LiteralPath $PythonExe -PathType Leaf))
     throw "TUGARIN BOTS Python venv not found."
 }
 
-$provision = Join-Path $Root "scripts\provision_scrcpy_server.ps1"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $provision
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 $env:PYTHONIOENCODING = "utf-8"
-$evidence = Join-Path $Root "debug\recovery-acceptance.json"
+$evidence = Join-Path $Root "debug\recovery-smoke.json"
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $evidence) | Out-Null
 Remove-Item -LiteralPath $evidence -Force -ErrorAction SilentlyContinue
 
