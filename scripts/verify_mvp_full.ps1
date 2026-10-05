@@ -24,7 +24,7 @@ $currentName = [string]$currentIdentity.Name
 # Do not keep a Cyrillic account name as executable source text. The SID is the
 # release identity source of truth; resolve its Unicode NTAccount at runtime.
 try {
-    $expectedSidObject = New-Object Security.Principal.SecurityIdentifier($ExpectedSid)
+    $expectedSidObject = New-Object Security.Principal.SecurityIdentifier -ArgumentList $ExpectedSid
     $targetAccount = [string]$expectedSidObject.Translate(
         [Security.Principal.NTAccount]
     ).Value
