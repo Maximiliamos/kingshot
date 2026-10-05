@@ -38,11 +38,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--serial", default=None)
     parser.add_argument("--adb", default=None)
     parser.add_argument("--output", default="warbot-frame.png")
+    parser.add_argument("--report", default="")
     parser.add_argument("--apks-dir", default=None)
     parser.add_argument("--game-stability-seconds", type=int, default=45)
     parser.add_argument("--preview-seconds", type=float, default=10.0)
     parser.add_argument("--require-h264", action="store_true")
     parser.add_argument("--require-fast", action="store_true")
+    parser.add_argument("--require-printwindow", action="store_true")
     parser.add_argument("--min-preview-fps", type=float, default=15.0)
     parser.add_argument("--with-adb-reconnect", action="store_true")
     parser.add_argument("--min-characters", type=int, default=2)
@@ -177,6 +179,14 @@ def probe_h264_transport(backend) -> dict:
     )
     report["report_path"] = str(report_path.resolve())
     return report
+
+
+def create_production_capture(backend):
+    """Return the exact production capture used by WSA automation."""
+    if isinstance(backend, WsaBackend):
+        import bot
+        return bot.WsaGameWindowCapture()
+    return create_preview_capture(backend)
 
 
 GOOGLE_PACKAGES = {
@@ -497,7 +507,7 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
         backend.launch_app()
         backend.wait_package_running(timeout=90)
 
-    capture = create_preview_capture(backend)
+    capture = create_production_capture(backend)
     result = {
         "pass": False,
         "baseline_frame": False,
@@ -522,7 +532,7 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
             f"Recovery did not restart stopped Kingshot: {decision.action} {decision.detail}"
         )
 
-    capture = create_preview_capture(backend)
+    capture = create_production_capture(backend)
     try:
         frame, _, _ = capture.grab()
         result["frame_after_restart"] = bool(
@@ -559,7 +569,7 @@ def run_recovery_smoke(backend, *, with_adb_reconnect: bool = False) -> dict:
         if not ready:
             raise BackendError("ADB did not recover within 30 seconds")
 
-        capture = create_preview_capture(backend)
+        capture = create_production_capture(backend)
         try:
             frame, _, _ = capture.grab()
             result["frame_after_adb_reconnect"] = bool(
@@ -776,14 +786,16 @@ def main(argv=None) -> int:
     if args.action == "preview-smoke":
         backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
         capture = None
-        if isinstance(backend, WsaBackend):
+        if isinstance(backend, WsaBackend) and args.require_fast:
+            capture = create_production_capture(backend)
+        elif isinstance(backend, WsaBackend):
             try:
-                import bot
-                capture = bot.WsaGameWindowCapture()
+                capture = create_production_capture(backend)
             except Exception:
                 capture = None
         if capture is None:
             capture = create_preview_capture(backend)
+
         duration = max(2.0, float(args.preview_seconds))
         started = time.monotonic()
         deadline = started + duration
@@ -791,6 +803,9 @@ def main(argv=None) -> int:
         latencies = []
         transports = []
         last_shape = None
+        last_frame = None
+        last_title = ""
+        last_rect = None
         black_frames = 0
         frozen_frames = 0
         capture_errors = 0
@@ -802,13 +817,17 @@ def main(argv=None) -> int:
             while time.monotonic() < deadline:
                 before = time.monotonic()
                 try:
-                    frame, _, _ = capture.grab()
+                    frame, title, rect = capture.grab()
                 except Exception:
                     capture_errors += 1
-                    if frames == 0 and isinstance(backend, WsaBackend):
+                    if (
+                        frames == 0
+                        and isinstance(backend, WsaBackend)
+                        and not args.require_fast
+                    ):
                         capture.close()
                         capture = create_preview_capture(backend)
-                        frame, _, _ = capture.grab()
+                        frame, title, rect = capture.grab()
                     else:
                         raise
                 elapsed_ms = (time.monotonic() - before) * 1000.0
@@ -820,6 +839,9 @@ def main(argv=None) -> int:
                 if previous_frame is not None and frame.shape == previous_frame.shape and np.array_equal(frame, previous_frame):
                     frozen_frames += 1
                 previous_frame = frame.copy()
+                last_frame = frame.copy()
+                last_title = str(title)
+                last_rect = dict(rect or {})
                 latencies.append(elapsed_ms)
                 transport = str(getattr(capture, "transport_name", "unknown"))
                 if not transports or transports[-1] != transport:
@@ -838,15 +860,16 @@ def main(argv=None) -> int:
         p95_latency = None
         avg_latency = None
         if ordered:
-            p95_index = min(
-                len(ordered) - 1,
-                max(0, int(round((len(ordered) - 1) * 0.95))),
-            )
+            p95_index = min(len(ordered)-1, max(0, int(round((len(ordered)-1)*0.95))))
             p95_latency = round(ordered[p95_index], 3)
             avg_latency = round(sum(latencies) / len(latencies), 3)
 
         active_transport = transports[-1] if transports else "unknown"
-        fast_transport = active_transport in {"wsa-window", "scrcpy-h264", "h264-screenrecord"}
+        capture_method = str(getattr(capture, "capture_method", "") or "")
+        printwindow_transport = (
+            active_transport == "wsa-window" and capture_method == "printwindow"
+        )
+        fast_transport = active_transport in {"wsa-window", "scrcpy-h264"}
         fps = frames / elapsed
         window_changed = frozen_frames < max(3, frames - 1)
         stale_stream = bool(source_changed and not window_changed)
@@ -855,8 +878,11 @@ def main(argv=None) -> int:
         if args.require_fast:
             passed = bool(
                 passed and fast_transport and fps >= float(args.min_preview_fps)
-                and visual_ok and capture_errors <= 1
+                and visual_ok and capture_errors == 0
             )
+        if args.require_printwindow:
+            passed = bool(passed and printwindow_transport)
+
         result = {
             "pass": passed,
             "seconds": round(elapsed, 3),
@@ -865,8 +891,13 @@ def main(argv=None) -> int:
             "avg_latency_ms": avg_latency,
             "p95_latency_ms": p95_latency,
             "active_transport": active_transport,
+            "capture_method": capture_method,
+            "printwindow_transport": printwindow_transport,
+            "hwnd_targeted_capture": printwindow_transport,
             "transport_history": transports,
             "frame_shape": last_shape,
+            "window_title": last_title,
+            "window_rect": last_rect,
             "h264": active_transport in {"scrcpy-h264", "h264-screenrecord"},
             "fast_transport": fast_transport,
             "black_frames": black_frames,
@@ -875,7 +906,23 @@ def main(argv=None) -> int:
             "source_changed": source_changed,
             "window_changed": window_changed,
             "stale_stream": stale_stream,
+            "screenshot": "",
+            "report_path": "",
         }
+
+        if args.report:
+            screenshot = Path(args.output)
+            report_path = Path(args.report)
+            screenshot.parent.mkdir(parents=True, exist_ok=True)
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            if last_frame is not None and cv2.imwrite(str(screenshot), last_frame):
+                result["screenshot"] = str(screenshot.resolve())
+            result["report_path"] = str(report_path.resolve())
+            report_path.write_text(
+                json.dumps(result, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
         print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
         if frames < 3:
             raise BackendError(f"Preview smoke produced too few frames: {frames}")
@@ -884,11 +931,17 @@ def main(argv=None) -> int:
                 "H.264 preview was required but preview fell back to "
                 f"{active_transport}. See JSON metrics above."
             )
+        if args.require_printwindow and not printwindow_transport:
+            raise BackendError(
+                "Release preview requires the exact WSA PrintWindow transport; "
+                f"got transport={active_transport!r} method={capture_method!r}."
+            )
         if args.require_fast and not result["pass"]:
             raise BackendError(
                 "Production preview gate failed: transport="
-                f"{active_transport} fps={result['fps']} black={black_frames} "
-                f"frozen={frozen_frames} stale={stale_stream} errors={capture_errors}."
+                f"{active_transport} method={capture_method} fps={result['fps']} "
+                f"black={black_frames} frozen={frozen_frames} "
+                f"stale={stale_stream} errors={capture_errors}."
             )
         return 0
 
