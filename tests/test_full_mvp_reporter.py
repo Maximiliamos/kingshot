@@ -10,6 +10,11 @@ INSTALL = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8-sig")
 
 
 class FullMvpReporterTests(unittest.TestCase):
+    def test_runner_refuses_wrong_local_branch_before_pull(self):
+        self.assertIn("git branch --show-current", SOURCE)
+        self.assertIn("Refusing full MVP acceptance on branch", SOURCE)
+        self.assertIn("$currentBranch -ne $Branch", SOURCE)
+
     def test_runner_pulls_exact_published_branch_and_reexecs_after_update(self):
         self.assertIn("git pull --ff-only origin $Branch", SOURCE)
         self.assertIn('symbolic-full-name "@{u}"', SOURCE)
