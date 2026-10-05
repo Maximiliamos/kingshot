@@ -1092,10 +1092,20 @@ class WarBotWindow(QMainWindow):
         return phone, viewport
 
     @staticmethod
-    def _shared_phone_viewport(phone, android_viewport=None):
+    def _shared_phone_viewport(phone, frame_metadata=None):
         phone_height, phone_width = phone.shape[:2]
-        if android_viewport:
-            return dict(android_viewport)
+        viewport = (
+            dict((frame_metadata or {}).get("viewport") or {})
+            if isinstance(frame_metadata, dict)
+            else {}
+        )
+        if all(int(viewport.get(key, 0) or 0) > 0 for key in ("width", "height")):
+            return {
+                "left": int(viewport.get("left", 0) or 0),
+                "top": int(viewport.get("top", 0) or 0),
+                "width": int(viewport["width"]),
+                "height": int(viewport["height"]),
+            }
         return {
             "left": 0,
             "top": 0,
@@ -1121,10 +1131,11 @@ class WarBotWindow(QMainWindow):
                     phone = cv2.imread(live_path)
                     if phone is not None:
                         self.last_bot_frame_mtime = modified
-                        viewport = self._shared_phone_viewport(
-                            phone,
-                            self.android_content_rect,
+                        frame_meta = read_json(
+                            getattr(bot, "LIVE_FRAME_META_FILE", ""),
+                            {},
                         )
+                        viewport = self._shared_phone_viewport(phone, frame_meta)
                         self._render_capture(
                             phone,
                             f"bot-shared:{serial}",
