@@ -98,16 +98,26 @@ class TugarinBotsGuiSourceTests(unittest.TestCase):
             {"left": 83, "top": 135, "width": 480, "height": 720},
         )
 
-    def test_bot_shared_portrait_uses_measured_android_viewport(self):
+    def test_bot_shared_portrait_uses_published_wsa_client_viewport(self):
         phone = np.zeros((1080, 608, 3), dtype=np.uint8)
         viewport = WarBotWindow._shared_phone_viewport(
             phone,
-            {"left": 83, "top": 0, "width": 608, "height": 1080},
+            {
+                "coordinate_space": "wsa-client",
+                "viewport": {
+                    "left": 83, "top": 0, "width": 608, "height": 1080,
+                },
+            },
         )
         self.assertEqual(
             viewport,
             {"left": 83, "top": 0, "width": 608, "height": 1080},
         )
+
+    def test_bot_shared_preview_reads_atomic_geometry_metadata(self):
+        self.assertIn("LIVE_FRAME_META_FILE", self.bot)
+        self.assertIn('"coordinate_space": "wsa-client"', self.bot)
+        self.assertIn('getattr(bot, "LIVE_FRAME_META_FILE", "")', self.gui)
 
     def test_wsa_prefers_exact_visible_game_window_capture(self):
         bot_source = (ROOT / "bot.py").read_text(encoding="utf-8-sig")
