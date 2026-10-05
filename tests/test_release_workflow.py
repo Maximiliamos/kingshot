@@ -10,11 +10,14 @@ INSTALL = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8-sig")
 
 
 class ReleaseWorkflowTests(unittest.TestCase):
-    def test_process_audit_records_adb_but_only_fails_stale_console_python(self):
+    def test_process_audit_fails_stale_project_processes_and_setup_tasks(self):
         self.assertIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb", "ffmpeg"', AUDIT)
         self.assertIn('"python", "pythonw", "cmd", "conhost", "ffmpeg"', AUDIT)
-        self.assertNotIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost"\n        )', AUDIT)
+        self.assertIn('"powershell", "pwsh"', AUDIT)
+        self.assertIn("$_.pid -ne $PID", AUDIT)
         self.assertIn("stale_processes", AUDIT)
+        self.assertIn("stale_scheduled_tasks", AUDIT)
+        self.assertIn("GApps Migration|WSA.*Continue|Setup.*Continue|Migration", AUDIT)
         self.assertIn("tugarin-scrcpy-server", AUDIT)
         self.assertIn("command_line", AUDIT)
         self.assertIn("Invoke-CimMethod -InputObject $cim -MethodName GetOwner", AUDIT)
