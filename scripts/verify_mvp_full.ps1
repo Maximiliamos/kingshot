@@ -87,7 +87,8 @@ function Run-Gate {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][string]$Script,
-        [string[]]$Arguments = @()
+        [string[]]$Arguments = @(),
+        [string[]]$EvidencePaths = @()
     )
     Write-Host ""
     Write-Host ("=" * 72)
@@ -103,6 +104,7 @@ function Run-Gate {
         exit_code = $code
         started_at_utc = $gateStarted.ToString("o")
         finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        evidence = @($EvidencePaths)
     })
     if ($code -ne 0) {
         # Every failure path still records whether a GUI/bot/video process was
@@ -161,29 +163,87 @@ $GateResults.Add([ordered]@{
     started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
     finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
 })
+
+$upstream = (& git -C $Root rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>$null | Out-String).Trim()
+$upstreamHead = if ($upstream) {
+    (& git -C $Root rev-parse $upstream 2>$null | Out-String).Trim()
+} else { "" }
+if (-not $upstream -or $upstreamHead -ne $head) {
+    $GateResults.Add([ordered]@{
+        name = "Published branch head"
+        script = "git rev-parse @{u}"
+        pass = $false
+        exit_code = 92
+        started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        detail = "local=$head upstream=$upstream upstream_head=$upstreamHead"
+    })
+    Save-AcceptanceEvidence -Overall "fail" -FailedGate "Published branch head" -ExitCode 92
+    Write-Host "MVP 1.0 HOST ACCEPTANCE FAIL: local HEAD is not the published upstream HEAD."
+    Write-Host "Local: $head"
+    Write-Host "Upstream: $upstreamHead"
+    exit 92
+}
+$GateResults.Add([ordered]@{
+    name = "Published branch head"
+    script = "git rev-parse @{u}"
+    pass = $true
+    exit_code = 0
+    started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+    finished_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+    detail = "$upstream@$upstreamHead"
+})
 Save-AcceptanceEvidence
 Write-Host ""
 Write-Host "IMPORTANT: game-flow and soak gates intentionally clear Kingshot app data."
 Write-Host "The PC-side Tugarin nickname counter is preserved."
 
 if (-not $SkipInfrastructure) {
-    Run-Gate -Name "Infrastructure / WSA / Kingshot / process audit" -Script (Join-Path $Root "scripts\verify_release.ps1")
+    Run-Gate -Name "Infrastructure / WSA / Kingshot / process audit" `
+        -Script (Join-Path $Root "scripts\verify_release.ps1") `
+        -EvidencePaths @("C:\warbot_wsa\reports\LATEST-LOCAL.json")
 }
 
-Run-Gate -Name "Production fast preview (WSA window or H.264)" -Script (Join-Path $Root "scripts\verify_preview.ps1")
-Run-Gate -Name "Consoleless GUI render" -Script (Join-Path $Root "scripts\verify_gui.ps1")
-Run-Gate -Name "Operator Unicode/UI/audio channel" -Script (Join-Path $Root "scripts\verify_operator_io.ps1")
-Run-Gate -Name "Bounded game + ADB recovery" -Script (Join-Path $Root "scripts\verify_recovery.ps1")
-Run-Gate -Name "Exact State #3 -> tutorial -> Tugarin<N>" -Script (Join-Path $Root "scripts\verify_game_flow.ps1") -Arguments @("-TimeoutMinutes", [string]$FlowTimeoutMinutes)
-Run-Gate -Name "Multi-cycle soak" -Script (Join-Path $Root "scripts\verify_soak.ps1") -Arguments @(
-    "-TimeoutMinutes", [string]$SoakTimeoutMinutes,
-    "-MinCharacters", [string][Math]::Max(2, $SoakCharacters)
-)
+Run-Gate -Name "Google Services / Play Store / account" `
+    -Script (Join-Path $Root "scripts\verify_google_services.ps1") `
+    -EvidencePaths @(
+        (Join-Path $Root "debug\google-services.json"),
+        (Join-Path $Root "debug\google-services.png")
+    )
+Run-Gate -Name "Production PrintWindow preview" `
+    -Script (Join-Path $Root "scripts\verify_preview.ps1") `
+    -EvidencePaths @(
+        (Join-Path $Root "debug\preview-production.json"),
+        (Join-Path $Root "debug\preview-production.png")
+    )
+Run-Gate -Name "Consoleless GUI render" `
+    -Script (Join-Path $Root "scripts\verify_gui.ps1") `
+    -EvidencePaths @((Join-Path $Root "debug\gui-host-smoke.json"))
+Run-Gate -Name "Operator Unicode/UI/audio channel" `
+    -Script (Join-Path $Root "scripts\verify_operator_io.ps1") `
+    -EvidencePaths @((Join-Path $Root "debug\operator-io-smoke.json"))
+Run-Gate -Name "Bounded game + ADB recovery" `
+    -Script (Join-Path $Root "scripts\verify_recovery.ps1") `
+    -EvidencePaths @((Join-Path $Root "debug\recovery-smoke.json"))
+Run-Gate -Name "Exact State #3 -> tutorial -> Tugarin<N>" `
+    -Script (Join-Path $Root "scripts\verify_game_flow.ps1") `
+    -Arguments @("-TimeoutMinutes", [string]$FlowTimeoutMinutes) `
+    -EvidencePaths @((Join-Path $Root "debug\mvp-game-flow-evidence.json"))
+Run-Gate -Name "Multi-cycle soak" `
+    -Script (Join-Path $Root "scripts\verify_soak.ps1") `
+    -Arguments @(
+        "-TimeoutMinutes", [string]$SoakTimeoutMinutes,
+        "-MinCharacters", [string][Math]::Max(2, $SoakCharacters)
+    ) `
+    -EvidencePaths @((Join-Path $Root "debug\mvp-soak-evidence.json"))
 
-Run-Gate -Name "Final production-user process audit" -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") -Arguments @(
-    "-TargetUser", $TargetUser,
-    "-Output", (Join-Path $Root "debug\mvp-final-process-audit.json")
-)
+Run-Gate -Name "Final production-user process audit" `
+    -Script (Join-Path $Root "scripts\audit_runtime_processes.ps1") `
+    -Arguments @(
+        "-TargetUser", $TargetUser,
+        "-Output", (Join-Path $Root "debug\mvp-final-process-audit.json")
+    ) `
+    -EvidencePaths @((Join-Path $Root "debug\mvp-final-process-audit.json"))
 
 Save-AcceptanceEvidence -Overall "pass" -ExitCode 0
 Write-Host ""
