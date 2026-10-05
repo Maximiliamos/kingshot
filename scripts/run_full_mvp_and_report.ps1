@@ -113,6 +113,16 @@ if ($verifyExit -eq 0 -and (Test-Path -LiteralPath $fullEvidencePath)) {
     catch {}
 }
 
+$evidenceInventory = @()
+Get-ChildItem -LiteralPath $stage -File -ErrorAction SilentlyContinue | ForEach-Object {
+    $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $evidenceInventory += [ordered]@{
+        name = $_.Name
+        size_bytes = [int64]$_.Length
+        sha256 = $hash
+    }
+}
+
 $finished = Get-Date
 $manifest = [ordered]@{
     schema = 1
@@ -129,6 +139,7 @@ $manifest = [ordered]@{
     flow_timeout_minutes = $FlowTimeoutMinutes
     soak_timeout_minutes = $SoakTimeoutMinutes
     soak_characters = [Math]::Max(2, $SoakCharacters)
+    evidence_files = @($evidenceInventory)
 }
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "manifest.json")
 
