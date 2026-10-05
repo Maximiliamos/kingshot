@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "written_at": "2026-10-05T23:34:06.830238+00:00",
+  "status": "stopped",
+  "detail": "Экран не распознан 75 сек.; остановка без слепых нажатий.",
+  "pid": 13784,
+  "backend": "wsa",
+  "serial": "127.0.0.1:58526",
+  "phase": "tutorial_new_character",
+  "step": "tutorial_wait_hand_result",
+  "last_frame_age_seconds": 24.739,
+  "last_action_age_seconds": 213.435
+}
