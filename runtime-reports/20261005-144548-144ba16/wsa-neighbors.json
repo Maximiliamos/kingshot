@@ -1,0 +1,912 @@
+﻿[
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  9,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  9,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  9,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 4",
+        "InterfaceIndex":  9,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.21.175.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.21.174.65",
+        "LinkLayerAddress":  "00-15-5D-CA-6A-EB",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "vEthernet (WSLCore)",
+        "InterfaceIndex":  57,
+        "IPAddress":  "172.21.173.126",
+        "LinkLayerAddress":  "00-15-5D-CA-67-8A",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 3",
+        "InterfaceIndex":  6,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  13,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  13,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  13,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  13,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet 2",
+        "InterfaceIndex":  13,
+        "IPAddress":  "10.114.64.1",
+        "LinkLayerAddress":  "00-00-00-00-00-00",
+        "State":  0
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  12,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  12,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  12,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Сетевое подключение Bluetooth",
+        "InterfaceIndex":  12,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 2",
+        "InterfaceIndex":  5,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 2",
+        "InterfaceIndex":  5,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  15,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  15,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  15,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети* 1",
+        "InterfaceIndex":  15,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "216.239.35.12",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "216.239.35.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "213.180.204.179",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "213.180.193.234",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "209.250.254.15",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "209.85.233.132",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "208.115.231.178",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.200.233",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.200.113",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.227",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.167",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.107",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.77",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.67",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.57",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.47",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.37",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.27",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "198.41.192.7",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "193.233.230.109",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "193.233.221.84",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "192.228.79.201",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "188.120.228.119",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "185.199.108.133",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "178.250.157.120",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "178.209.126.140",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "173.194.221.188",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "173.194.73.138",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.119.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.118.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.117.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.116.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.115.4",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.114.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.113.4",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.217.112.4",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.64.155.209",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.19.0.3",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "172.19.0.2",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "155.212.204.90",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "150.171.30.11",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "150.171.29.11",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "142.251.156.1",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "142.251.155.1",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "142.251.153.119",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "142.251.150.119",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "142.250.150.113",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "140.82.121.6",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "140.82.121.3",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "108.177.14.188",
+        "LinkLayerAddress":  "",
+        "State":  2
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "104.21.82.122",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "104.18.32.47",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "103.47.57.94",
+        "LinkLayerAddress":  "",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "77.88.21.119",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "74.125.131.188",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "48.200.63.27",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "34.120.0.95",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "34.104.35.123",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "23.73.4.222",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "23.73.4.200",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "23.47.124.140",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "23.11.41.157",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "20.184.175.17",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "20.85.130.105",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "20.85.108.33",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "20.82.9.214",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "8.8.8.8",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "4.207.247.137",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "1.1.1.1",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "1.0.0.1",
+        "LinkLayerAddress":  "",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "happ-xray",
+        "InterfaceIndex":  65,
+        "IPAddress":  "0.0.0.0",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "255.255.255.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "239.255.102.18",
+        "LinkLayerAddress":  "01-00-5E-7F-66-12",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "224.0.0.251",
+        "LinkLayerAddress":  "01-00-5E-00-00-FB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.255",
+        "LinkLayerAddress":  "FF-FF-FF-FF-FF-FF",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.146",
+        "LinkLayerAddress":  "9E-A6-3C-E3-68-49",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.126",
+        "LinkLayerAddress":  "3C-0B-4F-10-FE-E5",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.107",
+        "LinkLayerAddress":  "AC-BA-C0-F1-9B-02",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.38",
+        "LinkLayerAddress":  "CE-7B-5C-4C-2F-BD",
+        "State":  4
+    },
+    {
+        "InterfaceAlias":  "Ethernet",
+        "InterfaceIndex":  27,
+        "IPAddress":  "192.168.1.1",
+        "LinkLayerAddress":  "50-FF-20-6B-ED-B7",
+        "State":  5
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Беспроводная сеть",
+        "InterfaceIndex":  23,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "01-00-5E-7F-FF-FA",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "01-00-5E-00-00-FC",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "01-00-5E-00-00-BB",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Подключение по локальной сети",
+        "InterfaceIndex":  22,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "01-00-5E-00-00-16",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "239.255.255.250",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "224.0.0.252",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "224.0.0.187",
+        "LinkLayerAddress":  "",
+        "State":  6
+    },
+    {
+        "InterfaceAlias":  "Loopback Pseudo-Interface 1",
+        "InterfaceIndex":  1,
+        "IPAddress":  "224.0.0.22",
+        "LinkLayerAddress":  "",
+        "State":  6
+    }
+]

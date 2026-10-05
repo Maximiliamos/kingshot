@@ -1,0 +1,49 @@
+﻿{
+    "timestamp":  "2026-10-05T14:43:33.2472319+03:00",
+    "processes":  [
+                      {
+                          "Name":  "WSACrashUploader.exe",
+                          "ProcessId":  17972,
+                          "ParentProcessId":  16004,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WSACrashUploader\\WSACrashUploader.exe",
+                          "CommandLine":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                      },
+                      {
+                          "Name":  "WsaClient.exe",
+                          "ProcessId":  12196,
+                          "ParentProcessId":  16004,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaClient\\WsaClient.exe\" /partiallyrunning"
+                      },
+                      {
+                          "Name":  "WsaService.exe",
+                          "ProcessId":  20008,
+                          "ParentProcessId":  1016,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "vmmem",
+                          "ProcessId":  1036,
+                          "ParentProcessId":  12780,
+                          "ExecutablePath":  null,
+                          "CommandLine":  null
+                      },
+                      {
+                          "Name":  "WsaSettings.exe",
+                          "ProcessId":  7928,
+                          "ParentProcessId":  1144,
+                          "ExecutablePath":  "C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe",
+                          "CommandLine":  "\"C:\\warbot_wsa\\WSA_LTS8_Windows10_GApps\\WSA_2407.40000.4.0_x64\\WsaSettings.exe\" -ServerName:SettingsApp.AppXe5xfar8kfrnsjyxycsqtgfxc6xgc0zed.mca"
+                      }
+                  ],
+    "listeners":  [
+                      {
+                          "LocalAddress":  "::",
+                          "LocalPort":  58526,
+                          "OwningProcess":  12196,
+                          "State":  2
+                      }
+                  ],
+    "runtime_alive":  true
+}
