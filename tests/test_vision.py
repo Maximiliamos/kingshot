@@ -28,6 +28,18 @@ class TutorialVisionTests(unittest.TestCase):
         frame[y:y + height, x:x + width] = stretched
         self.assertIsNone(bot.match_offline_confirm(frame))
 
+    def test_resident_assignment_plus_requires_beige_panel_and_safe_position(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (35, 360), (386, 910), (190, 210, 225), -1)
+        cv2.rectangle(frame, (250, 760), (282, 814), (30, 190, 45), -1)
+        hit = bot.find_resident_assignment_plus(frame)
+        self.assertIsNotNone(hit)
+        self.assertGreaterEqual(hit["loc"][1], 760)
+
+        no_panel = np.zeros_like(frame)
+        cv2.rectangle(no_panel, (250, 760), (282, 814), (30, 190, 45), -1)
+        self.assertIsNone(bot.find_resident_assignment_plus(no_panel))
+
     def test_current_loading_splash_is_detected_without_clicking(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         cv2.rectangle(frame, (135, 190), (260, 250), (0, 145, 255), -1)

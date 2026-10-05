@@ -142,6 +142,9 @@ class ScrcpyCapture:
                 "Ожидается ровно одно видимое окно scrcpy; найдено: " + titles
             )
         self.hwnd, title = candidates[0]
+        if user32.IsIconic(self.hwnd):
+            user32.ShowWindow(self.hwnd, 9)  # SW_RESTORE
+            time.sleep(0.20)
         rect = wintypes.RECT()
         point = wintypes.POINT(0, 0)
         if not user32.GetClientRect(self.hwnd, ctypes.byref(rect)):
@@ -1235,6 +1238,34 @@ def find_tutorial_primary_button(phone):
     return max(candidates, key=lambda item: item["score"], default=None)
 
 
+def find_resident_assignment_plus(phone):
+    """Find the explicit green add-resident button on the quarry panel."""
+    height, width = phone.shape[:2]
+    lower = phone[round(height * 0.38):round(height * 0.96)]
+    hsv_lower = cv2.cvtColor(lower, cv2.COLOR_BGR2HSV)
+    beige = cv2.inRange(hsv_lower, (8, 8, 90), (35, 150, 255))
+    if float(np.count_nonzero(beige)) / max(1.0, float(beige.size)) < 0.48:
+        return None
+
+    hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
+    green = cv2.inRange(hsv, (35, 90, 70), (95, 255, 255))
+    contours, _ = cv2.findContours(green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    candidates = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        cx, cy = x + w / 2, y + h / 2
+        if not (
+            width * 0.54 <= cx <= width * 0.72
+            and height * 0.72 <= cy <= height * 0.90
+            and w >= width * 0.055
+            and h >= height * 0.035
+            and 0.45 <= w / max(1.0, float(h)) <= 1.25
+        ):
+            continue
+        candidates.append({"loc": (x, y), "w": w, "h": h, "score": float(cv2.contourArea(contour))})
+    return max(candidates, key=lambda item: item["score"], default=None)
+
+
 def is_construction_panel(phone):
     kitchen = match(phone, tpl("tutorial_kitchen_title.png"), 0.93)
     if kitchen:
@@ -1804,6 +1835,14 @@ def handle_tutorial(phone, state):
         state["tutorial_hand_locked"] = False
         save_state(state)
         log("Туториал: рука-указатель исчезла; следующий маркер снова может быть обработан.")
+
+    resident_plus = find_resident_assignment_plus(phone)
+    if resident_plus:
+        debug(phone, resident_plus, "tutorial_assign_resident_plus")
+        log("Туториал: подтверждена панель жителей каменоломни; назначаю рабочего кнопкой +.")
+        tap_match(phone, resident_plus)
+        set_step(state, "tutorial_wait_hand_result")
+        return "acted"
 
     primary = find_tutorial_primary_button(phone)
     if primary and is_construction_panel(phone):
