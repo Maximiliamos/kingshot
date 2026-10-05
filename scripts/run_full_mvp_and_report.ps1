@@ -35,8 +35,18 @@ if (-not $SkipPull) {
     }
 
     $before = (& git rev-parse HEAD).Trim()
-    $pullOutput = (& git pull --ff-only origin $Branch 2>&1 | Out-String).Trim()
-    $pullCode = [int]$LASTEXITCODE
+    # Windows PowerShell 5.1 can promote native stderr to NativeCommandError
+    # when ErrorActionPreference=Stop. git pull is optional once ExpectedCommit
+    # already pins the exact release SHA, so capture its exit code explicitly.
+    $savedErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $pullOutput = (& git pull --ff-only origin $Branch 2>&1 | Out-String).Trim()
+        $pullCode = [int]$LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $savedErrorAction
+    }
     if ($pullCode -ne 0) {
         if ($ExpectedCommit -and $before -eq $ExpectedCommit) {
             Write-Host "WARNING: git pull failed, but local HEAD exactly matches pinned release SHA."
