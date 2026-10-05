@@ -46,6 +46,13 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("exit 91", SOURCE)
         self.assertIn("S-1-5-21-1641294696-4270169483-3689275233-1007", SOURCE)
 
+    def test_preflight_is_windows_powershell_51_safe_for_unicode_account_name(self):
+        self.assertIn('[string]$TargetUser = ""', SOURCE)
+        self.assertIn("SecurityIdentifier($ExpectedSid)", SOURCE)
+        self.assertIn("Translate(", SOURCE)
+        self.assertIn("$resolvedTargetUser", SOURCE)
+        self.assertNotIn('TargetUser = "Программист1"', SOURCE)
+
     def test_preflight_only_exits_before_any_gate(self):
         preflight = SOURCE.index("if ($PreflightOnly)")
         first_gate = SOURCE.index('Run-Gate -Name "Infrastructure')
