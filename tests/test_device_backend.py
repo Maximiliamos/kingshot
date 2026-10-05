@@ -418,5 +418,68 @@ Current Networks:
         self.assertEqual(rect["height"], 30)
 
 
+    def test_wsa_swipe_and_hold_prefer_host_window_input(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post, \
+                patch.object(db.AdbDeviceBackend, "swipe") as adb_swipe:
+            backend.swipe(10, 20, 30, 40, 200)
+            self.assertTrue(post.called)
+            adb_swipe.assert_not_called()
+
+        with patch.object(backend, "_post_window_pointer", return_value=True) as post, \
+                patch.object(db.AdbDeviceBackend, "swipe") as adb_swipe:
+            backend.hold(50, 60, 800)
+            self.assertTrue(post.called)
+            adb_swipe.assert_not_called()
+
+    def test_wsa_host_pointer_restores_cursor_and_foreground(self):
+        backend = db.WsaBackend(
+            serial="127.0.0.1:58526",
+            adb_path=r"C:\\fake\\adb.exe",
+        )
+        calls = []
+
+        class FakeUser32:
+            def GetForegroundWindow(self):
+                return 999
+
+            def GetCursorPos(self, pointer):
+                point = db.ctypes.cast(pointer, db.ctypes.POINTER(db.wintypes.POINT)).contents
+                point.x = 7
+                point.y = 8
+                return 1
+
+            def SetForegroundWindow(self, hwnd):
+                calls.append(("foreground", int(hwnd)))
+                return 1
+
+            def SetCursorPos(self, x, y):
+                calls.append(("cursor", int(x), int(y)))
+                return 1
+
+            def mouse_event(self, flag, *_):
+                calls.append(("mouse", int(flag)))
+
+        with patch.object(
+            backend, "_game_window", return_value=(123, 100, 200, 500, 700)
+        ):
+            ok = backend._post_window_pointer(
+                [(150, 250)],
+                duration_ms=50,
+                user32_api=FakeUser32(),
+                sleep_fn=lambda _: None,
+            )
+
+        self.assertTrue(ok)
+        self.assertEqual(calls[0], ("foreground", 123))
+        self.assertIn(("mouse", 0x0002), calls)
+        self.assertIn(("mouse", 0x0004), calls)
+        self.assertEqual(calls[-2], ("cursor", 7, 8))
+        self.assertEqual(calls[-1], ("foreground", 999))
+
+
 if __name__ == "__main__":
     unittest.main()
