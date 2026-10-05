@@ -1,0 +1,18 @@
+{
+  "pass": false,
+  "has_rendered_frame": true,
+  "fast_transport": false,
+  "printwindow_transport": true,
+  "stream_metrics": {
+    "transport": "wsa-window",
+    "fps": 9.609514106805433,
+    "latency_ms": 35.04610000527464,
+    "frames": 114,
+    "errors": 0
+  },
+  "stream": "wsa-window · 9.6 FPS · 35 ms",
+  "device_status": "● Война за трон · 501×771",
+  "frame_stream_running": true,
+  "backend": "wsa",
+  "serial": "127.0.0.1:58526"
+}
