@@ -13,8 +13,9 @@ class RecoveryAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("RECOVERY HOST GATE PASS", SOURCE)
         self.assertIn("RECOVERY HOST GATE FAIL", SOURCE)
 
-    def test_recovery_gate_provisions_scrcpy_transport(self):
-        self.assertIn("provision_scrcpy_server.ps1", SOURCE)
+    def test_recovery_gate_has_no_scrcpy_runtime_dependency(self):
+        self.assertNotIn("provision_scrcpy_server.ps1", SOURCE)
+        self.assertIn("recovery-smoke.json", SOURCE)
 
 
 if __name__ == "__main__":
