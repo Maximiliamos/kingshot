@@ -3,6 +3,7 @@ param(
     [int]$FlowTimeoutMinutes = 45,
     [int]$SoakTimeoutMinutes = 90,
     [int]$SoakCharacters = 2,
+    [string]$ExpectedCommit = "",
     [switch]$SkipPull
 )
 
@@ -22,6 +23,11 @@ if ($currentBranch -ne $Branch) {
     throw "Refusing full MVP acceptance on branch '$currentBranch'; expected '$Branch'."
 }
 
+$localHead = (& git rev-parse HEAD).Trim()
+if ($ExpectedCommit -and $localHead -ne $ExpectedCommit) {
+    throw "Refusing full MVP acceptance on unexpected SHA. local=$localHead expected=$ExpectedCommit"
+}
+
 if (-not $SkipPull) {
     $dirty = (& git status --porcelain)
     if ($dirty) {
@@ -29,9 +35,23 @@ if (-not $SkipPull) {
     }
 
     $before = (& git rev-parse HEAD).Trim()
-    & git pull --ff-only origin $Branch
-    if ($LASTEXITCODE -ne 0) { throw "git pull --ff-only failed." }
+    $pullOutput = (& git pull --ff-only origin $Branch 2>&1 | Out-String).Trim()
+    $pullCode = [int]$LASTEXITCODE
+    if ($pullCode -ne 0) {
+        if ($ExpectedCommit -and $before -eq $ExpectedCommit) {
+            Write-Host "WARNING: git pull failed, but local HEAD exactly matches pinned release SHA."
+            Write-Host "Continuing host acceptance at pinned SHA: $ExpectedCommit"
+            if ($pullOutput) { Write-Host $pullOutput }
+        }
+        else {
+            throw "git pull --ff-only failed and local HEAD is not protected by -ExpectedCommit. $pullOutput"
+        }
+    }
     $after = (& git rev-parse HEAD).Trim()
+
+    if ($ExpectedCommit -and $after -ne $ExpectedCommit) {
+        throw "Published branch moved away from pinned release SHA. local=$after expected=$ExpectedCommit"
+    }
 
     if ($before -ne $after -and $env:TUGARIN_FULL_REPORT_REEXEC -ne "1") {
         $env:TUGARIN_FULL_REPORT_REEXEC = "1"
@@ -42,6 +62,7 @@ if (-not $SkipPull) {
             "-FlowTimeoutMinutes", [string]$FlowTimeoutMinutes,
             "-SoakTimeoutMinutes", [string]$SoakTimeoutMinutes,
             "-SoakCharacters", [string][Math]::Max(2, $SoakCharacters),
+            "-ExpectedCommit", $ExpectedCommit,
             "-SkipPull"
         )
         & powershell.exe @args
@@ -50,12 +71,20 @@ if (-not $SkipPull) {
 }
 
 $commit = (& git rev-parse HEAD).Trim()
+if ($ExpectedCommit -and $commit -ne $ExpectedCommit) {
+    throw "Local HEAD changed during preflight. local=$commit expected=$ExpectedCommit"
+}
 $upstream = (& git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>$null | Out-String).Trim()
 $upstreamHead = if ($upstream) {
     (& git rev-parse $upstream 2>$null | Out-String).Trim()
 } else { "" }
 if (-not $upstream -or $upstreamHead -ne $commit) {
-    throw "Local HEAD must equal published upstream before host acceptance. local=$commit upstream=$upstreamHead"
+    if ($ExpectedCommit -and $commit -eq $ExpectedCommit) {
+        Write-Host "WARNING: upstream tracking ref is unavailable/stale, but exact pinned release SHA is verified locally."
+    }
+    else {
+        throw "Local HEAD must equal published upstream before host acceptance. local=$commit upstream=$upstreamHead"
+    }
 }
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -133,6 +162,7 @@ $manifest = [ordered]@{
     schema = 1
     kind = "mvp-full-host"
     commit = $commit
+    expected_commit = $ExpectedCommit
     source_branch = (& git branch --show-current).Trim()
     upstream = $upstream
     upstream_commit = $upstreamHead
