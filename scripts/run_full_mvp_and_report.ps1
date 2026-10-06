@@ -18,6 +18,50 @@ function Copy-IfExists {
     }
 }
 
+$RunEvidenceNames = @(
+    "mvp-full-acceptance.json",
+    "google-services.json",
+    "google-services.png",
+    "preview-production.json",
+    "preview-production.png",
+    "gui-host-smoke.json",
+    "operator-io-smoke.json",
+    "recovery-smoke.json",
+    "mvp-game-flow-evidence.json",
+    "mvp-soak-evidence.json",
+    "mvp-final-process-audit.json",
+    "mvp-failure-process-audit.json",
+    "runtime-heartbeat.json",
+    "android-data-free-space.json",
+    "tutorial-perception-failure.json"
+)
+
+function Clear-PreviousRunEvidence {
+    $debugRoot = Join-Path $Root "debug"
+    $perceptionPath = Join-Path $debugRoot "tutorial-perception-failure.json"
+
+    # The perception JSON can point at run-specific images with dynamic names.
+    # Remove those first so a failed later run cannot package old screenshots.
+    if (Test-Path -LiteralPath $perceptionPath -PathType Leaf) {
+        try {
+            $oldPerception = Get-Content -LiteralPath $perceptionPath -Raw | ConvertFrom-Json
+            foreach ($property in @("full_frame", "normalized_frame", "annotated_frame")) {
+                $candidate = [string]$oldPerception.$property
+                if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+                    Remove-Item -LiteralPath $candidate -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
+        catch {
+            Write-Warning "Could not parse stale tutorial perception evidence before cleanup: $($_.Exception.Message)"
+        }
+    }
+
+    foreach ($name in $RunEvidenceNames) {
+        Remove-Item -LiteralPath (Join-Path $debugRoot $name) -Force -ErrorAction SilentlyContinue
+    }
+}
+
 $currentBranch = (& git branch --show-current | Out-String).Trim()
 if ($currentBranch -ne $Branch) {
     throw "Refusing full MVP acceptance on branch '$currentBranch'; expected '$Branch'."
@@ -112,6 +156,10 @@ $verifyArgs = @(
     "-SoakCharacters", [string][Math]::Max(2, $SoakCharacters)
 )
 
+# Never allow a failed/partial run to inherit release evidence from an older
+# acceptance. Each full run starts from an empty release-evidence set.
+Clear-PreviousRunEvidence
+
 $savedErrorAction = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 try {
@@ -122,22 +170,7 @@ finally {
     $ErrorActionPreference = $savedErrorAction
 }
 
-$debugEvidence = @(
-    "mvp-full-acceptance.json",
-    "google-services.json",
-    "google-services.png",
-    "preview-production.json",
-    "preview-production.png",
-    "gui-host-smoke.json",
-    "operator-io-smoke.json",
-    "recovery-smoke.json",
-    "mvp-game-flow-evidence.json",
-    "mvp-soak-evidence.json",
-    "mvp-final-process-audit.json",
-    "runtime-heartbeat.json",
-    "android-data-free-space.json",
-    "tutorial-perception-failure.json"
-)
+$debugEvidence = @($RunEvidenceNames)
 foreach ($name in $debugEvidence) {
     Copy-IfExists -Source (Join-Path $Root "debug\$name") -Destination (Join-Path $stage $name)
 }
@@ -167,12 +200,28 @@ Copy-IfExists -Source "C:\warbot_wsa\reports\LATEST-LOCAL.json" -Destination (Jo
 
 $fullEvidencePath = Join-Path $Root "debug\mvp-full-acceptance.json"
 $overall = "fail"
-if ($verifyExit -eq 0 -and (Test-Path -LiteralPath $fullEvidencePath)) {
+$acceptanceRunId = ""
+$acceptanceHead = ""
+if (Test-Path -LiteralPath $fullEvidencePath -PathType Leaf) {
     try {
         $full = Get-Content -LiteralPath $fullEvidencePath -Raw | ConvertFrom-Json
-        if ([string]$full.overall -eq "pass") { $overall = "pass" }
+        $acceptanceRunId = [string]$full.run_id
+        $acceptanceHead = [string]$full.head
+        if (
+            $verifyExit -eq 0 -and
+            [string]$full.overall -eq "pass" -and
+            $acceptanceHead -eq $commit -and
+            $acceptanceRunId
+        ) {
+            $overall = "pass"
+        }
+        elseif ($verifyExit -eq 0) {
+            Write-Warning "Verifier exited 0, but acceptance evidence does not prove PASS for current HEAD/run_id."
+        }
     }
-    catch {}
+    catch {
+        Write-Warning "Could not parse current full acceptance evidence: $($_.Exception.Message)"
+    }
 }
 
 $evidenceInventory = @()
@@ -199,6 +248,8 @@ $manifest = [ordered]@{
     duration_seconds = [int](($finished - $started).TotalSeconds)
     verify_exit_code = $verifyExit
     overall = $overall
+    acceptance_run_id = $acceptanceRunId
+    acceptance_head = $acceptanceHead
     flow_timeout_minutes = $FlowTimeoutMinutes
     soak_timeout_minutes = $SoakTimeoutMinutes
     soak_characters = [Math]::Max(2, $SoakCharacters)
