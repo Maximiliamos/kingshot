@@ -135,6 +135,33 @@ class PanelDetector:
         if modal_beige >= 0.42 and len(modal_cyan) == 2:
             return Panel("source_modal", min(1.0, 0.55 + modal_beige * 0.45), ("beige-modal", "two-actions"))
 
+        # Battle reward is a distinct tutorial dialog: its conquest title,
+        # compact chest claim control, and wide bottom continuation control
+        # must all agree.  OCR corroborates the already-bound controls; it is
+        # never enough to create an action by itself.
+        conquest_title = any(
+            str(line.get("normalized", "")).startswith("заво")
+            and int((line.get("loc") or (0, 0))[1]) <= round(height * 0.15)
+            for line in ocr
+        )
+        reward_claim = [
+            item for item in buttons
+            if item.style == "green"
+            and width * 0.70 <= item.bbox.center[0] <= width * 0.92
+            and height * 0.68 <= item.bbox.center[1] <= height * 0.78
+            and 1.15 <= item.bbox.width / max(1.0, float(item.bbox.height)) <= 2.4
+        ]
+        conquest_action = [
+            item for item in buttons
+            if item.style in ("cyan", "green")
+            and item.bbox.width >= width * 0.25
+            and item.bbox.center[1] >= height * 0.86
+        ]
+        if conquest_title and reward_claim and conquest_action and modal_beige >= 0.30:
+            return Panel("battle_reward", 0.92, ("conquest-title", "reward-geometry", "bottom-action", "dialog"))
+        if conquest_title and conquest_action and modal_beige >= 0.30:
+            return Panel("battle_conquest", 0.84, ("conquest-title", "bottom-action", "dialog"))
+
         lower = hsv[round(height * 0.38):round(height * 0.96)]
         lower_beige = _coverage(cv2.inRange(lower, (8, 8, 90), (35, 150, 255)))
         # A resident assignment panel always has its two-tab footer.  City
@@ -390,6 +417,23 @@ class TutorialPerception:
         )
         for item in buttons:
             role = item.role
+            normalized_text = "".join(ch for ch in item.text.lower() if ch.isalnum())
+            if (
+                panel.kind == "battle_reward"
+                and item.style == "green"
+                and frame.shape[1] * 0.70 <= item.bbox.center[0] <= frame.shape[1] * 0.92
+                and frame.shape[0] * 0.68 <= item.bbox.center[1] <= frame.shape[0] * 0.78
+                and normalized_text.startswith("получ")
+            ):
+                role = "battle_reward_claim"
+            elif (
+                panel.kind in ("battle_reward", "battle_conquest")
+                and item.style in ("cyan", "green")
+                and item.bbox.width >= frame.shape[1] * 0.25
+                and item.bbox.center[1] >= frame.shape[0] * 0.86
+                and normalized_text.startswith("завое")
+            ):
+                role = "battle_conquer"
             if panel.kind == "source_modal" and item in source_buttons[:1]:
                 role = "source_upgrade"
             elif (
@@ -398,7 +442,6 @@ class TutorialPerception:
                 and item.bbox.width >= frame.shape[1] * 0.18
                 and item.bbox.center[1] >= frame.shape[0] * 0.40
             ):
-                normalized_text = "".join(ch for ch in item.text.lower() if ch.isalnum())
                 role = (
                     "construction_upgrade"
                     if item.style == "grey" or "улучш" in normalized_text

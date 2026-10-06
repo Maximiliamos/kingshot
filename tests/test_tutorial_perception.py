@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 import cv2
+import inspect
 import numpy as np
 
 import bot
@@ -47,6 +48,40 @@ class TutorialPerceptionTests(unittest.TestCase):
         }]
         model = tv.TutorialPerception().perceive(frame, ocr_lines=lines)
         self.assertIsNotNone(model.button("construction_upgrade"))
+
+    def test_battle_reward_claim_requires_bound_text_and_context(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (35, 300), (385, 900), (190, 210, 225), -1)
+        cv2.rectangle(frame, (302, 670), (369, 708), (30, 190, 45), -1)
+        cv2.rectangle(frame, (139, 843), (282, 899), (220, 180, 40), -1)
+        lines = [
+            {"text": "Завоевание", "normalized": "завоевание", "loc": (77, 44), "w": 90, "h": 30, "score": 90},
+            {"text": "Получить", "normalized": "получить", "loc": (306, 681), "w": 59, "h": 19, "score": 95},
+            {"text": "Завоевать", "normalized": "завоевать", "loc": (171, 856), "w": 79, "h": 26, "score": 90},
+        ]
+        model = tv.TutorialPerception().perceive(frame, ocr_lines=lines)
+        claim = model.button("battle_reward_claim")
+        conquer = model.button("battle_conquer")
+        self.assertEqual(model.panel.kind, "battle_reward")
+        self.assertIsNotNone(claim)
+        self.assertEqual(claim.text, "Получить")
+        self.assertIsNotNone(conquer)
+
+        no_context = tv.TutorialPerception().perceive(frame, ocr_lines=lines[1:])
+        self.assertIsNone(no_context.button("battle_reward_claim"))
+
+    def test_battle_reward_colours_without_context_remain_generic(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (302, 670), (369, 708), (30, 190, 45), -1)
+        model = tv.TutorialPerception().perceive(frame, ocr_lines=[])
+        self.assertIsNone(model.button("battle_reward_claim"))
+        self.assertIsNone(model.button("battle_conquer"))
+
+    def test_battle_actions_use_bounded_policy(self):
+        source = inspect.getsource(bot.handle_tutorial)
+        self.assertIn('state, "battle_reward_claim"', source)
+        self.assertIn('state, "battle_conquer"', source)
+        self.assertGreaterEqual(source.count("TUTORIAL_ACTION_POLICY.decide("), 4)
 
     def test_novel_guidance_requires_temporal_motion(self):
         detector = tv.TutorialGuidanceDetector()

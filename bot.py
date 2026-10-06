@@ -2077,6 +2077,40 @@ def handle_tutorial(phone, state):
         save_state(state)
         log("Туториал: рука-указатель исчезла; следующий маркер снова может быть обработан.")
 
+    reward_claim = _button_hit(screen.button("battle_reward_claim"))
+    if reward_claim:
+        claim_box = Box(reward_claim["loc"][0], reward_claim["loc"][1], reward_claim["w"], reward_claim["h"])
+        decision = TUTORIAL_ACTION_POLICY.decide(
+            state, "battle_reward_claim", claim_box, phone.shape, retry_after=3.0
+        )
+        if decision in ("act", "retry"):
+            debug(phone, reward_claim, "tutorial_battle_reward_claim")
+            log(f"Туториал: подтверждён reward «Получить»; action={decision}.")
+            tap_match(phone, reward_claim)
+            set_step(state, "tutorial_wait_hand_result")
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: reward «Получить» не исчез после bounded retry; fail-closed.")
+            return False
+        return "wait"
+
+    battle_conquer = _button_hit(screen.button("battle_conquer"))
+    if battle_conquer:
+        conquer_box = Box(battle_conquer["loc"][0], battle_conquer["loc"][1], battle_conquer["w"], battle_conquer["h"])
+        decision = TUTORIAL_ACTION_POLICY.decide(
+            state, "battle_conquer", conquer_box, phone.shape, retry_after=3.0
+        )
+        if decision in ("act", "retry"):
+            debug(phone, battle_conquer, "tutorial_battle_conquer")
+            log(f"Туториал: подтверждённое действие «Завоевать»; action={decision}.")
+            tap_match(phone, battle_conquer)
+            set_step(state, "tutorial_wait_hand_result")
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: «Завоевать» не исчезло после bounded retry; fail-closed.")
+            return False
+        return "wait"
+
     resident_source = _button_hit(screen.button("source_upgrade"))
     if not resident_source:
         resident_source = find_resident_source_upgrade_button(phone)
