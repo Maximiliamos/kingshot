@@ -1,6 +1,6 @@
 # TUGARIN BOTS progress
 
-Updated: 2026-10-05
+Updated: 2026-10-06
 
 ## Source of truth
 
@@ -42,6 +42,19 @@ GitHub Actions rerun before handing the branch to the local host.
 
 ## Implemented after that baseline
 
+- tutorial vision refactored into `tutorial_vision.py` with `ScreenModel`,
+  reusable guidance/button/panel detectors and bounded action policy;
+- production tutorial guidance uses glow + pointer colours + temporal motion instead
+  of scanning all historical scene-specific hand screenshots;
+- two core hand crops remain only as throttled migration fallback; the full historical
+  matcher is regression-only and is no longer called by tutorial/rename production paths;
+- construction controls distinguish generic primary actions from semantic upgrade holds,
+  including active grey hold-buttons;
+- OCR is bound to detected button geometry as evidence, never promoted to blind action;
+- unknown tutorial states persist machine-readable perception JSON plus annotated/raw
+  frames, and the full host reporter collects those diagnostics;
+- clean installer now ships `tutorial_vision.py` and no longer requires the legacy
+  `upgrade_button.png` asset for production validation;
 - exact Kingshot HWND capture via Win32 `PrintWindow`;
 - `wsa-window` is now the production capture for both GUI and bot vision;
 - no MSS desktop-rectangle dependency for production capture;
