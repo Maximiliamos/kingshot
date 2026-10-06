@@ -56,9 +56,15 @@ class FullMvpReporterTests(unittest.TestCase):
             "mvp-final-process-audit.json",
             "runtime-heartbeat.json",
             "android-data-free-space.json",
+            "tutorial-perception-failure.json",
             "events.jsonl",
         ):
             self.assertIn(name, SOURCE)
+
+    def test_runner_collects_tutorial_perception_images_from_json(self):
+        self.assertIn('"full_frame"', SOURCE)
+        self.assertIn('"normalized_frame"', SOURCE)
+        self.assertIn('"annotated_frame"', SOURCE)
 
     def test_runner_hashes_collected_evidence(self):
         self.assertIn("Get-FileHash", SOURCE)
