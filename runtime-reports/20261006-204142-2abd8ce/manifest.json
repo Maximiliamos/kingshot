@@ -1,0 +1,81 @@
+﻿{
+    "schema":  1,
+    "kind":  "mvp-full-host",
+    "commit":  "2abd8ce17afa64cd86fdc968cfe7177b73c3847b",
+    "expected_commit":  "2abd8ce17afa64cd86fdc968cfe7177b73c3847b",
+    "source_branch":  "feature/unified-android-backend",
+    "upstream":  "origin/feature/unified-android-backend",
+    "upstream_commit":  "2abd8ce17afa64cd86fdc968cfe7177b73c3847b",
+    "started_at":  "2026-10-06T20:36:12.9035434+03:00",
+    "finished_at":  "2026-10-06T20:41:41.6184026+03:00",
+    "duration_seconds":  329,
+    "verify_exit_code":  1,
+    "overall":  "fail",
+    "acceptance_run_id":  "e82e015bb7fc488a9b04933ce318b253",
+    "acceptance_head":  "2abd8ce17afa64cd86fdc968cfe7177b73c3847b",
+    "flow_timeout_minutes":  45,
+    "soak_timeout_minutes":  90,
+    "soak_characters":  2,
+    "evidence_files":  [
+                           {
+                               "name":  "android-data-free-space.json",
+                               "size_bytes":  597,
+                               "sha256":  "b2ec282bceabdd2ba90291d5d6fc272d1f7c6df00db055e5fb9b378b7f13e80e"
+                           },
+                           {
+                               "name":  "bot.log",
+                               "size_bytes":  5038173,
+                               "sha256":  "5d57a3959f302f75d5ed8c35c9faf054b7acc222e2f563d6ea1ca27ba636ec6b"
+                           },
+                           {
+                               "name":  "console.txt",
+                               "size_bytes":  160270,
+                               "sha256":  "8cd1d6a900cd373d762cf3035bc0ec152d0e50eabb1ba57a2d02ed7f003f42d2"
+                           },
+                           {
+                               "name":  "control.json",
+                               "size_bytes":  41,
+                               "sha256":  "10846fabacdc128e8f8e53dfd4d322a919e4fa2dc5454fa46115043ef3feccb8"
+                           },
+                           {
+                               "name":  "events.jsonl",
+                               "size_bytes":  528340,
+                               "sha256":  "78735fa5efeee41faf55ed908db97821fa537aa9c8841f98d7f18321f094e9f3"
+                           },
+                           {
+                               "name":  "google-services.json",
+                               "size_bytes":  1152,
+                               "sha256":  "6603cd3eb2c004703a4ce2e5d42269424cb9de769fe025573cd78778993c66e2"
+                           },
+                           {
+                               "name":  "google-services.png",
+                               "size_bytes":  2864,
+                               "sha256":  "be9e9b69995bd16a1059eeba9b11b6d0133f05282d7068841176a7926d71c721"
+                           },
+                           {
+                               "name":  "mvp-failure-process-audit.json",
+                               "size_bytes":  20687,
+                               "sha256":  "25f5b6dca156ec284f94cf1de3d0abb049f384857d6c156adbbbadca0ae6ee05"
+                           },
+                           {
+                               "name":  "mvp-full-acceptance.json",
+                               "size_bytes":  4080,
+                               "sha256":  "6a3f8d6a416601de762fc6de309a03002fbc9b2bb36667b325852911b8b4bd5f"
+                           },
+                           {
+                               "name":  "state.json",
+                               "size_bytes":  714,
+                               "sha256":  "67b85ddbcf582c07db184649cc0e067264d6dfb2835c2a0bf159e0175d364163"
+                           },
+                           {
+                               "name":  "state.previous.json",
+                               "size_bytes":  712,
+                               "sha256":  "036dfb2ece527e3b59bb897c132016c8b07b5e6578fdfcfad2f7d6c17177ce05"
+                           },
+                           {
+                               "name":  "wsa-latest-local.json",
+                               "size_bytes":  2103,
+                               "sha256":  "d633536aefdb62367caeda53a798c82d6cc62cb198dfeb20d758c3131bf20f63"
+                           }
+                       ]
+}
