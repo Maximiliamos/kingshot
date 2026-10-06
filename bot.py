@@ -1268,6 +1268,31 @@ def find_resident_assignment_plus(phone):
     return max(candidates, key=lambda item: item["score"], default=None)
 
 
+def find_completed_resident_assignment(phone):
+    """Find the disabled add button after the quarry reaches its worker cap."""
+    height, width = phone.shape[:2]
+    lower = phone[round(height * 0.38):round(height * 0.96)]
+    hsv_lower = cv2.cvtColor(lower, cv2.COLOR_BGR2HSV)
+    beige = cv2.inRange(hsv_lower, (8, 8, 90), (35, 150, 255))
+    if float(np.count_nonzero(beige)) / max(1.0, float(beige.size)) < 0.48:
+        return None
+
+    hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
+    # Once the counter reaches 2/2 the same add button is disabled: its green
+    # fill becomes neutral grey. The adjacent counter touches its border, so a
+    # contour would merge both controls; measure only the exact button cell.
+    x0, x1 = round(width * 0.58), round(width * 0.68)
+    y0, y1 = round(height * 0.80), round(height * 0.87)
+    cell = hsv[y0:y1, x0:x1]
+    neutral = cv2.inRange(cell, (0, 0, 55), (179, 85, 190))
+    green = cv2.inRange(cell, (35, 90, 70), (95, 255, 255))
+    neutral_coverage = float(np.count_nonzero(neutral)) / max(1.0, float(neutral.size))
+    green_coverage = float(np.count_nonzero(green)) / max(1.0, float(green.size))
+    if neutral_coverage < 0.30 or green_coverage >= 0.05:
+        return None
+    return {"loc": (x0, y0), "w": x1 - x0, "h": y1 - y0, "score": neutral_coverage}
+
+
 def is_construction_panel(phone):
     kitchen = match(phone, tpl("tutorial_kitchen_title.png"), 0.93)
     if kitchen:
@@ -1847,6 +1872,14 @@ def handle_tutorial(phone, state):
         # Keep the action fail-closed, but use a local-action threshold instead
         # of the scene-transition threshold used by full-screen tutorial steps.
         state["action_change_threshold"] = 0.5
+        set_step(state, "tutorial_wait_hand_result")
+        return "acted"
+
+    resident_complete = find_completed_resident_assignment(phone)
+    if resident_complete:
+        debug(phone, resident_complete, "tutorial_resident_assignment_complete")
+        log("Туториал: панель жителей заполнена; закрываю подтверждённую панель Android Back.")
+        key(4)
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 

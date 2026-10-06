@@ -54,6 +54,22 @@ class TutorialVisionTests(unittest.TestCase):
         cv2.rectangle(no_panel, (250, 760), (282, 814), (30, 190, 45), -1)
         self.assertIsNone(bot.find_resident_assignment_plus(no_panel))
 
+    def test_completed_resident_assignment_requires_disabled_button_and_panel(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (35, 360), (386, 910), (190, 210, 225), -1)
+        cv2.rectangle(frame, (250, 770), (282, 814), (115, 120, 125), -1)
+        hit = bot.find_completed_resident_assignment(frame)
+        self.assertIsNotNone(hit)
+        self.assertGreaterEqual(hit["loc"][1], 750)
+
+        green_button = frame.copy()
+        cv2.rectangle(green_button, (250, 770), (282, 814), (30, 190, 45), -1)
+        self.assertIsNone(bot.find_completed_resident_assignment(green_button))
+
+        no_panel = np.zeros_like(frame)
+        cv2.rectangle(no_panel, (250, 770), (282, 814), (115, 120, 125), -1)
+        self.assertIsNone(bot.find_completed_resident_assignment(no_panel))
+
     def test_current_loading_splash_is_detected_without_clicking(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         cv2.rectangle(frame, (135, 190), (260, 250), (0, 145, 255), -1)
