@@ -1005,7 +1005,13 @@ def ocr_action_is_safe(phone, target):
             return False
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         cyan = cv2.inRange(hsv, (75, 80, 80), (105, 255, 255))
-        return cv2.countNonZero(cyan) >= roi.shape[0] * roi.shape[1] * 0.10
+        if cv2.countNonZero(cyan) >= roi.shape[0] * roi.shape[1] * 0.10:
+            return True
+        # Housing upgrades use a grey hold-button rather than the turquoise
+        # construction action. OCR is still limited to the exact whitelist and
+        # right-side action zone; additionally require the verified parchment
+        # construction panel before accepting this visual variant.
+        return is_construction_panel(phone)
     # Other tutorial buttons use visual templates; do not trust OCR for them.
     return False
 

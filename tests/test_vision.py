@@ -573,6 +573,20 @@ class TutorialVisionTests(unittest.TestCase):
         self.assertTrue(bot.is_construction_panel(phone))
         self.assertEqual(hit["loc"], (294, 457))
 
+    def test_ocr_upgrade_accepts_grey_hold_button_only_on_construction_panel(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        phone[360:] = (160, 190, 220)
+        cv2.rectangle(phone, (294, 457), (375, 520), (115, 120, 125), -1)
+        target = {
+            "action": "upgrade", "name": "tutorial_upgrade", "text": "Улучшить",
+            "score": 96.0, "loc": (306, 490), "w": 53, "h": 17,
+        }
+        self.assertTrue(bot.ocr_action_is_safe(phone, target))
+
+        no_panel = np.zeros_like(phone)
+        cv2.rectangle(no_panel, (294, 457), (375, 520), (115, 120, 125), -1)
+        self.assertFalse(bot.ocr_action_is_safe(no_panel, target))
+
     def test_ocr_action_is_locked_until_its_text_disappears(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         state = dict(bot.DEFAULT_STATE)
