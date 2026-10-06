@@ -137,6 +137,11 @@ class PanelDetector:
 
         lower = hsv[round(height * 0.38):round(height * 0.96)]
         lower_beige = _coverage(cv2.inRange(lower, (8, 8, 90), (35, 150, 255)))
+        # A resident assignment panel always has its two-tab footer.  City
+        # Center's green benefit icons occupy the same relative position as
+        # the add-resident control, so colour/geometry alone is unsafe.
+        footer = hsv[round(height * 0.90):round(height * 0.98), round(width * 0.05):round(width * 0.95)]
+        resident_footer = _coverage(cv2.inRange(footer, (5, 30, 20), (30, 255, 200)))
         resident_controls = [
             item for item in buttons
             if width * 0.54 <= item.bbox.center[0] <= width * 0.72
@@ -151,8 +156,8 @@ class PanelDetector:
             and height * 0.80 <= item.bbox.center[1] <= height * 0.87
             for item in resident_controls
         )
-        if lower_beige >= 0.48 and (resident_green or resident_disabled_cell):
-            return Panel("resident_assignment", min(1.0, 0.50 + lower_beige * 0.50), ("lower-beige", "resident-control"))
+        if lower_beige >= 0.48 and resident_footer >= 0.20 and (resident_green or resident_disabled_cell):
+            return Panel("resident_assignment", min(1.0, 0.50 + lower_beige * 0.50), ("lower-beige", "resident-footer", "resident-control"))
 
         construction_words = ("кухня", "требуется", "улучшить", "барак")
         primary = [

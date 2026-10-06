@@ -1352,6 +1352,14 @@ def find_resident_assignment_plus(phone):
     if float(np.count_nonzero(beige)) / max(1.0, float(beige.size)) < 0.48:
         return None
 
+    # City Center benefit icons can be green at the same coordinates as the
+    # resident add button.  Require the resident panel's dark-brown tab
+    # footer as independent context before an action is allowed.
+    footer = hsv_lower[round(height * 0.52):round(height * 0.60), round(width * 0.05):round(width * 0.95)]
+    footer_brown = cv2.inRange(footer, (5, 30, 20), (30, 255, 200))
+    if float(np.count_nonzero(footer_brown)) / max(1.0, float(footer_brown.size)) < 0.20:
+        return None
+
     hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
     green = cv2.inRange(hsv, (35, 90, 70), (95, 255, 255))
     contours, _ = cv2.findContours(green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

@@ -78,6 +78,7 @@ class TutorialVisionTests(unittest.TestCase):
     def test_resident_assignment_plus_requires_beige_panel_and_safe_position(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         cv2.rectangle(frame, (35, 360), (386, 910), (190, 210, 225), -1)
+        cv2.rectangle(frame, (35, 850), (207, 925), (30, 90, 160), -1)
         cv2.rectangle(frame, (250, 760), (282, 814), (30, 190, 45), -1)
         hit = bot.find_resident_assignment_plus(frame)
         self.assertIsNotNone(hit)
@@ -86,6 +87,14 @@ class TutorialVisionTests(unittest.TestCase):
         no_panel = np.zeros_like(frame)
         cv2.rectangle(no_panel, (250, 760), (282, 814), (30, 190, 45), -1)
         self.assertIsNone(bot.find_resident_assignment_plus(no_panel))
+
+    def test_city_center_green_benefit_is_not_resident_assignment(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (35, 360), (386, 910), (190, 210, 225), -1)
+        # Same green geometry as the resident add control, but no two-tab
+        # resident footer: this is a City Center benefit icon, not a target.
+        cv2.rectangle(frame, (250, 760), (282, 814), (30, 190, 45), -1)
+        self.assertIsNone(bot.find_resident_assignment_plus(frame))
 
     def test_completed_resident_assignment_requires_disabled_button_and_panel(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
