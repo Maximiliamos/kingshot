@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "written_at": "2026-10-06T08:23:29.706633+00:00",
+  "status": "stopped",
+  "detail": "",
+  "pid": 24836,
+  "backend": "wsa",
+  "serial": "127.0.0.1:58526",
+  "phase": "tutorial_new_character",
+  "step": "tutorial_wait_hand_result",
+  "last_frame_age_seconds": 1.683,
+  "last_action_age_seconds": 8.687
+}

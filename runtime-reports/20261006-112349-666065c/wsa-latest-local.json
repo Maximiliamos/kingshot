@@ -1,0 +1,46 @@
+﻿{
+    "schema":  1,
+    "product":  "TUGARIN BOTS",
+    "overall":  "running",
+    "head":  "666065c5e26c9234f0ae513c39635ce8e3984148",
+    "run_id":  "8c3f1a18ba5f46eebeed1575d6481e7a",
+    "windows_user":  "COMPUTER\\Программист1",
+    "windows_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "started_at_utc":  "2026-10-06T08:17:03.0321156+00:00",
+    "finished_at_utc":  null,
+    "failed_gate":  "",
+    "exit_code":  0,
+    "gates":  [
+                  {
+                      "name":  "Clean tracked worktree",
+                      "script":  "git status --porcelain --untracked-files=no",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T08:17:03.1736685+00:00",
+                      "finished_at_utc":  "2026-10-06T08:17:03.1824647+00:00"
+                  },
+                  {
+                      "name":  "Published branch head",
+                      "script":  "git rev-parse @{u}",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T08:17:03.2889327+00:00",
+                      "finished_at_utc":  "2026-10-06T08:17:03.2889327+00:00",
+                      "detail":  "origin/feature/unified-android-backend@666065c5e26c9234f0ae513c39635ce8e3984148"
+                  },
+                  {
+                      "name":  "Infrastructure / WSA / Kingshot / process audit",
+                      "script":  "verify_release.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T08:17:03.3959101+00:00",
+                      "finished_at_utc":  "2026-10-06T08:21:15.2295257+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_wsa\\reports\\LATEST-LOCAL.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  }
+              ]
+}
