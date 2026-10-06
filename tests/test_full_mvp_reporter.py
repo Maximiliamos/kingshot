@@ -66,6 +66,22 @@ class FullMvpReporterTests(unittest.TestCase):
         self.assertIn('"normalized_frame"', SOURCE)
         self.assertIn('"annotated_frame"', SOURCE)
 
+    def test_runner_clears_previous_release_evidence_before_verifier(self):
+        self.assertIn("Clear-PreviousRunEvidence", SOURCE)
+        self.assertIn("Remove-Item", SOURCE)
+        self.assertIn("mvp-failure-process-audit.json", SOURCE)
+        self.assertLess(
+            SOURCE.index("Clear-PreviousRunEvidence\n\n$savedErrorAction"),
+            SOURCE.index("& powershell.exe @verifyArgs"),
+        )
+
+    def test_runner_requires_pass_evidence_for_current_head_and_run_id(self):
+        self.assertIn("$acceptanceHead -eq $commit", SOURCE)
+        self.assertIn("$acceptanceRunId", SOURCE)
+        self.assertIn("acceptance_run_id = $acceptanceRunId", SOURCE)
+        self.assertIn("acceptance_head = $acceptanceHead", SOURCE)
+        self.assertIn("does not prove PASS for current HEAD/run_id", SOURCE)
+
     def test_runner_hashes_collected_evidence(self):
         self.assertIn("Get-FileHash", SOURCE)
         self.assertIn("evidence_files", SOURCE)
