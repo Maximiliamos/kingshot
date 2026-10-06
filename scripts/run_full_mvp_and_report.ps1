@@ -134,11 +134,28 @@ $debugEvidence = @(
     "mvp-game-flow-evidence.json",
     "mvp-soak-evidence.json",
     "mvp-final-process-audit.json",
-    "runtime-heartbeat.json"
-    "android-data-free-space.json"
+    "runtime-heartbeat.json",
+    "android-data-free-space.json",
+    "tutorial-perception-failure.json"
 )
 foreach ($name in $debugEvidence) {
     Copy-IfExists -Source (Join-Path $Root "debug\$name") -Destination (Join-Path $stage $name)
+}
+
+$perceptionEvidencePath = Join-Path $Root "debug\tutorial-perception-failure.json"
+if (Test-Path -LiteralPath $perceptionEvidencePath) {
+    try {
+        $perceptionEvidence = Get-Content -LiteralPath $perceptionEvidencePath -Raw | ConvertFrom-Json
+        foreach ($property in @("full_frame", "normalized_frame", "annotated_frame")) {
+            $candidate = [string]$perceptionEvidence.$property
+            if ($candidate -and (Test-Path -LiteralPath $candidate)) {
+                Copy-IfExists -Source $candidate -Destination (Join-Path $stage ([IO.Path]::GetFileName($candidate)))
+            }
+        }
+    }
+    catch {
+        Write-Warning "Could not collect tutorial perception image evidence: $($_.Exception.Message)"
+    }
 }
 
 foreach ($name in @("state.json", "state.previous.json", "control.json")) {
