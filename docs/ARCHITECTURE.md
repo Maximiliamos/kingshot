@@ -1,6 +1,6 @@
 # TUGARIN BOTS architecture
 
-Updated: 2026-10-05
+Updated: 2026-10-06
 
 ## Production decision
 
@@ -15,7 +15,9 @@ Production runs entirely in the interactive Windows session
 └─ TUGARIN BOTS
    ├─ PrintWindow capture
    ├─ WsaBackend host input
-   ├─ OpenCV vision/action gate
+   ├─ OpenCV perception primitives
+   ├─ TutorialPerception / ScreenModel
+   ├─ bounded action policy
    ├─ fail-closed state machine
    └─ GUI / evidence / recovery
 ```
@@ -78,6 +80,30 @@ ADB remains explicit and device-scoped. It is used for:
 - controlled recovery.
 
 Game pointer input is the host-window path described above.
+
+## Tutorial perception
+
+Tutorial automation no longer treats each city background as a separate hand
+template. `tutorial_vision.py` builds a small fail-closed `ScreenModel` from
+reusable primitives:
+
+- `TutorialGuidanceDetector` finds the illuminated target using glow, pointer
+  colours and temporal motion between adjacent frames;
+- novel guidance requires temporal evidence; two background-independent core crops
+  remain only as a throttled migration fallback;
+- `UniversalButtonDetector` detects button geometry/style, while panel context
+  assigns semantic roles such as resident/source/construction actions;
+- grey is not synonymous with disabled: construction context can promote a grey
+  control to an active `construction_upgrade` hold action;
+- OCR text is bound to a nearby button bbox as corroborating evidence and never
+  creates an action by itself;
+- `BoundedActionPolicy` permits only a bounded retry of the same recognised
+  target before failing closed.
+
+The historical scene-specific `tutorial_hand_*` matcher remains available for
+offline regression, but production tutorial and rename flows do not call the
+full matcher. Unknown tutorial UI produces `tutorial-perception-failure.json`
+plus full/normalised/annotated images for the runtime report.
 
 ## State machine safety
 
