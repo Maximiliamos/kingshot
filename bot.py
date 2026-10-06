@@ -23,6 +23,7 @@ from frame_stream import create_preview_capture
 from runtime_events import emit_event
 from runtime_recovery import RecoveryController
 from runtime_watchdog import RuntimeHeartbeat
+from tutorial_vision import BoundedActionPolicy, Box, TutorialPerception
 
 
 WINDOWS_NO_WINDOW = (
@@ -79,6 +80,7 @@ UNKNOWN_DIFF = 8.0
 DRY_RUN = False
 TEMPLATE_CACHE = {}
 LAST_OCR_AT = 0.0
+LAST_LEGACY_TUTORIAL_SCAN_AT = 0.0
 WATCHDOG_SECONDS = 75.0
 GOVERNOR_CONFIRM_SECONDS = 1.5
 RUNTIME_PROBE_INTERVAL = 15.0
@@ -325,13 +327,15 @@ class ActionGate:
         self.label = None
         self.started_at = 0.0
         self.change_threshold = ACTION_CHANGE_DIFF
+        self.roi = None
 
     @property
     def pending(self):
         return self.before is not None
 
-    def arm(self, phone, label, change_threshold=ACTION_CHANGE_DIFF):
-        self.before = phone.copy()
+    def arm(self, phone, label, change_threshold=ACTION_CHANGE_DIFF, roi=None):
+        self.roi = tuple(roi) if roi else None
+        self.before = self._region(phone).copy()
         self.label = label
         self.started_at = time.monotonic()
         self.change_threshold = float(change_threshold)
@@ -343,7 +347,7 @@ class ActionGate:
         elapsed = time.monotonic() - self.started_at
         if elapsed < ACTION_MIN_SETTLE:
             return "waiting"
-        delta = diff(phone, self.before)
+        delta = diff(self._region(phone), self.before)
         if delta >= self.change_threshold:
             log(f"Кадр изменился после {self.label}: diff={delta:.1f}, {elapsed:.2f} сек.")
             self.before = None
@@ -351,6 +355,15 @@ class ActionGate:
         if elapsed >= ACTION_TIMEOUT:
             return "timeout"
         return "waiting"
+
+    def _region(self, phone):
+        if not self.roi:
+            return phone
+        x, y, width, height = self.roi
+        x0, y0 = max(0, int(x)), max(0, int(y))
+        x1 = min(phone.shape[1], x0 + max(1, int(width)))
+        y1 = min(phone.shape[0], y0 + max(1, int(height)))
+        return phone[y0:y1, x0:x1]
 
 
 DEFAULT_STATE = {
@@ -378,6 +391,11 @@ DEFAULT_STATE = {
     "ocr_absent_since": 0.0,
     "ocr_upgrade_hold_ms": 0,
 }
+
+
+TUTORIAL_PERCEPTION = TutorialPerception()
+TUTORIAL_ACTION_POLICY = BoundedActionPolicy()
+LAST_TUTORIAL_SCREEN_MODEL = None
 
 
 def ensure_dirs():
@@ -879,15 +897,8 @@ def validate_templates():
         "create_plus.png", "select_kingdom_title.png", "state3_row.png", "state3_modal.png", "state3_confirm.png",
         "loading_logo.png", "task_scroll.png",
         "upgrade_button.png", "newbie_offer_context.png", "newbie_offer_close.png", "offline_confirm.png",
-        "invasion_title.png", "tutorial_skip.png", "tutorial_skip_small.png", "tutorial_skip_core.png", "tutorial_hand_building.png",
-        "tutorial_summon_button.png", "tutorial_hand_target.png", "tutorial_hand_roof.png",
-        "tutorial_hand_housing.png", "tutorial_hand_residents.png",
-        "tutorial_hand_bell.png",
-        "tutorial_hand_recommend.png",
-        "tutorial_hand_save_residents.png",
-        "tutorial_hand_chest.png",
-        "tutorial_hand_task_center.png",
-        "tutorial_hand_assignment_task.png",
+        "invasion_title.png", "tutorial_skip.png", "tutorial_skip_small.png", "tutorial_skip_core.png",
+        "tutorial_summon_button.png", "tutorial_hand_target.png", "tutorial_hand_quarry_core.png",
         "tutorial_kitchen_title.png",
         "tutorial_return_city.png", "tutorial_return_city_small.png", "tutorial_cook_button.png",
         "tutorial_build_tower_button.png",
@@ -977,8 +988,9 @@ def ocr_lines(phone):
     return lines
 
 
-def ocr_action(phone):
-    for line in ocr_lines(phone):
+def ocr_action_from_lines(lines):
+    for source in lines:
+        line = dict(source)
         for phrase, (name, action) in OCR_ACTIONS.items():
             similarity = SequenceMatcher(None, phrase, line["normalized"]).ratio()
             # OCR may lose the first glyph on a rounded button (for example,
@@ -988,6 +1000,10 @@ def ocr_action(phone):
                 line["action"] = action
                 return line
     return None
+
+
+def ocr_action(phone):
+    return ocr_action_from_lines(ocr_lines(phone))
 
 
 def ocr_action_is_safe(phone, target):
@@ -1022,12 +1038,14 @@ def ocr_action_is_safe(phone, target):
     return False
 
 
-def handle_tutorial_ocr(phone, state):
+def handle_tutorial_ocr(phone, state, lines=None):
     global LAST_OCR_AT
-    if time.monotonic() - LAST_OCR_AT < OCR_INTERVAL:
-        return False
-    LAST_OCR_AT = time.monotonic()
-    target = ocr_action(phone)
+    if lines is None:
+        if time.monotonic() - LAST_OCR_AT < OCR_INTERVAL:
+            return False
+        LAST_OCR_AT = time.monotonic()
+        lines = ocr_lines(phone)
+    target = ocr_action_from_lines(lines)
     now = time.time()
     if not target:
         if state.get("ocr_locked_action"):
@@ -1231,6 +1249,77 @@ def tutorial_target_is_lit(phone, hit, target):
     return float(np.count_nonzero(lit)) / float(lit.size) >= 0.12
 
 
+def perceive_tutorial_screen(phone, *, include_ocr=False):
+    """Build the state-machine-facing screen model from reusable primitives."""
+    global LAST_TUTORIAL_SCREEN_MODEL, LAST_LEGACY_TUTORIAL_SCAN_AT, LAST_OCR_AT
+    now_mono = time.monotonic()
+    collect_ocr = include_ocr or now_mono - LAST_OCR_AT >= OCR_INTERVAL
+    lines = ocr_lines(phone) if collect_ocr else []
+    if collect_ocr:
+        LAST_OCR_AT = now_mono
+    LAST_TUTORIAL_SCREEN_MODEL = TUTORIAL_PERCEPTION.perceive(
+        phone,
+        ocr_lines=lines,
+    )
+    # Animated glow/motion is the production path.  Two small, background-
+    # independent crops remain as a throttled migration fallback; the sixteen
+    # historical scene templates stay available for offline regression only.
+    now = time.monotonic()
+    if (
+        LAST_TUTORIAL_SCREEN_MODEL.tutorial_target is None
+        and now - LAST_LEGACY_TUTORIAL_SCAN_AT >= 1.5
+    ):
+        LAST_LEGACY_TUTORIAL_SCAN_AT = now
+        legacy_hint = match_tutorial_hand_core(phone)
+        if legacy_hint:
+            LAST_TUTORIAL_SCREEN_MODEL = TUTORIAL_PERCEPTION.perceive(
+                phone,
+                ocr_lines=lines,
+                legacy_hint=legacy_hint,
+            )
+    return LAST_TUTORIAL_SCREEN_MODEL
+
+
+def match_tutorial_hand_core(phone):
+    """Throttled fallback using only two background-independent pointer crops."""
+    best = None
+    variants = (
+        ("tutorial_hand_target.png", (0.46, 0.76), 0.70),
+        ("tutorial_hand_quarry_core.png", (0.22, 0.91), 0.62),
+    )
+    for name, target, threshold in variants:
+        image = tpl(name)
+        if image is None:
+            continue
+        for scale in (0.80, 0.94, 1.0, 1.12, 1.25):
+            resized = cv2.resize(
+                image, None, fx=scale, fy=scale,
+                interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC,
+            )
+            hit = match(phone, resized, threshold, allow_scale=False)
+            if hit and hit["loc"][1] >= round(phone.shape[0] * 0.25) \
+                    and tutorial_target_is_lit(phone, hit, target):
+                if best is None or hit["score"] > best["score"]:
+                    hit.update(target=target, variant=name)
+                    best = hit
+    return best
+
+
+def _button_hit(button):
+    return button.bbox.as_hit() if button is not None else None
+
+
+def _expanded_action_roi(phone, hit, scale=2.0):
+    x, y = hit["loc"]
+    width, height = hit["w"], hit["h"]
+    pad_x = round(width * (scale - 1.0) / 2.0)
+    pad_y = round(height * (scale - 1.0) / 2.0)
+    x0, y0 = max(0, x - pad_x), max(0, y - pad_y)
+    x1 = min(phone.shape[1], x + width + pad_x)
+    y1 = min(phone.shape[0], y + height + pad_y)
+    return [x0, y0, x1 - x0, y1 - y0]
+
+
 def find_tutorial_primary_button(phone):
     """Find the large turquoise primary action in a construction panel."""
     height, width = phone.shape[:2]
@@ -1391,7 +1480,64 @@ def debug(phone, hit, name):
     x, y = hit["loc"]
     out = phone.copy()
     cv2.rectangle(out, (x, y), (x+hit["w"], y+hit["h"]), (0,255,0), 3)
-    save_img(os.path.join(DEBUG_DIR, f"{fs()}_{name}_{hit['score']:.3f}.png"), out)
+    score = float(hit.get("score", 0.0))
+    save_img(os.path.join(DEBUG_DIR, f"{fs()}_{name}_{score:.3f}.png"), out)
+
+
+def save_tutorial_perception_bundle(full_frame, phone, state, screenshot_path):
+    """Persist one self-contained fail-closed diagnostic for an unknown UI."""
+    screen = LAST_TUTORIAL_SCREEN_MODEL
+    if screen is None:
+        screen = perceive_tutorial_screen(phone, include_ocr=True)
+    else:
+        # OCR remains throttled during normal gameplay; run it only when a
+        # diagnostic bundle is already being written.
+        screen.ocr_lines = ocr_lines(phone)
+    annotated = phone.copy()
+    for button in screen.buttons:
+        box = button.bbox
+        color = (255, 180, 0) if button.enabled else (130, 130, 130)
+        cv2.rectangle(
+            annotated,
+            (box.x, box.y),
+            (box.x + box.width, box.y + box.height),
+            color,
+            2,
+        )
+    if screen.tutorial_target:
+        box = screen.tutorial_target.bbox
+        cv2.rectangle(
+            annotated,
+            (box.x, box.y),
+            (box.x + box.width, box.y + box.height),
+            (0, 255, 255),
+            3,
+        )
+    stamp = fs()
+    full_path = os.path.join(DEBUG_DIR, f"tutorial-perception-{stamp}-full.png")
+    normalized_path = os.path.join(DEBUG_DIR, f"tutorial-perception-{stamp}-normalized.png")
+    annotated_path = os.path.join(DEBUG_DIR, f"tutorial-perception-{stamp}-annotated.png")
+    save_img(full_path, full_frame)
+    save_img(normalized_path, phone)
+    save_img(annotated_path, annotated)
+    payload = {
+        "schema": 1,
+        "captured_at": datetime.now().astimezone().isoformat(),
+        "phase": state.get("phase"),
+        "step": state.get("step"),
+        "reason": "no action met the fail-closed perception policy",
+        "source_screenshot": screenshot_path,
+        "full_frame": full_path,
+        "normalized_frame": normalized_path,
+        "annotated_frame": annotated_path,
+        "screen": screen.to_dict(),
+    }
+    report_path = os.path.join(DEBUG_DIR, "tutorial-perception-failure.json")
+    tmp_path = report_path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as stream:
+        json.dump(payload, stream, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, report_path)
+    return report_path
 
 
 def sync_input_geometry(frame, rect=None):
@@ -1710,10 +1856,10 @@ def handle_rename_governor(phone, state):
             log("Обязательное обучение уже закончено; закрываю необязательную панель.")
             tap_match(phone, back)
             return True
-        blocking_hand = match_tutorial_hand(phone)
-        if blocking_hand:
-            log("Обучение закончено; убираю оставшийся указатель, который блокирует меню.")
-            tap_match_relative(phone, blocking_hand, *blocking_hand["target"])
+        blocking_target = perceive_tutorial_screen(phone).tutorial_target
+        if blocking_target:
+            log("Обучение закончено; убираю оставшуюся подтверждённую tutorial-цель.")
+            tap_match(phone, blocking_target.bbox.as_hit())
             return True
         hit = match(phone, tpl("governor_avatar_large.png"), 0.94)
         if not hit:
@@ -1732,8 +1878,8 @@ def handle_rename_governor(phone, state):
             # A camera movement is not proof that the avatar opened. Recover
             # to the verified home step and retry after clearing UI blockers.
             avatar = match(phone, tpl("governor_avatar_large.png"), 0.90)
-            blocking_hand = match_tutorial_hand(phone)
-            if avatar or blocking_hand:
+            blocking_target = perceive_tutorial_screen(phone).tutorial_target
+            if avatar or blocking_target:
                 log("Профиль не открылся; возвращаюсь к проверенному шагу меню губернатора.")
                 set_step(state, "governor_home")
             return False
@@ -1847,6 +1993,7 @@ def handle_rename_governor(phone, state):
 
 def handle_tutorial(phone, state):
     step = state["step"]
+    screen = perceive_tutorial_screen(phone)
 
     # Battles after summoning run automatically. The pause badge is a stable
     # scene marker; no tutorial control is actionable until it disappears.
@@ -1861,8 +2008,7 @@ def handle_tutorial(phone, state):
     if step in ("tutorial_wait_city", "tutorial_wait_hand_result", "tutorial_wait_scroll"):
         for name, threshold in (
             ("governor_avatar.png", 0.91),
-            ("governor_avatar_small.png", 0.94),
-            ("governor_avatar_large.png", 0.94),
+            ("governor_avatar_small.png", 0.94),            ("governor_avatar_large.png", 0.94),
         ):
             governor = match(phone, tpl(name), threshold)
             if governor:
@@ -1873,23 +2019,26 @@ def handle_tutorial(phone, state):
     # A visible hand is the tutorial's exclusive input contract: the game
     # disables every other control. It must therefore outrank Skip, OCR, and
     # colour-based buttons; clicking anything else only wastes an action.
-    hand_target = match_tutorial_hand(phone)
-    if hand_target:
-        if not state.get("tutorial_hand_locked", False):
-            debug(phone, hand_target, "tutorial_hand_target")
-            log(f"Туториал: рука-указатель ({hand_target['variant']}) — нажимаю только указанную цель.")
-            tap_match_relative(phone, hand_target, *hand_target["target"])
+    guidance = screen.tutorial_target
+    if guidance:
+        hand_target = guidance.bbox.as_hit()
+        decision = TUTORIAL_ACTION_POLICY.decide(
+            state, "tutorial_target", guidance.bbox, phone.shape, retry_after=3.0
+        )
+        if decision in ("act", "retry"):
+            debug(phone, hand_target, "tutorial_guidance_target")
+            verb = "повторяю" if decision == "retry" else "нажимаю"
+            log(
+                f"Туториал: {verb} подтверждённую цель "
+                f"source={guidance.source} confidence={guidance.confidence:.2f}."
+            )
+            tap_match(phone, hand_target)
             state["tutorial_hand_locked"] = True
             set_step(state, "tutorial_wait_hand_result")
-            # The WSA window occasionally drops one foreground pointer event.
-            # Do not arm the global scene-change gate here: the branch below
-            # already waits while the exact hand remains visible and retries
-            # only that same illuminated target after three seconds.
             return "held"
-        if time.time() - float(state.get("step_started_at", 0.0)) >= 3.0:
-            log("Туториал: указатель остался после действия; повторяю точную светящуюся цель.")
-            state["tutorial_hand_locked"] = False
-            save_state(state)
+        if decision == "exhausted":
+            log("Туториал: два подтверждённых нажатия не убрали ту же цель; fail-closed.")
+            return False
         return "wait"
 
     # Skip is common to tutorial dialogs, so it takes precedence over every
@@ -1910,12 +2059,18 @@ def handle_tutorial(phone, state):
         save_state(state)
         log("Туториал: «Пропустить» исчезло; следующий эпизод снова может быть обработан.")
 
-    if state.get("tutorial_hand_locked", False):
+    if TUTORIAL_ACTION_POLICY.clear_kind(state, "tutorial_target"):
+        state["tutorial_hand_locked"] = False
+        save_state(state)
+        log("Туториал: подтверждённая цель исчезла; action policy разблокирована.")
+    elif state.get("tutorial_hand_locked", False):
         state["tutorial_hand_locked"] = False
         save_state(state)
         log("Туториал: рука-указатель исчезла; следующий маркер снова может быть обработан.")
 
-    resident_source = find_resident_source_upgrade_button(phone)
+    resident_source = _button_hit(screen.button("source_upgrade"))
+    if not resident_source:
+        resident_source = find_resident_source_upgrade_button(phone)
     if resident_source:
         debug(phone, resident_source, "tutorial_resident_source_upgrade")
         log("Туториал: подтверждено окно источников жителей; выбираю верхнее «Улучшить дом».")
@@ -1923,7 +2078,9 @@ def handle_tutorial(phone, state):
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
-    resident_plus = find_resident_assignment_plus(phone)
+    resident_plus = _button_hit(screen.button("resident_add"))
+    if not resident_plus:
+        resident_plus = find_resident_assignment_plus(phone)
     if resident_plus:
         debug(phone, resident_plus, "tutorial_assign_resident_plus")
         log("Туториал: подтверждена панель жителей каменоломни; назначаю рабочего кнопкой +.")
@@ -1932,10 +2089,13 @@ def handle_tutorial(phone, state):
         # Keep the action fail-closed, but use a local-action threshold instead
         # of the scene-transition threshold used by full-screen tutorial steps.
         state["action_change_threshold"] = 0.2
+        state["action_change_roi"] = _expanded_action_roi(phone, resident_plus, 2.5)
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
-    resident_complete = find_completed_resident_assignment(phone)
+    resident_complete = _button_hit(screen.button("resident_complete"))
+    if not resident_complete:
+        resident_complete = find_completed_resident_assignment(phone)
     if resident_complete:
         debug(phone, resident_complete, "tutorial_resident_assignment_complete")
         log("Туториал: панель жителей заполнена; закрываю подтверждённую панель Android Back.")
@@ -1943,29 +2103,27 @@ def handle_tutorial(phone, state):
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
-    primary = find_tutorial_primary_button(phone)
-    if primary and is_construction_panel(phone):
-        primary_signature = [
-            round(primary["loc"][0] / max(1, phone.shape[1]) * 100),
-            round(primary["loc"][1] / max(1, phone.shape[0]) * 100),
-            round(primary["w"] / max(1, phone.shape[1]) * 100),
-            round(primary["h"] / max(1, phone.shape[0]) * 100),
-        ]
-        if (
-            state.get("tutorial_primary_locked", False)
-            and state.get("tutorial_primary_signature") != primary_signature
-        ):
-            state["tutorial_primary_locked"] = False
-        if not state.get("tutorial_primary_locked", False):
+    primary_button = screen.button("construction_primary")
+    primary = _button_hit(primary_button)
+    if not primary:
+        primary = find_tutorial_primary_button(phone)
+    if primary and (screen.panel.kind == "construction" or is_construction_panel(phone)):
+        primary_box = Box(primary["loc"][0], primary["loc"][1], primary["w"], primary["h"])
+        decision = TUTORIAL_ACTION_POLICY.decide(
+            state, "construction_primary", primary_box, phone.shape, retry_after=3.0
+        )
+        if decision in ("act", "retry"):
             debug(phone, primary, "tutorial_primary_button")
-            log("Туториал: подтверждена панель строительства; нажимаю её основную кнопку.")
+            log(f"Туториал: панель строительства подтверждена; action={decision}.")
             tap_match(phone, primary)
             state["tutorial_primary_locked"] = True
-            state["tutorial_primary_signature"] = primary_signature
             set_step(state, "tutorial_wait_construction")
             return "acted"
+        if decision == "exhausted":
+            log("Туториал: кнопка строительства осталась после bounded retry; fail-closed.")
+            return False
         return "wait"
-    if state.get("tutorial_primary_locked", False):
+    if TUTORIAL_ACTION_POLICY.clear_kind(state, "construction_primary") and state.get("tutorial_primary_locked", False):
         state["tutorial_primary_locked"] = False
         state.pop("tutorial_primary_signature", None)
         save_state(state)
@@ -2050,7 +2208,7 @@ def handle_tutorial(phone, state):
         # Dialogue screens can appear before/after Skip. We do not ship a
         # guessed generic dialogue image; the fallback below only accepts
         # explicit "Далее/Продолжить" OCR text in the safe lower dialogue zone.
-        fallback = handle_tutorial_ocr(phone, state)
+        fallback = handle_tutorial_ocr(phone, state, screen.ocr_lines)
         return fallback if fallback else False
 
     if step in ("tutorial_scroll", "tutorial_wait_scroll"):
@@ -2064,21 +2222,11 @@ def handle_tutorial(phone, state):
 
         # Text-based dialogue continuation is handled by the safe OCR
         # fallback below if none of the stronger tutorial markers match.
-        # The first real tutorial task is a hand pointing to the shelter, not
-        # the later task scroll.  Its crop comes from the live scrcpy frame.
-        hand = match(phone, tpl("tutorial_hand_building.png"), 0.94)
-        if hand:
-            debug(phone, hand, "tutorial_hand_building")
-            log("Туториал: подтверждён указатель на первое здание; нажимаю круг подсказки.")
-            # The actionable circle is at the bottom-left of this contextual
-            # hand crop. The centre is only the hand, not the target.
-            tap_match_relative(phone, hand, 0.25, 0.93)
-            set_step(state, "tutorial_building")
-            return "acted"
-
+        # Tutorial hands are handled globally by TutorialPerception above; do
+        # not reintroduce scene-specific pointer templates here.
         hit = match(phone, tpl("task_scroll.png"), 0.88)
         if not hit:
-            fallback = handle_tutorial_ocr(phone, state)
+            fallback = handle_tutorial_ocr(phone, state, screen.ocr_lines)
             return fallback if fallback else False
         debug(phone, hit, "task_scroll")
         log("Туториал: найден свиток задания. Нажимаю свиток.")
@@ -2087,17 +2235,13 @@ def handle_tutorial(phone, state):
         return "acted"
 
     if step == "tutorial_building":
-        hit = match(phone, tpl("upgrade_button.png"), 0.90)
-        if not hit:
-            fallback = handle_tutorial_ocr(phone, state)
-            return fallback if fallback else False
-        debug(phone, hit, "upgrade_button")
-        log("Туториал: найдено «Улучшить». Удерживаю до завершения улучшений.")
-        hold_match(phone, hit, UPGRADE_HOLD_MS)
-        set_step(state, "tutorial_wait_scroll")
-        return "held"
+        # The construction panel is handled by ScreenModel before this branch.
+        # OCR is the fail-closed semantic fallback; no dedicated upgrade PNG is
+        # required for another colour/background variant.
+        fallback = handle_tutorial_ocr(phone, state, screen.ocr_lines)
+        return fallback if fallback else False
 
-    fallback = handle_tutorial_ocr(phone, state)
+    fallback = handle_tutorial_ocr(phone, state, screen.ocr_lines)
     return fallback if fallback else False
 
 
@@ -2421,10 +2565,12 @@ def main():
                 change_threshold = float(
                     state.pop("action_change_threshold", ACTION_CHANGE_DIFF)
                 )
+                change_roi = state.pop("action_change_roi", None)
                 gate.arm(
                     phone,
                     f"{state['phase']}/{state['step']}",
                     change_threshold=change_threshold,
+                    roi=change_roi,
                 )
                 save_state(state)
                 unknown_since = None
@@ -2443,6 +2589,9 @@ def main():
                     )
                     if save_img(out, phone):
                         log(f"НЕИЗВЕСТНЫЙ ЭКРАН — ничего не нажимаю: {out} | diff={d:.1f}")
+                        if state.get("phase") == "tutorial_new_character":
+                            bundle = save_tutorial_perception_bundle(frame, phone, state, out)
+                            log(f"Tutorial perception evidence: {bundle}")
                     last_unknown = phone.copy()
                     last_unknown_at = now
 
@@ -2452,6 +2601,9 @@ def main():
                     f"watchdog_{fs()}_{state['phase']}_{state['step']}.png"
                 )
                 save_img(out, phone)
+                if state.get("phase") == "tutorial_new_character":
+                    bundle = save_tutorial_perception_bundle(frame, phone, state, out)
+                    log(f"Tutorial perception evidence: {bundle}")
                 reason = detect_stop_reason(phone)
                 if not reason:
                     reason = (
