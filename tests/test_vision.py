@@ -25,6 +25,18 @@ class TutorialVisionTests(unittest.TestCase):
         self.assertTrue(state["tutorial_hand_locked"])
         tap_hand.assert_called_once_with(phone, target, 0.5, 0.8)
 
+    def test_assignment_task_hand_variant_is_found(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        template = bot.tpl("tutorial_hand_assignment_task.png")
+        height, width = template.shape[:2]
+        phone[665:665 + height, 145:145 + width] = template
+
+        hit = bot.match_tutorial_hand(phone)
+
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["variant"], "tutorial_hand_assignment_task.png")
+        self.assertEqual(hit["target"], (0.20, 0.95))
+
     def test_action_gate_supports_bounded_local_change_threshold(self):
         before = np.zeros((100, 100, 3), dtype=np.uint8)
         after = before.copy()
