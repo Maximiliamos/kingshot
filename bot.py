@@ -896,7 +896,7 @@ def validate_templates():
         "governor_back.png",
         "create_plus.png", "select_kingdom_title.png", "state3_row.png", "state3_modal.png", "state3_confirm.png",
         "loading_logo.png", "task_scroll.png",
-        "upgrade_button.png", "newbie_offer_context.png", "newbie_offer_close.png", "offline_confirm.png",
+        "newbie_offer_context.png", "newbie_offer_close.png", "offline_confirm.png",
         "invasion_title.png", "tutorial_skip.png", "tutorial_skip_small.png", "tutorial_skip_core.png",
         "tutorial_summon_button.png", "tutorial_hand_target.png", "tutorial_hand_quarry_core.png",
         "tutorial_kitchen_title.png",
