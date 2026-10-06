@@ -393,10 +393,15 @@ class TutorialPerception:
                 and item.bbox.width >= frame.shape[1] * 0.18
                 and item.bbox.center[1] >= frame.shape[0] * 0.40
             ):
-                role = "construction_primary"
+                normalized_text = "".join(ch for ch in item.text.lower() if ch.isalnum())
+                role = (
+                    "construction_upgrade"
+                    if item.style == "grey" or "улучш" in normalized_text
+                    else "construction_primary"
+                )
             enabled = item.enabled
-            if role == "construction_primary":
-                # Grey construction controls are active hold/tap actions in Kingshot;
+            if role in ("construction_primary", "construction_upgrade"):
+                # Grey construction controls are active hold actions in Kingshot;
                 # panel context, not colour, is the independent enabling evidence.
                 enabled = True
             classified.append(
