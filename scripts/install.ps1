@@ -14,6 +14,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $Target "scripts") | Out-Nu
 
 $files = @(
     "bot.py",
+    "tutorial_vision.py",
     "gui.py",
     "device_backend.py",
     "frame_stream.py",
