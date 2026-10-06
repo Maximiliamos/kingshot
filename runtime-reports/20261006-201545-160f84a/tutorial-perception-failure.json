@@ -1,0 +1,360 @@
+{
+  "schema": 1,
+  "captured_at": "2026-10-06T20:15:14.554348+03:00",
+  "phase": "tutorial_new_character",
+  "step": "tutorial_wait_hand_result",
+  "reason": "no action met the fail-closed perception policy",
+  "source_screenshot": "C:\\warbot_git\\unknown\\watchdog_20261006_201512_tutorial_new_character_tutorial_wait_hand_result.png",
+  "full_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261006_201514-full.png",
+  "normalized_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261006_201514-normalized.png",
+  "annotated_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261006_201514-annotated.png",
+  "screen": {
+    "tutorial_target": null,
+    "buttons": [
+      {
+        "bbox": {
+          "x": 139,
+          "y": 843,
+          "width": 143,
+          "height": 56
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.9835164835164836,
+        "text": "Завоева rb",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 251,
+          "y": 317,
+          "width": 135,
+          "height": 246
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.7231865401987354,
+        "text": "а",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 184,
+          "y": 285,
+          "width": 48,
+          "height": 42
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.7289558531746032,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 216,
+          "y": 184,
+          "width": 119,
+          "height": 102
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.7022532542428737,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 139,
+          "y": 843,
+          "width": 143,
+          "height": 56
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.983585164835165,
+        "text": "Завоева rb",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 302,
+          "y": 671,
+          "width": 67,
+          "height": 38
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.9673802042419481,
+        "text": "Получить",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 258,
+          "y": 322,
+          "width": 128,
+          "height": 231
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.6913504464285715,
+        "text": "а",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 189,
+          "y": 279,
+          "width": 45,
+          "height": 48
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.7541550925925926,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 0,
+          "y": 301,
+          "width": 421,
+          "height": 643
+        },
+        "style": "grey",
+        "enabled": true,
+        "confidence": 0.8591318714606044,
+        "text": "а",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 48,
+          "y": 46,
+          "width": 120,
+          "height": 30
+        },
+        "style": "grey",
+        "enabled": true,
+        "confidence": 0.6422708333333333,
+        "text": "завоввание",
+        "role": "generic"
+      }
+    ],
+    "panel": {
+      "kind": "tutorial_dialog",
+      "confidence": 0.8,
+      "evidence": [
+        "central-beige"
+      ]
+    },
+    "ocr_lines": [
+      {
+        "text": "завоввание",
+        "normalized": "завоввание",
+        "score": 63.62426,
+        "loc": [
+          77,
+          44
+        ],
+        "w": 90,
+        "h": 38
+      },
+      {
+        "text": "а",
+        "normalized": "а",
+        "score": 54.624481,
+        "loc": [
+          179,
+          569
+        ],
+        "w": 117,
+        "h": 68
+      },
+      {
+        "text": "Получить",
+        "normalized": "получить",
+        "score": 95.843864,
+        "loc": [
+          306,
+          681
+        ],
+        "w": 59,
+        "h": 19
+      },
+      {
+        "text": "у",
+        "normalized": "у",
+        "score": 84.860115,
+        "loc": [
+          362,
+          642
+        ],
+        "w": 15,
+        "h": 54
+      },
+      {
+        "text": "@",
+        "normalized": "",
+        "score": 85.376785,
+        "loc": [
+          247,
+          759
+        ],
+        "w": 18,
+        "h": 50
+      },
+      {
+        "text": "Завоева rb",
+        "normalized": "завоеваrb",
+        "score": 68.092834,
+        "loc": [
+          171,
+          856
+        ],
+        "w": 79,
+        "h": 26
+      }
+    ],
+    "rejected_targets": [
+      {
+        "center": [
+          207,
+          721
+        ],
+        "radius": 59,
+        "confidence": 0.631886940578801,
+        "glow": 0.07981727574750831,
+        "white": 0.3509194509194509,
+        "cuff": 0.13032893032893034,
+        "motion": 0.3062937062937063,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          326,
+          614
+        ],
+        "radius": 51,
+        "confidence": 1.0,
+        "glow": 0.48736141906873615,
+        "white": 0.4420011215252744,
+        "cuff": 0.1574140831530882,
+        "motion": 0.4420411759993591,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow",
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          216,
+          620
+        ],
+        "radius": 63,
+        "confidence": 1.0,
+        "glow": 0.3132091940645912,
+        "white": 0.624635435654393,
+        "cuff": 0.09565257017863653,
+        "motion": 0.3120670798395917,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow",
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          154,
+          539
+        ],
+        "radius": 67,
+        "confidence": 1.0,
+        "glow": 0.544801026957638,
+        "white": 0.6437863606981254,
+        "cuff": 0.01935197155785391,
+        "motion": 0.2706043956043956,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow"
+        ]
+      },
+      {
+        "center": [
+          254,
+          627
+        ],
+        "radius": 47,
+        "confidence": 1.0,
+        "glow": 0.2720626631853786,
+        "white": 0.5519621943702486,
+        "cuff": 0.16330388329566467,
+        "motion": 0.3914526402301212,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow",
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          351,
+          652
+        ],
+        "radius": 35,
+        "confidence": 0.8524209628356548,
+        "glow": 0.19597156398104265,
+        "white": 0.3176231176231176,
+        "cuff": 0.24794464794464793,
+        "motion": 0.4227106227106227,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          263,
+          779
+        ],
+        "radius": 21,
+        "confidence": 0.19285714285714287,
+        "glow": 0.0,
+        "white": 0.08902691511387163,
+        "cuff": 0.017391304347826087,
+        "motion": 0.13519668737060042,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": []
+      },
+      {
+        "center": [
+          208,
+          782
+        ],
+        "radius": 24,
+        "confidence": 0.5949623417721519,
+        "glow": 0.2345,
+        "white": 0.07911392405063292,
+        "cuff": 0.14240506329113925,
+        "motion": 0.11677215189873418,
+        "global_motion": 0.25700259672289544,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow"
+        ]
+      }
+    ]
+  }
+}
