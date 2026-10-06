@@ -5,25 +5,29 @@ import cv2
 import numpy as np
 
 import bot
+from tutorial_vision import ScreenModel, TutorialTarget
 
 
 class TutorialVisionTests(unittest.TestCase):
-    def test_visible_tutorial_hand_uses_its_bounded_retry_path(self):
+    def test_visible_tutorial_guidance_uses_its_bounded_retry_path(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
         state = dict(bot.DEFAULT_STATE)
-        target = {
-            "loc": (100, 200), "w": 80, "h": 100, "score": 0.95,
-            "variant": "tutorial_hand_quarry_core.png", "target": (0.5, 0.8),
-        }
+        target = TutorialTarget(
+            bbox=bot.Box(100, 200, 80, 80),
+            confidence=0.95,
+            evidence=("target-glow", "temporal-motion"),
+            source="universal-glow-pointer",
+        )
+        screen = ScreenModel(tutorial_target=target)
         with patch("bot.match", return_value=None), \
-                patch("bot.match_tutorial_hand", return_value=target), \
-                patch("bot.debug"), patch("bot.tap_match_relative") as tap_hand, \
+                patch("bot.perceive_tutorial_screen", return_value=screen), \
+                patch("bot.debug"), patch("bot.tap_match") as tap_target, \
                 patch("bot.set_step", side_effect=lambda s, step: s.update(step=step)):
             result = bot.handle_tutorial(phone, state)
 
         self.assertEqual(result, "held")
         self.assertTrue(state["tutorial_hand_locked"])
-        tap_hand.assert_called_once_with(phone, target, 0.5, 0.8)
+        tap_target.assert_called_once_with(phone, target.bbox.as_hit())
 
     def test_assignment_task_hand_variant_is_found(self):
         phone = np.zeros((944, 421, 3), dtype=np.uint8)
