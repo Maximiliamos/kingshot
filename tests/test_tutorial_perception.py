@@ -28,12 +28,23 @@ class TutorialPerceptionTests(unittest.TestCase):
         lines = [{"text": "Улучшить", "normalized": "улучшить",
                   "loc": (275, 485), "w": 90, "h": 25, "score": 95}]
         model = tv.TutorialPerception().perceive(frame, ocr_lines=lines)
-        primary = model.button("construction_primary")
+        primary = model.button("construction_upgrade")
         self.assertEqual(model.panel.kind, "construction")
         self.assertIsNotNone(primary)
         self.assertEqual(primary.style, "grey")
         self.assertTrue(primary.enabled)
         self.assertEqual(primary.text, "Улучшить")
+
+    def test_cyan_upgrade_text_gets_hold_semantics(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (0, 380), (420, 943), (170, 190, 205), -1)
+        cv2.rectangle(frame, (230, 500), (395, 565), (220, 180, 40), -1)
+        lines = [{
+            "text": "Улучшить", "normalized": "улучшить",
+            "loc": (265, 515), "w": 95, "h": 25, "score": 95,
+        }]
+        model = tv.TutorialPerception().perceive(frame, ocr_lines=lines)
+        self.assertIsNotNone(model.button("construction_upgrade"))
 
     def test_novel_guidance_requires_temporal_motion(self):
         detector = tv.TutorialGuidanceDetector()
