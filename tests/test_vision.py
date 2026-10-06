@@ -13,7 +13,7 @@ class TutorialVisionTests(unittest.TestCase):
         after = before.copy()
         after[40:60, 40:60] = 20
         gate = bot.ActionGate()
-        gate.arm(before, "resident assignment", change_threshold=0.5)
+        gate.arm(before, "resident assignment", change_threshold=0.2)
         gate.started_at -= bot.ACTION_MIN_SETTLE + 0.1
         self.assertEqual(gate.observe(after), "changed")
 

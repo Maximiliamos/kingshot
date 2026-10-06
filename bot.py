@@ -1920,7 +1920,7 @@ def handle_tutorial(phone, state):
         # Assigning one resident changes only a small portrait/counter region.
         # Keep the action fail-closed, but use a local-action threshold instead
         # of the scene-transition threshold used by full-screen tutorial steps.
-        state["action_change_threshold"] = 0.5
+        state["action_change_threshold"] = 0.2
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
