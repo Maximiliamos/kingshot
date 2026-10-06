@@ -266,15 +266,39 @@ def google_services_smoke(backend, output: str) -> dict:
         and re.search(r"(?i)\bANR\b", anr_dump)
     )
 
-    frame = backend.frame()
     screenshot = Path(output)
     screenshot.parent.mkdir(parents=True, exist_ok=True)
-    frame_ok = bool(
-        frame is not None
-        and frame.size > 0
-        and float(np.std(frame)) > 1.0
-        and cv2.imwrite(str(screenshot), frame)
-    )
+    # Play Store can be foreground while its first WSA surface is still a
+    # black splash frame.  Do not mistake that short transition for a broken
+    # GApps runtime, but keep the wait bounded and require a real rendered
+    # Android frame before this gate can pass.
+    frame_ok = False
+    frame_attempts = 0
+    frame_stddev = 0.0
+    frame_error = ""
+    frame_deadline = time.monotonic() + 10.0
+    while time.monotonic() < frame_deadline:
+        frame_attempts += 1
+        try:
+            frame = backend.frame()
+            if frame is None or frame.size == 0:
+                frame_error = "Android screencap returned an empty frame"
+            else:
+                frame_stddev = float(np.std(frame))
+                # Preserve the observed frame even on failure so the current
+                # acceptance run has diagnostic evidence rather than relying
+                # on a prior run's screenshot.
+                screenshot_written = cv2.imwrite(str(screenshot), frame)
+                if frame_stddev > 1.0 and screenshot_written:
+                    frame_ok = True
+                    break
+                if not screenshot_written:
+                    frame_error = "Could not write Play Store UI evidence"
+                else:
+                    frame_error = f"Android UI frame is blank (stddev={frame_stddev:.3f})"
+        except BackendError as exc:
+            frame_error = str(exc)
+        time.sleep(0.5)
     auxiliary_cleanup = close_auxiliary_android_windows(backend)
     cleanup_deadline = time.monotonic() + 5.0
     play_store_closed = False
@@ -313,9 +337,12 @@ def google_services_smoke(backend, output: str) -> dict:
         "play_store_crash_loop": crash_loop,
         "play_store_anr": play_store_anr,
         "ui_frame": frame_ok,
+        "ui_frame_attempts": frame_attempts,
+        "ui_frame_stddev": round(frame_stddev, 3),
+        "ui_frame_error": frame_error,
         "play_store_closed_after_evidence": play_store_closed,
         "auxiliary_windows_closed": auxiliary_cleanup,
-        "screenshot": str(screenshot.resolve()) if frame_ok else "",
+        "screenshot": str(screenshot.resolve()) if screenshot.is_file() else "",
         "packages": packages,
     }
     report_path = screenshot.with_suffix(".json")

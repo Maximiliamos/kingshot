@@ -71,6 +71,50 @@ class WarBotCliTests(unittest.TestCase):
         self.assertNotIn("private@example.com", persisted)
         self.assertNotIn("account_output", report)
 
+    def test_google_services_smoke_retries_transient_blank_play_store_frame(self):
+        backend = MagicMock()
+        backend.require_ready.return_value = DeviceHealth(
+            backend="wsa", serial="127.0.0.1:58526", state="device", boot_completed="1"
+        )
+        play_store_stopped = False
+
+        def shell(args, timeout=60):
+            nonlocal play_store_stopped
+            if args[:2] == ["pm", "path"]:
+                return f"package:/data/app/{args[2]}/base.apk"
+            if args[:2] == ["dumpsys", "package"]:
+                return "versionCode=123\nversionName=1.2.3\n"
+            if args[:4] == ["pm", "list", "packages", "-e"]:
+                return f"package:{args[4]}"
+            if args[:3] == ["cmd", "account", "list"]:
+                return "Account {type=com.google}"
+            if args[0] == "monkey":
+                return "Events injected: 1"
+            if args[0] == "pidof":
+                if play_store_stopped:
+                    raise BackendError("ADB command failed (1): no diagnostic output")
+                return "1234"
+            if args[:2] == ["am", "force-stop"]:
+                if args[2] == "com.android.vending":
+                    play_store_stopped = True
+                return ""
+            if args[:3] == ["dumpsys", "window", "windows"]:
+                return "mCurrentFocus=com.android.vending/.AssetBrowserActivity"
+            if args[:3] == ["dumpsys", "activity", "lastanr"]:
+                return "No ANR"
+            raise AssertionError(args)
+
+        backend.shell.side_effect = shell
+        valid = np.zeros((20, 10, 3), dtype=np.uint8)
+        valid[:, 5:] = 255
+        backend.frame.side_effect = [np.zeros((20, 10, 3), dtype=np.uint8), valid]
+        with TemporaryDirectory() as td:
+            report = warbot_cli.google_services_smoke(backend, str(Path(td) / "google.png"))
+
+        self.assertTrue(report["pass"])
+        self.assertEqual(report["ui_frame_attempts"], 2)
+        self.assertGreater(report["ui_frame_stddev"], 1.0)
+
     def test_status_prints_backend_health(self):
         backend = MagicMock()
         backend.health.return_value = DeviceHealth(
