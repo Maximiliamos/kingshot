@@ -8,6 +8,23 @@ import bot
 
 
 class TutorialVisionTests(unittest.TestCase):
+    def test_visible_tutorial_hand_uses_its_bounded_retry_path(self):
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        state = dict(bot.DEFAULT_STATE)
+        target = {
+            "loc": (100, 200), "w": 80, "h": 100, "score": 0.95,
+            "variant": "tutorial_hand_quarry_core.png", "target": (0.5, 0.8),
+        }
+        with patch("bot.match", return_value=None), \
+                patch("bot.match_tutorial_hand", return_value=target), \
+                patch("bot.debug"), patch("bot.tap_match_relative") as tap_hand, \
+                patch("bot.set_step", side_effect=lambda s, step: s.update(step=step)):
+            result = bot.handle_tutorial(phone, state)
+
+        self.assertEqual(result, "held")
+        self.assertTrue(state["tutorial_hand_locked"])
+        tap_hand.assert_called_once_with(phone, target, 0.5, 0.8)
+
     def test_action_gate_supports_bounded_local_change_threshold(self):
         before = np.zeros((100, 100, 3), dtype=np.uint8)
         after = before.copy()

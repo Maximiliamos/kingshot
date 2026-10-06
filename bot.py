@@ -1874,7 +1874,11 @@ def handle_tutorial(phone, state):
             tap_match_relative(phone, hand_target, *hand_target["target"])
             state["tutorial_hand_locked"] = True
             set_step(state, "tutorial_wait_hand_result")
-            return "acted"
+            # The WSA window occasionally drops one foreground pointer event.
+            # Do not arm the global scene-change gate here: the branch below
+            # already waits while the exact hand remains visible and retries
+            # only that same illuminated target after three seconds.
+            return "held"
         if time.time() - float(state.get("step_started_at", 0.0)) >= 3.0:
             log("Туториал: указатель остался после действия; повторяю точную светящуюся цель.")
             state["tutorial_hand_locked"] = False
