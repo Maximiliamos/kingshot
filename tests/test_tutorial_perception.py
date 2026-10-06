@@ -1,9 +1,11 @@
+import inspect
 import unittest
 from unittest.mock import patch
 
 import cv2
 import numpy as np
 
+import bot
 import tutorial_vision as tv
 
 
@@ -64,6 +66,14 @@ class TutorialPerceptionTests(unittest.TestCase):
         with patch.object(detector, "_circle_candidates", return_value=[static]):
             target, _ = detector.detect(frame)
         self.assertIsNone(target)
+
+    def test_production_paths_do_not_reintroduce_scene_hand_templates(self):
+        tutorial_source = inspect.getsource(bot.handle_tutorial)
+        rename_source = inspect.getsource(bot.handle_rename_governor)
+        self.assertNotIn("match_tutorial_hand(", tutorial_source)
+        self.assertNotIn("match_tutorial_hand(", rename_source)
+        self.assertNotIn("tutorial_hand_building.png", tutorial_source)
+        self.assertNotIn("upgrade_button.png", tutorial_source)
 
     def test_action_policy_is_bounded(self):
         policy = tv.BoundedActionPolicy()
