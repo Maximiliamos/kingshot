@@ -1044,8 +1044,9 @@ def handle_tutorial_ocr(phone, state, lines=None):
         if time.monotonic() - LAST_OCR_AT < OCR_INTERVAL:
             return False
         LAST_OCR_AT = time.monotonic()
-        lines = ocr_lines(phone)
-    target = ocr_action_from_lines(lines)
+        target = ocr_action(phone)
+    else:
+        target = ocr_action_from_lines(lines)
     now = time.time()
     if not target:
         if state.get("ocr_locked_action"):
