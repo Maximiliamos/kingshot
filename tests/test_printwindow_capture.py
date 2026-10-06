@@ -52,6 +52,15 @@ class FakeGdi32:
 
 
 class PrintWindowCaptureTests(unittest.TestCase):
+    def test_window_title_match_rejects_browser_tabs_that_only_mention_kingshot(self):
+        self.assertTrue(bot.WsaGameWindowCapture._is_game_window_title("Война за трон"))
+        self.assertTrue(bot.WsaGameWindowCapture._is_game_window_title("Kingshot"))
+        self.assertFalse(
+            bot.WsaGameWindowCapture._is_game_window_title(
+                "Аудит проекта Kingshot — Яндекс Браузер"
+            )
+        )
+
     def _capture(self):
         capture = bot.WsaGameWindowCapture()
         capture.hwnd = 77

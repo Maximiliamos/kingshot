@@ -170,6 +170,12 @@ class WsaGameWindowCapture(ScrcpyCapture):
     capture_method = "printwindow"
     TITLE_MARKERS = ("война за трон", "kingshot")
 
+    @classmethod
+    def _is_game_window_title(cls, title):
+        """Accept only the app window title, never a browser/document mention."""
+        folded = " ".join(str(title or "").split()).casefold()
+        return folded in cls.TITLE_MARKERS
+
     def __init__(self):
         # This transport never samples desktop pixels, so it must not allocate
         # an MSS screen-grabber. Keeping it HWND-only makes overlap safety
@@ -195,8 +201,7 @@ class WsaGameWindowCapture(ScrcpyCapture):
                 return True
             title = ctypes.create_unicode_buffer(size + 1)
             user32.GetWindowTextW(hwnd, title, size + 1)
-            folded = title.value.casefold()
-            if any(marker in folded for marker in WsaGameWindowCapture.TITLE_MARKERS):
+            if WsaGameWindowCapture._is_game_window_title(title.value):
                 found.append((hwnd, title.value))
             return True
 
