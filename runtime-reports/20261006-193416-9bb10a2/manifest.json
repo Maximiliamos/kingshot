@@ -1,0 +1,76 @@
+﻿{
+    "schema":  1,
+    "kind":  "mvp-full-host",
+    "commit":  "9bb10a2ad7bb1c4ede8fb83c902e3da134e65ea2",
+    "expected_commit":  "9bb10a2ad7bb1c4ede8fb83c902e3da134e65ea2",
+    "source_branch":  "feature/unified-android-backend",
+    "upstream":  "origin/feature/unified-android-backend",
+    "upstream_commit":  "9bb10a2ad7bb1c4ede8fb83c902e3da134e65ea2",
+    "started_at":  "2026-10-06T19:29:45.0972244+03:00",
+    "finished_at":  "2026-10-06T19:34:15.3165156+03:00",
+    "duration_seconds":  270,
+    "verify_exit_code":  5,
+    "overall":  "fail",
+    "acceptance_run_id":  "a12fc512c6a84bb5b09d220580265a19",
+    "acceptance_head":  "9bb10a2ad7bb1c4ede8fb83c902e3da134e65ea2",
+    "flow_timeout_minutes":  45,
+    "soak_timeout_minutes":  90,
+    "soak_characters":  2,
+    "evidence_files":  [
+                           {
+                               "name":  "android-data-free-space.json",
+                               "size_bytes":  597,
+                               "sha256":  "24ae3a01b2e4a7a683687c0665c72873a4f30a1b4d909fe1c5e9d73332150470"
+                           },
+                           {
+                               "name":  "bot.log",
+                               "size_bytes":  5009192,
+                               "sha256":  "af0ded761735125d21b2843fa263023bd8ba8cc6a505a4842d12721b3f1cd415"
+                           },
+                           {
+                               "name":  "console.txt",
+                               "size_bytes":  154244,
+                               "sha256":  "db7530917d77b7a67e181f119b8f3f7c4c9fd40e7dd3a4cda486c999062e77aa"
+                           },
+                           {
+                               "name":  "control.json",
+                               "size_bytes":  41,
+                               "sha256":  "10846fabacdc128e8f8e53dfd4d322a919e4fa2dc5454fa46115043ef3feccb8"
+                           },
+                           {
+                               "name":  "events.jsonl",
+                               "size_bytes":  460125,
+                               "sha256":  "c06bc99c6eeb794d43f92536831d82e36fa4b1bc8584d38d5e561631173aa155"
+                           },
+                           {
+                               "name":  "google-services.json",
+                               "size_bytes":  1030,
+                               "sha256":  "fbbbf10090ad331764896c09c47123f8f42d6510a7591f81f3eaed4984424063"
+                           },
+                           {
+                               "name":  "mvp-failure-process-audit.json",
+                               "size_bytes":  20690,
+                               "sha256":  "b309fc859fce224889afd19c9a87814264e454cba700c01920539472ad22ed40"
+                           },
+                           {
+                               "name":  "mvp-full-acceptance.json",
+                               "size_bytes":  3337,
+                               "sha256":  "abb3207d549b1f377cd1c2a211512aa3ecb507da926ea7b8e093bed27f619888"
+                           },
+                           {
+                               "name":  "state.json",
+                               "size_bytes":  714,
+                               "sha256":  "7b66c6b1c5b5e6f1dc022b81f2d48aae27e33d03810c64509b88c8f2313181e3"
+                           },
+                           {
+                               "name":  "state.previous.json",
+                               "size_bytes":  714,
+                               "sha256":  "92ab2330417ea862415d85c38ce2a33678fba3270580863d5e1ec18ddb241e8a"
+                           },
+                           {
+                               "name":  "wsa-latest-local.json",
+                               "size_bytes":  2103,
+                               "sha256":  "d2ab17b0efe5113cbf8b1426f6090010f66d927dbefb5722d60df81f764be526"
+                           }
+                       ]
+}
