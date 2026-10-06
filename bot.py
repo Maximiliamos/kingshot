@@ -1293,6 +1293,41 @@ def find_completed_resident_assignment(phone):
     return {"loc": (x0, y0), "w": x1 - x0, "h": y1 - y0, "score": neutral_coverage}
 
 
+def find_resident_source_upgrade_button(phone):
+    """Find the upper Forward button in the exact two-option resident source modal."""
+    height, width = phone.shape[:2]
+    modal = phone[round(height * 0.31):round(height * 0.64), round(width * 0.08):round(width * 0.92)]
+    hsv_modal = cv2.cvtColor(modal, cv2.COLOR_BGR2HSV)
+    beige = cv2.inRange(hsv_modal, (8, 8, 90), (35, 150, 255))
+    if float(np.count_nonzero(beige)) / max(1.0, float(beige.size)) < 0.42:
+        return None
+
+    hsv = cv2.cvtColor(phone, cv2.COLOR_BGR2HSV)
+    cyan = cv2.inRange(hsv, (75, 80, 90), (105, 255, 255))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 5))
+    cyan = cv2.morphologyEx(cyan, cv2.MORPH_CLOSE, kernel)
+    contours, _ = cv2.findContours(cyan, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    candidates = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        cx, cy = x + w / 2, y + h / 2
+        if not (
+            width * 0.62 <= cx <= width * 0.90
+            and height * 0.38 <= cy <= height * 0.62
+            and width * 0.12 <= w <= width * 0.26
+            and height * 0.035 <= h <= height * 0.075
+        ):
+            continue
+        candidates.append({"loc": (x, y), "w": w, "h": h, "score": float(cv2.contourArea(contour))})
+    candidates.sort(key=lambda item: item["loc"][1])
+    if len(candidates) != 2:
+        return None
+    separation = candidates[1]["loc"][1] - candidates[0]["loc"][1]
+    if separation < height * 0.07 or separation > height * 0.16:
+        return None
+    return candidates[0]
+
+
 def is_construction_panel(phone):
     kitchen = match(phone, tpl("tutorial_kitchen_title.png"), 0.93)
     if kitchen:
@@ -1862,6 +1897,14 @@ def handle_tutorial(phone, state):
         state["tutorial_hand_locked"] = False
         save_state(state)
         log("Туториал: рука-указатель исчезла; следующий маркер снова может быть обработан.")
+
+    resident_source = find_resident_source_upgrade_button(phone)
+    if resident_source:
+        debug(phone, resident_source, "tutorial_resident_source_upgrade")
+        log("Туториал: подтверждено окно источников жителей; выбираю верхнее «Улучшить дом».")
+        tap_match(phone, resident_source)
+        set_step(state, "tutorial_wait_hand_result")
+        return "acted"
 
     resident_plus = find_resident_assignment_plus(phone)
     if resident_plus:

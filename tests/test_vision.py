@@ -70,6 +70,24 @@ class TutorialVisionTests(unittest.TestCase):
         cv2.rectangle(no_panel, (250, 770), (282, 814), (115, 120, 125), -1)
         self.assertIsNone(bot.find_completed_resident_assignment(no_panel))
 
+    def test_resident_source_modal_requires_two_forward_buttons_and_returns_upper(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (47, 323), (374, 596), (190, 210, 225), -1)
+        cv2.rectangle(frame, (286, 404), (354, 452), (220, 190, 25), -1)
+        cv2.rectangle(frame, (286, 507), (354, 554), (220, 190, 25), -1)
+        hit = bot.find_resident_source_upgrade_button(frame)
+        self.assertIsNotNone(hit)
+        self.assertLess(hit["loc"][1], 500)
+
+        one_button = frame.copy()
+        cv2.rectangle(one_button, (280, 500), (360, 560), (190, 210, 225), -1)
+        self.assertIsNone(bot.find_resident_source_upgrade_button(one_button))
+
+        no_modal = np.zeros_like(frame)
+        cv2.rectangle(no_modal, (286, 404), (354, 452), (220, 190, 25), -1)
+        cv2.rectangle(no_modal, (286, 507), (354, 554), (220, 190, 25), -1)
+        self.assertIsNone(bot.find_resident_source_upgrade_button(no_modal))
+
     def test_current_loading_splash_is_detected_without_clicking(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)
         cv2.rectangle(frame, (135, 190), (260, 250), (0, 145, 255), -1)
