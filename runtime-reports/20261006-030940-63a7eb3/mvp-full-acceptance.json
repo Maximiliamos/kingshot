@@ -1,0 +1,140 @@
+﻿{
+    "schema":  1,
+    "product":  "TUGARIN BOTS",
+    "overall":  "fail",
+    "head":  "63a7eb38b105b17e2337f4dafc945b4ba45eddf9",
+    "run_id":  "7fd281fc12a44698a8c4b72bb1ff8edd",
+    "windows_user":  "COMPUTER\\Программист1",
+    "windows_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "started_at_utc":  "2026-10-05T23:59:59.5184280+00:00",
+    "finished_at_utc":  "2026-10-06T00:09:38.8329250+00:00",
+    "failed_gate":  "Exact State #3 -\u003e tutorial -\u003e Tugarin\u003cN\u003e",
+    "exit_code":  4,
+    "gates":  [
+                  {
+                      "name":  "Clean tracked worktree",
+                      "script":  "git status --porcelain --untracked-files=no",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:59:59.6500895+00:00",
+                      "finished_at_utc":  "2026-10-05T23:59:59.6556216+00:00"
+                  },
+                  {
+                      "name":  "Published branch head",
+                      "script":  "git rev-parse @{u}",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:59:59.7722632+00:00",
+                      "finished_at_utc":  "2026-10-05T23:59:59.7722632+00:00",
+                      "detail":  "origin/feature/unified-android-backend@63a7eb38b105b17e2337f4dafc945b4ba45eddf9"
+                  },
+                  {
+                      "name":  "Infrastructure / WSA / Kingshot / process audit",
+                      "script":  "verify_release.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-05T23:59:59.8915149+00:00",
+                      "finished_at_utc":  "2026-10-06T00:04:36.5036039+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_wsa\\reports\\LATEST-LOCAL.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Google Services / Play Store / account",
+                      "script":  "verify_google_services.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:04:36.5146046+00:00",
+                      "finished_at_utc":  "2026-10-06T00:04:41.7042472+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\google-services.json",
+                                       "C:\\warbot_git\\debug\\google-services.png"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Production PrintWindow preview",
+                      "script":  "verify_preview.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:04:41.7173012+00:00",
+                      "finished_at_utc":  "2026-10-06T00:04:59.6294075+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\preview-production.json",
+                                       "C:\\warbot_git\\debug\\preview-production.png"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Consoleless GUI render",
+                      "script":  "verify_gui.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:04:59.6409358+00:00",
+                      "finished_at_utc":  "2026-10-06T00:05:16.0585270+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\gui-host-smoke.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Operator Unicode/UI/audio channel",
+                      "script":  "verify_operator_io.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:05:16.0695272+00:00",
+                      "finished_at_utc":  "2026-10-06T00:05:19.4893861+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\operator-io-smoke.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Bounded game + ADB recovery",
+                      "script":  "verify_recovery.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:05:19.5235862+00:00",
+                      "finished_at_utc":  "2026-10-06T00:05:27.0172637+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\recovery-smoke.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Exact State #3 -\u003e tutorial -\u003e Tugarin\u003cN\u003e",
+                      "script":  "verify_game_flow.ps1",
+                      "pass":  false,
+                      "exit_code":  4,
+                      "started_at_utc":  "2026-10-06T00:05:27.0566792+00:00",
+                      "finished_at_utc":  "2026-10-06T00:09:17.8779677+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\mvp-game-flow-evidence.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Failure-path process audit",
+                      "script":  "audit_runtime_processes.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T00:09:38.8319226+00:00",
+                      "finished_at_utc":  "2026-10-06T00:09:38.8319226+00:00"
+                  }
+              ]
+}

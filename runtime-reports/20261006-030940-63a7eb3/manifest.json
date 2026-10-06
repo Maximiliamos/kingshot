@@ -1,0 +1,109 @@
+﻿{
+    "schema":  1,
+    "kind":  "mvp-full-host",
+    "commit":  "63a7eb38b105b17e2337f4dafc945b4ba45eddf9",
+    "expected_commit":  "63a7eb38b105b17e2337f4dafc945b4ba45eddf9",
+    "source_branch":  "feature/unified-android-backend",
+    "upstream":  "origin/feature/unified-android-backend",
+    "upstream_commit":  "63a7eb38b105b17e2337f4dafc945b4ba45eddf9",
+    "started_at":  "2026-10-06T02:59:58.9550969+03:00",
+    "finished_at":  "2026-10-06T03:09:39.7409965+03:00",
+    "duration_seconds":  581,
+    "verify_exit_code":  4,
+    "overall":  "fail",
+    "flow_timeout_minutes":  45,
+    "soak_timeout_minutes":  90,
+    "soak_characters":  2,
+    "evidence_files":  [
+                           {
+                               "name":  "android-data-free-space.json",
+                               "size_bytes":  597,
+                               "sha256":  "2ef7ce9f2f3ec610dab6ae747dbbe23183cd614f24c2667738f4b71828b854cf"
+                           },
+                           {
+                               "name":  "bot.log",
+                               "size_bytes":  4946614,
+                               "sha256":  "e78e159cf80235c21b6e347b7698836c710ed01181967ddbc1b54820a8636b5a"
+                           },
+                           {
+                               "name":  "console.txt",
+                               "size_bytes":  174966,
+                               "sha256":  "12184f05e272bf8735599384d840eafa292f18b4193b226e142f6f0c62199c5a"
+                           },
+                           {
+                               "name":  "control.json",
+                               "size_bytes":  41,
+                               "sha256":  "10846fabacdc128e8f8e53dfd4d322a919e4fa2dc5454fa46115043ef3feccb8"
+                           },
+                           {
+                               "name":  "events.jsonl",
+                               "size_bytes":  321855,
+                               "sha256":  "19174106e786a4135fd6f8b01b58c1d944d7ae054e85b010a37f128e4a75b90e"
+                           },
+                           {
+                               "name":  "google-services.json",
+                               "size_bytes":  1070,
+                               "sha256":  "667da647a8c5274f74e7a1e1fd944850d7170b61e03203f045807be98147235a"
+                           },
+                           {
+                               "name":  "google-services.png",
+                               "size_bytes":  2864,
+                               "sha256":  "962b2267b49a8e73f2358a5e135eefd03ed08667f8460e195a505f7fdc9edc11"
+                           },
+                           {
+                               "name":  "gui-host-smoke.json",
+                               "size_bytes":  4261,
+                               "sha256":  "12b91d041954f6766b8df28cbd2ed7d49e7227e575132d20b9fd014dabff21ee"
+                           },
+                           {
+                               "name":  "mvp-full-acceptance.json",
+                               "size_bytes":  6778,
+                               "sha256":  "6cc0191bd5ab6c4334a8ab7ea3ec8024ca49257bb541e4923d5179c44b92d46f"
+                           },
+                           {
+                               "name":  "mvp-game-flow-evidence.json",
+                               "size_bytes":  1292,
+                               "sha256":  "d1e7260c08f6a53d27a88ab247b39b5e6c6df8a71b8c93edd645b25d3ef34d92"
+                           },
+                           {
+                               "name":  "operator-io-smoke.json",
+                               "size_bytes":  4929,
+                               "sha256":  "ac98723757237730171bc7a164f66185f56a4ffc3922496f101edb07a9985ea8"
+                           },
+                           {
+                               "name":  "preview-production.json",
+                               "size_bytes":  853,
+                               "sha256":  "b872c459f12b124fede34a6b8877591d7cb53ac684055e7ee68353ae777dc634"
+                           },
+                           {
+                               "name":  "preview-production.png",
+                               "size_bytes":  3615,
+                               "sha256":  "277785e7b26779d05a28ab43efc251b8e36f5ddf345a73cd53f2f3f220646910"
+                           },
+                           {
+                               "name":  "recovery-smoke.json",
+                               "size_bytes":  5585,
+                               "sha256":  "2503a8b710849eb001f81f9eafce38cddceebb8b79da0975237a35da12d650d2"
+                           },
+                           {
+                               "name":  "runtime-heartbeat.json",
+                               "size_bytes":  437,
+                               "sha256":  "36039398f773c7b20f2cdb0d951483d7d22382775cd69c1be0556ce57323704b"
+                           },
+                           {
+                               "name":  "state.json",
+                               "size_bytes":  790,
+                               "sha256":  "a12963204239d921f12197d01a3b86203ffd10c42bc0d85c4884dc458178a762"
+                           },
+                           {
+                               "name":  "state.previous.json",
+                               "size_bytes":  689,
+                               "sha256":  "1c7f16a235faa408617b05b22d95e6167bacc3ac7a65d7cd63736453c97b8519"
+                           },
+                           {
+                               "name":  "wsa-latest-local.json",
+                               "size_bytes":  2103,
+                               "sha256":  "6357eca164369ec5224e9e95370ccf38fb6269d84606834c4b0a06e304f5ec7b"
+                           }
+                       ]
+}
