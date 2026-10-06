@@ -63,6 +63,7 @@ class ReleaseWorkflowTests(unittest.TestCase):
 
     def test_copy_installer_ships_hardening_modules(self):
         for name in (
+            "tutorial_vision.py",
             "frame_stream.py",
             "scrcpy_transport.py",
             "runtime_events.py",
