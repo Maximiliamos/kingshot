@@ -2103,6 +2103,28 @@ def handle_tutorial(phone, state):
         set_step(state, "tutorial_wait_hand_result")
         return "acted"
 
+    upgrade_button = screen.button("construction_upgrade")
+    upgrade = _button_hit(upgrade_button)
+    if upgrade:
+        upgrade_box = Box(upgrade["loc"][0], upgrade["loc"][1], upgrade["w"], upgrade["h"])
+        decision = TUTORIAL_ACTION_POLICY.decide(
+            state, "construction_upgrade", upgrade_box, phone.shape, retry_after=3.0
+        )
+        if decision in ("act", "retry"):
+            debug(phone, upgrade, "tutorial_construction_upgrade")
+            log(f"Туториал: подтверждено «Улучшить»; hold {UPGRADE_HOLD_MS} ms action={decision}.")
+            hold_match(phone, upgrade, UPGRADE_HOLD_MS)
+            state["ocr_upgrade_hold_ms"] = UPGRADE_HOLD_MS
+            set_step(state, "tutorial_wait_scroll")
+            return "held"
+        if decision == "exhausted":
+            log("Туториал: upgrade-кнопка осталась после bounded hold retry; fail-closed.")
+            return False
+        return "wait"
+    if TUTORIAL_ACTION_POLICY.clear_kind(state, "construction_upgrade"):
+        state["ocr_upgrade_hold_ms"] = 0
+        save_state(state)
+
     primary_button = screen.button("construction_primary")
     primary = _button_hit(primary_button)
     if not primary:
