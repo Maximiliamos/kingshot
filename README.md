@@ -18,7 +18,11 @@ WSA / Native ARM64 PoC / любой готовый ADB Android
       └───────────┴────────────┘
                   │
                   ▼
-          OpenCV vision layer
+        OpenCV perception primitives
+                  │
+                  ▼
+       TutorialPerception / ScreenModel
+      (guidance / buttons / panels / OCR)
                   │
                   ▼
        safe state machine / GUI
@@ -70,6 +74,8 @@ image-first подход для Unity-интерфейса как в Airtest.
 - atomic state, previous snapshot и fail-closed при повреждённом state.json;
 - точный выбор строки и Confirm государства №3;
 - обязательный initial/character tutorial state machine;
+- универсальный tutorial perception layer: animated glow + pointer colours + temporal motion определяют цель без фонозависимого hand-template; два core-crop используются только как throttled migration fallback;
+- структурное распознавание tutorial buttons/panels с context-aware enabled state, OCR привязывается к bbox кнопки только как evidence, а unknown UI сохраняет fail-closed perception bundle;
 - переименование без пробела: `Тугарин1`, `Тугарин2`, ...;
 - продолжение счётчика между циклами;
 - настраиваемый цикл и синхронный `pm clear`;
