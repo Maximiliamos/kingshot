@@ -1,0 +1,280 @@
+﻿{
+    "schema":  1,
+    "checked_at":  "2026-10-06T19:51:18.3059356+03:00",
+    "target_user":  "COMPUTER\\Программист1",
+    "allow_gui_processes":  false,
+    "pass":  true,
+    "processes":  [
+                      {
+                          "name":  "conhost",
+                          "pid":  18284,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  18256,
+                          "parent_command_line":  "\"WSACrashUploader\\WSACrashUploader.exe\""
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  21072,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  9084,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  6792,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_modules\\@oai\\sky\\bin\\windows\\swift\\x64\\codex-computer-use-swift.exe --parent-pid 16324"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  712,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  12680,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node.exe\" C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_modules\\@oai\\cua-repl\\bin\\cua-repl.mjs"
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  7080,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  2568,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  21528,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_repl.exe\""
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  22704,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  3028,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  7080,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  14504,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  22704,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  21896,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  7640,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex-code-mode-host.exe\""
+                      },
+                      {
+                          "name":  "adb",
+                          "pid":  23044,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "adb -L tcp:5037 fork-server server --reply-fd 692",
+                          "parent_process_id":  7016,
+                          "parent_command_line":  ""
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  6148,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  32060,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_repl.exe\""
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  8108,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  13256,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  12200,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  8108,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  28452,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  18204,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node.exe\" C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_modules\\@oai\\cua-repl\\bin\\cua-repl.mjs"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  8224,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  13256,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs"
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  12204,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  5832,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  9748,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_repl.exe\""
+                      },
+                      {
+                          "name":  "cmd",
+                          "pid":  5040,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  30520,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  5040,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /s /c call ./scripts/launch_codex_app_tools_mcp.cmd ./server.mjs"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  24344,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  12204,
+                          "parent_command_line":  "\"C:\\WINDOWS\\system32\\cmd.exe\" /d /c scripts\\launch_code_review_mcp.cmd"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  8908,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  27272,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node.exe\" C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\7d8d3ac5ca9f6767\\bin\\node_modules\\@oai\\cua-repl\\bin\\cua-repl.mjs"
+                      },
+                      {
+                          "name":  "pwsh",
+                          "pid":  22480,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\Users\\Программист1\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\".\\scripts\\run_full_mvp_and_report.ps1\\\" -ExpectedCommit f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b\"",
+                          "parent_process_id":  20908,
+                          "parent_command_line":  "C:\\Users\\Программист1\\AppData\\Local\\OpenAI\\Codex\\bin\\f544b3844e0f14e9\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true"
+                      },
+                      {
+                          "name":  "conhost",
+                          "pid":  30640,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4",
+                          "parent_process_id":  22480,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\".\\scripts\\run_full_mvp_and_report.ps1\\\" -ExpectedCommit f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b\""
+                      },
+                      {
+                          "name":  "powershell",
+                          "pid":  27580,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\run_full_mvp_and_report.ps1 -ExpectedCommit f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b",
+                          "parent_process_id":  22480,
+                          "parent_command_line":  "\"C:\\Users\\Программист1\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\".\\scripts\\run_full_mvp_and_report.ps1\\\" -ExpectedCommit f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b\""
+                      },
+                      {
+                          "name":  "powershell",
+                          "pid":  13984,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File C:\\warbot_git\\scripts\\verify_mvp_full.ps1 -FlowTimeoutMinutes 45 -SoakTimeoutMinutes 90 -SoakCharacters 2",
+                          "parent_process_id":  27580,
+                          "parent_command_line":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\run_full_mvp_and_report.ps1 -ExpectedCommit f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b"
+                      },
+                      {
+                          "name":  "powershell",
+                          "pid":  9668,
+                          "user":  "COMPUTER\\Программист1",
+                          "session_id":  1,
+                          "command_line":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File C:\\warbot_git\\scripts\\audit_runtime_processes.ps1 -TargetUser Программист1 -Output C:\\warbot_git\\debug\\mvp-failure-process-audit.json",
+                          "parent_process_id":  13984,
+                          "parent_command_line":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File C:\\warbot_git\\scripts\\verify_mvp_full.ps1 -FlowTimeoutMinutes 45 -SoakTimeoutMinutes 90 -SoakCharacters 2"
+                      }
+                  ],
+    "stale_processes":  [
+
+                        ],
+    "scheduled_tasks":  [
+
+                        ],
+    "stale_scheduled_tasks":  [
+
+                              ],
+    "allowed_verifier_pids":  [
+                                  9668,
+                                  13984,
+                                  27580,
+                                  22480,
+                                  20908,
+                                  16324,
+                                  10556,
+                                  10508
+                              ]
+}

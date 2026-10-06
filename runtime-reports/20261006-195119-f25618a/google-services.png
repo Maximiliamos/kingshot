@@ -1,0 +1,61 @@
+﻿{
+    "schema":  1,
+    "product":  "TUGARIN BOTS",
+    "overall":  "running",
+    "head":  "f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b",
+    "run_id":  "1ef3893c924e4e1baa88bfe527f92f6a",
+    "windows_user":  "COMPUTER\\Программист1",
+    "windows_sid":  "S-1-5-21-1641294696-4270169483-3689275233-1007",
+    "started_at_utc":  "2026-10-06T16:42:19.2055066+00:00",
+    "finished_at_utc":  null,
+    "failed_gate":  "",
+    "exit_code":  0,
+    "gates":  [
+                  {
+                      "name":  "Clean tracked worktree",
+                      "script":  "git status --porcelain --untracked-files=no",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T16:42:19.3423468+00:00",
+                      "finished_at_utc":  "2026-10-06T16:42:19.3488702+00:00"
+                  },
+                  {
+                      "name":  "Published branch head",
+                      "script":  "git rev-parse @{u}",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T16:42:19.4575020+00:00",
+                      "finished_at_utc":  "2026-10-06T16:42:19.4575020+00:00",
+                      "detail":  "origin/feature/unified-android-backend@f25618a5d19abdddb8cef94e06d0e8ee3faa9b4b"
+                  },
+                  {
+                      "name":  "Infrastructure / WSA / Kingshot / process audit",
+                      "script":  "verify_release.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T16:42:19.6910216+00:00",
+                      "finished_at_utc":  "2026-10-06T16:47:45.2539818+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_wsa\\reports\\LATEST-LOCAL.json"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  },
+                  {
+                      "name":  "Google Services / Play Store / account",
+                      "script":  "verify_google_services.ps1",
+                      "pass":  true,
+                      "exit_code":  0,
+                      "started_at_utc":  "2026-10-06T16:47:45.3336289+00:00",
+                      "finished_at_utc":  "2026-10-06T16:47:54.6858533+00:00",
+                      "evidence":  [
+                                       "C:\\warbot_git\\debug\\google-services.json",
+                                       "C:\\warbot_git\\debug\\google-services.png"
+                                   ],
+                      "missing_evidence":  [
+
+                                           ]
+                  }
+              ]
+}
