@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "checked_at_epoch": 1791423377.3780644,
+  "serial": "127.0.0.1:58526",
+  "mount": "/data",
+  "status": "ok",
+  "probe": "statfs",
+  "data_free_mb": 121622,
+  "attempts": [
+    {
+      "command": [
+        "stat",
+        "-f",
+        "-c",
+        "%a",
+        "/data"
+      ],
+      "status": "ok",
+      "stdout": "31135481\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "stat",
+        "-f",
+        "-c",
+        "%S",
+        "/data"
+      ],
+      "status": "ok",
+      "stdout": "4096\n",
+      "stderr": ""
+    }
+  ]
+}

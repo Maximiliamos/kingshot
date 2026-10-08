@@ -1,0 +1,516 @@
+{
+  "schema": 1,
+  "captured_at": "2026-10-08T04:36:37.466264+03:00",
+  "phase": "tutorial_new_character",
+  "step": "tutorial_intro",
+  "reason": "no action met the fail-closed perception policy",
+  "source_screenshot": "C:\\warbot_git\\unknown\\watchdog_20261008_043636_tutorial_new_character_tutorial_intro.png",
+  "full_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261008_043637-full.png",
+  "normalized_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261008_043637-normalized.png",
+  "annotated_frame": "C:\\warbot_git\\debug\\tutorial-perception-20261008_043637-annotated.png",
+  "screen": {
+    "tutorial_target": null,
+    "buttons": [
+      {
+        "bbox": {
+          "x": 315,
+          "y": 736,
+          "width": 71,
+          "height": 66
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.6478286384976526,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 165,
+          "y": 657,
+          "width": 26,
+          "height": 28
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.6804258241758242,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 216,
+          "y": 573,
+          "width": 128,
+          "height": 59
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.9841234110169492,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 171,
+          "y": 237,
+          "width": 171,
+          "height": 97
+        },
+        "style": "cyan",
+        "enabled": true,
+        "confidence": 0.8009826972930609,
+        "text": "sled",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 323,
+          "y": 920,
+          "width": 62,
+          "height": 24
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.6872983870967743,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 216,
+          "y": 573,
+          "width": 128,
+          "height": 59
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.9838685116525423,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 355,
+          "y": 306,
+          "width": 30,
+          "height": 32
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.7416145833333334,
+        "text": "",
+        "role": "generic"
+      },
+      {
+        "bbox": {
+          "x": 174,
+          "y": 236,
+          "width": 168,
+          "height": 98
+        },
+        "style": "green",
+        "enabled": true,
+        "confidence": 0.697406462585034,
+        "text": "sled",
+        "role": "generic"
+      }
+    ],
+    "panel": {
+      "kind": "tutorial_dialog",
+      "confidence": 0.8,
+      "evidence": [
+        "central-beige"
+      ]
+    },
+    "ocr_lines": [
+      {
+        "text": "с",
+        "normalized": "с",
+        "score": 82.069946,
+        "loc": [
+          10,
+          11
+        ],
+        "w": 9,
+        "h": 13
+      },
+      {
+        "text": "Война за трон",
+        "normalized": "войназатрон",
+        "score": 69.610565,
+        "loc": [
+          34,
+          14
+        ],
+        "w": 64,
+        "h": 13
+      },
+      {
+        "text": "О",
+        "normalized": "о",
+        "score": 87.470505,
+        "loc": [
+          359,
+          12
+        ],
+        "w": 8,
+        "h": 12
+      },
+      {
+        "text": "x",
+        "normalized": "x",
+        "score": 82.291519,
+        "loc": [
+          397,
+          12
+        ],
+        "w": 8,
+        "h": 12
+      },
+      {
+        "text": "Ole",
+        "normalized": "ole",
+        "score": 80.950256,
+        "loc": [
+          50,
+          66
+        ],
+        "w": 55,
+        "h": 36
+      },
+      {
+        "text": "Prius +",
+        "normalized": "prius",
+        "score": 52.555634,
+        "loc": [
+          65,
+          197
+        ],
+        "w": 209,
+        "h": 41
+      },
+      {
+        "text": "sled",
+        "normalized": "sled",
+        "score": 52.439083,
+        "loc": [
+          288,
+          234
+        ],
+        "w": 9,
+        "h": 2
+      },
+      {
+        "text": "\\",
+        "normalized": "",
+        "score": 91.444489,
+        "loc": [
+          308,
+          213
+        ],
+        "w": 3,
+        "h": 13
+      },
+      {
+        "text": "ОДС",
+        "normalized": "одс",
+        "score": 70.261513,
+        "loc": [
+          188,
+          353
+        ],
+        "w": 21,
+        "h": 9
+      },
+      {
+        "text": "Связаться с",
+        "normalized": "связатьсяс",
+        "score": 92.918365,
+        "loc": [
+          99,
+          577
+        ],
+        "w": 87,
+        "h": 26
+      },
+      {
+        "text": "гейм-мастером",
+        "normalized": "гейммастером",
+        "score": 91.520493,
+        "loc": [
+          88,
+          604
+        ],
+        "w": 107,
+        "h": 22
+      },
+      {
+        "text": "p",
+        "normalized": "p",
+        "score": 50.320229,
+        "loc": [
+          36,
+          607
+        ],
+        "w": 22,
+        "h": 36
+      },
+      {
+        "text": "Г >",
+        "normalized": "г",
+        "score": 57.766018,
+        "loc": [
+          158,
+          706
+        ],
+        "w": 37,
+        "h": 16
+      },
+      {
+        "text": "a",
+        "normalized": "a",
+        "score": 71.792343,
+        "loc": [
+          125,
+          784
+        ],
+        "w": 55,
+        "h": 60
+      },
+      {
+        "text": "еока ин",
+        "normalized": "еокаин",
+        "score": 62.109077,
+        "loc": [
+          145,
+          853
+        ],
+        "w": 39,
+        "h": 14
+      },
+      {
+        "text": "12",
+        "normalized": "12",
+        "score": 75.953064,
+        "loc": [
+          214,
+          858
+        ],
+        "w": 8,
+        "h": 4
+      },
+      {
+        "text": "ЦИИ",
+        "normalized": "ции",
+        "score": 85.235313,
+        "loc": [
+          225,
+          862
+        ],
+        "w": 14,
+        "h": 4
+      }
+    ],
+    "rejected_targets": [
+      {
+        "center": [
+          100,
+          705
+        ],
+        "radius": 67,
+        "confidence": 0.4709699414598465,
+        "glow": 0.09672657252888318,
+        "white": 0.3910593083387201,
+        "cuff": 0.21192226890756302,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          152,
+          668
+        ],
+        "radius": 39,
+        "confidence": 0.6903713216110879,
+        "glow": 0.21979483282674772,
+        "white": 0.3744600272205456,
+        "cuff": 0.2874726315166578,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow",
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          214,
+          822
+        ],
+        "radius": 57,
+        "confidence": 0.04187785451709926,
+        "glow": 0.0,
+        "white": 0.03411496045449482,
+        "cuff": 0.0462292525342542,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": []
+      },
+      {
+        "center": [
+          172,
+          773
+        ],
+        "radius": 39,
+        "confidence": 0.04934309625792141,
+        "glow": 0.004749240121580547,
+        "white": 0.041955145274868336,
+        "cuff": 0.03781288833658796,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": []
+      },
+      {
+        "center": [
+          226,
+          596
+        ],
+        "radius": 47,
+        "confidence": 0.46860824967637865,
+        "glow": 0.006919060052219321,
+        "white": 0.7993425107869324,
+        "cuff": 0.03649065132525169,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          122,
+          622
+        ],
+        "radius": 39,
+        "confidence": 0.678019281841824,
+        "glow": 0.10353343465045593,
+        "white": 0.6863719746730575,
+        "cuff": 0.2800757441268714,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          136,
+          818
+        ],
+        "radius": 38,
+        "confidence": 0.10342196774682011,
+        "glow": 0.008413461538461538,
+        "white": 0.07596850393700788,
+        "cuff": 0.09719685039370078,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": []
+      },
+      {
+        "center": [
+          145,
+          587
+        ],
+        "radius": 35,
+        "confidence": 0.5221516164994426,
+        "glow": 0.0,
+        "white": 0.8443701226309922,
+        "cuff": 0.11549609810479376,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          189,
+          685
+        ],
+        "radius": 24,
+        "confidence": 0.34331898734177213,
+        "glow": 0.0935,
+        "white": 0.19889240506329114,
+        "cuff": 0.17800632911392406,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          106,
+          225
+        ],
+        "radius": 14,
+        "confidence": 1.0,
+        "glow": 0.5744047619047619,
+        "white": 0.1267345050878816,
+        "cuff": 0.20212765957446807,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow",
+          "pointer-colors"
+        ]
+      },
+      {
+        "center": [
+          279,
+          609
+        ],
+        "radius": 26,
+        "confidence": 0.34196738839882385,
+        "glow": 0.0,
+        "white": 0.6217588879978615,
+        "cuff": 0.0,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": []
+      },
+      {
+        "center": [
+          208,
+          230
+        ],
+        "radius": 21,
+        "confidence": 0.5000859999132821,
+        "glow": 0.2637434554973822,
+        "white": 0.043064182194616975,
+        "cuff": 0.13519668737060042,
+        "motion": 0.0,
+        "global_motion": 0.00018368291799186761,
+        "temporal_motion": false,
+        "evidence": [
+          "target-glow"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "pass": true,
+  "seconds": 15.014,
+  "frames": 861,
+  "fps": 57.346,
+  "avg_latency_ms": 13.488,
+  "p95_latency_ms": 15.88,
+  "active_transport": "wsa-window",
+  "capture_method": "printwindow",
+  "printwindow_transport": true,
+  "hwnd_targeted_capture": true,
+  "transport_history": [
+    "wsa-window"
+  ],
+  "frame_shape": [
+    771,
+    501,
+    3
+  ],
+  "window_title": "Война за трон",
+  "window_rect": {
+    "left": 50,
+    "top": 138,
+    "width": 501,
+    "height": 771
+  },
+  "h264": false,
+  "fast_transport": true,
+  "black_frames": 0,
+  "frozen_frames": 43,
+  "capture_errors": 0,
+  "source_changed": true,
+  "window_changed": true,
+  "stale_stream": false,
+  "screenshot": "C:\\warbot_git\\debug\\preview-production.png",
+  "report_path": "C:\\warbot_git\\debug\\preview-production.json"
+}
