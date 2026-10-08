@@ -34,7 +34,8 @@ $RunEvidenceNames = @(
     "runtime-heartbeat.json",
     "android-data-free-space.json",
     "tutorial-perception-failure.json",
-    "game-resource-network-diagnostics.json"
+    "game-resource-network-diagnostics.json",
+    "resource-readiness.json"
 )
 
 function Clear-PreviousRunEvidence {
@@ -195,8 +196,9 @@ if (Test-Path -LiteralPath $perceptionEvidencePath) {
 foreach ($name in @("state.json", "state.previous.json", "control.json")) {
     Copy-IfExists -Source (Join-Path $Root $name) -Destination (Join-Path $stage $name)
 }
-Copy-IfExists -Source (Join-Path $Root "logs\events.jsonl") -Destination (Join-Path $stage "events.jsonl")
-Copy-IfExists -Source (Join-Path $Root "logs\bot.log") -Destination (Join-Path $stage "bot.log")
+# Cumulative logs may contain previous users, runs and credentials. Never
+# export them verbatim. Current-run bot log events are present in events.jsonl,
+# and console.txt is already scoped to this host verifier invocation.
 Copy-IfExists -Source "C:\warbot_wsa\reports\LATEST-LOCAL.json" -Destination (Join-Path $stage "wsa-latest-local.json")
 
 $fullEvidencePath = Join-Path $Root "debug\mvp-full-acceptance.json"
@@ -225,6 +227,29 @@ if (Test-Path -LiteralPath $fullEvidencePath -PathType Leaf) {
     }
 }
 
+# Filter to this exact acceptance run, rather than shipping years of appended
+# events. Missing run_id is a failure to attribute data and is never published.
+if ($acceptanceRunId) {
+    $sourceEvents = Join-Path $Root "logs\\events.jsonl"
+    $destEvents = Join-Path $stage "events.jsonl"
+    if (Test-Path -LiteralPath $sourceEvents -PathType Leaf) {
+        $eventWriter = New-Object System.IO.StreamWriter($destEvents, $false, (New-Object System.Text.UTF8Encoding($false)))
+        try {
+            foreach ($line in [IO.File]::ReadLines($sourceEvents)) {
+                try { $item = $line | ConvertFrom-Json -ErrorAction Stop }
+                catch { continue }
+                if ([string]$item.run_id -cne $acceptanceRunId) { continue }
+                $safeLine = ConvertTo-Json -InputObject $item -Depth 10 -Compress
+                # Redact common credentials and personal email before upload.
+                $safeLine = [regex]::Replace($safeLine, '(?i)(bearer\\s+)[a-z0-9._~+/-]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '(?i)((?:token|password|api[_-]?key)[=:]\\s*)[^\\\\\\s,;\"]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}', '[REDACTED_EMAIL]')
+                $eventWriter.WriteLine($safeLine)
+            }
+        }
+        finally { $eventWriter.Dispose() }
+    }
+}
 $evidenceInventory = @()
 Get-ChildItem -LiteralPath $stage -File -ErrorAction SilentlyContinue | ForEach-Object {
     $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -249,6 +274,8 @@ $manifest = [ordered]@{
     duration_seconds = [int](($finished - $started).TotalSeconds)
     verify_exit_code = $verifyExit
     overall = $overall
+    event_log_scope = "exact_acceptance_run_id_only"
+    cumulative_bot_log_exported = $false
     acceptance_run_id = $acceptanceRunId
     acceptance_head = $acceptanceHead
     flow_timeout_minutes = $FlowTimeoutMinutes
