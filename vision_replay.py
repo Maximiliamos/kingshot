@@ -18,6 +18,10 @@ import cv2
 from tutorial_vision import TutorialPerception
 from task_engine import TASK_RULES
 
+ACTION_ROLES = frozenset(TASK_RULES) | frozenset({
+    "resource_load_retry", "source_upgrade", "resident_add", "resident_complete",
+})
+
 
 class ReplayError(ValueError):
     pass
@@ -62,7 +66,7 @@ def replay_manifest(manifest_path: str | Path, *, require_real_coverage: bool = 
         model = TutorialPerception().perceive(frame, ocr_lines=case.get("ocr", []))
         observed = {
             item.role: item for item in model.buttons
-            if item.enabled and item.role in TASK_RULES
+            if item.enabled and item.role in ACTION_ROLES
         }
         if kind == "positive":
             positives += 1
@@ -77,7 +81,7 @@ def replay_manifest(manifest_path: str | Path, *, require_real_coverage: bool = 
                     failures.append(f"{name}: missing/misplaced role {role}")
         else:
             negatives += 1
-            forbidden = set(case.get("forbidden_roles", TASK_RULES))
+            forbidden = set(case.get("forbidden_roles", ACTION_ROLES))
             triggered = set(observed) & forbidden
             if triggered:
                 false_positives += len(triggered)
