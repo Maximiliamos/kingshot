@@ -81,9 +81,13 @@ function Save-AcceptanceEvidence {
         exit_code = $ExitCode
         gates = @($GateResults)
     }
-    $tmp = "$EvidencePath.tmp"
+    # PowerShell uses case-insensitive dynamic scoping: Run-Gate's foreach
+    # $evidencePath previously SHADOWED this script variable, so each saved
+    # acceptance snapshot overwrote the preceding gate's JSON evidence.
+    # Explicit script scope makes the acceptance path immutable.
+    $tmp = "${script:EvidencePath}.tmp"
     $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $tmp -Encoding UTF8
-    Move-Item -LiteralPath $tmp -Destination $EvidencePath -Force
+    Move-Item -LiteralPath $tmp -Destination $script:EvidencePath -Force
 }
 
 function Invoke-FinalProcessAudit {
@@ -111,9 +115,9 @@ function Run-Gate {
     $code = [int]$LASTEXITCODE
     $missingEvidence = @()
     if ($code -eq 0) {
-        foreach ($evidencePath in @($EvidencePaths)) {
-            if ($evidencePath -and -not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
-                $missingEvidence += [string]$evidencePath
+        foreach ($gateEvidencePath in @($EvidencePaths)) {
+            if ($gateEvidencePath -and -not (Test-Path -LiteralPath $gateEvidencePath -PathType Leaf)) {
+                $missingEvidence += [string]$gateEvidencePath
             }
         }
         if ($missingEvidence.Count -gt 0) {
