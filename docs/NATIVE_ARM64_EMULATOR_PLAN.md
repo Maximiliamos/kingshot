@@ -1,0 +1,319 @@
+# WAR BOT native ARM64 emulator PoC
+
+## Why this exists
+
+Both Windows x86 Android paths have now failed inside CPU translation layers:
+
+- official x86_64 Android Emulator: the game's ARM64 package fails in the
+  ARM translation/native-bridge path;
+- BlueStacks Android 11 Rvc64: the game reaches the loading flow but crashes
+  reproducibly in `/system/lib64/libhoudini.so` with SIGSEGV.
+
+The next experiment removes that class of failure entirely. The guest CPU and
+Android userspace are ARM64. On an x86-64 Windows host, ARM64 instructions are
+executed by QEMU TCG rather than by an Android ARM-to-x86 native bridge.
+
+This is slower than WHPX/BlueStacks. The first objective is correctness and
+stability. Performance tuning comes only after the game boots reliably.
+
+## Non-goals
+
+The PoC does **not**:
+
+- patch `com.got.globalru`;
+- replace or edit game native libraries;
+- hide that Android is virtualized;
+- bypass Play Integrity or server restrictions;
+- modify anti-cheat / emulator-detection code.
+
+## Runtime
+
+Default system image:
+
+`system-images;android-30;google_apis;arm64-v8a`
+
+Current raw-engine probe:
+
+`C:\Program Files\qemu\qemu-system-aarch64.exe` (QEMU 11.1, TCG)
+
+Default runtime data:
+
+`C:\warbot_arm64_runtime`
+
+The game remains the verified package:
+
+- package: `com.got.globalru`
+- activity: `com.unity3d.player.MyMainPlayerActivity`
+- APKS: 1.12.10 / 163 / arm64-v8a
+
+## Gates
+
+### A0 — runtime probe
+
+Required:
+
+- `adb.exe`
+- `sdkmanager.bat`
+- `qemu-system-aarch64.exe`
+- ARM64 Android system image
+- QEMU machine `ranchu` or `virt`
+
+### A1 — native ARM64 boot
+
+The guest must reach `sys.boot_completed=1`.
+
+### A2 — no translation bridge
+
+Required properties:
+
+```text
+ro.product.cpu.abi = arm64-v8a
+ro.product.cpu.abilist = arm64...
+ro.dalvik.vm.native.bridge = <empty/0/none>
+```
+
+Any x86 ABI or Houdini/libndk_translation fails this gate.
+
+### A3 — game install
+
+Install the three known Google Play splits with `adb install-multiple`.
+
+### A4 — game run
+
+The game must remain alive after launch. Any crash is collected from the native
+crash log before the next change.
+
+### A5 — framebuffer and input
+
+Only after A4:
+
+- `adb exec-out screencap -p`
+- ADB tap/swipe
+- tap-to-frame latency benchmark
+- software GPU / renderer work if Unity needs more graphics capability
+
+### A6 — WAR BOT integration
+
+Only after A1-A5 pass, implement `NativeArm64Backend` behind the existing
+DeviceBackend contract. Tutorial/OCR/state-machine code must not be rewritten.
+
+## Commands
+
+```powershell
+git checkout feature/native-arm64-emulator
+git pull
+
+python .\native_arm64_poc.py probe
+python .\native_arm64_poc.py install-image
+python .\native_arm64_poc.py prepare --wipe
+python .\native_arm64_poc.py command
+python .\native_arm64_poc.py start --wipe
+python .\native_arm64_poc.py status
+python .\native_arm64_poc.py verify-native
+```
+
+Do not run `install-game` until `verify-native` passes.
+
+Then:
+
+```powershell
+python .\native_arm64_poc.py install-game
+python .\native_arm64_poc.py verify-game --wait-seconds 60
+python .\native_arm64_poc.py capture
+```
+
+## Expected first iteration
+
+The first test is deliberately CPU/boot focused and starts with the simplest
+software framebuffer. If Android boots but Unity lacks a usable GLES renderer,
+that becomes the next isolated task. We should not mix CPU correctness, boot,
+ADB and GPU debugging in one change.
+
+## Evidence update — 2026-09-27
+
+`-debug-init` exposed the Android Emulator launcher's final ranchu topology.
+The launcher did not enter Android boot: its generated command includes
+`-soundhw hda`, but ranchu has no PCI bus. The headless binary reports the
+exact terminal error `PCI bus not available for hda`. `-no-audio` does not
+prevent that generated option, and QEMU passthrough appends rather than
+replaces it.
+
+Upstream QEMU 11.1 was then tested without the launcher layer. The stock
+Android 11 ARM64 kernel boots on `virt` under TCG, mounts system/vendor/data,
+finishes file-based encryption, starts zygote and adbd, and contains no x86
+native bridge. A fresh runtime encryption-key qcow2 overlay is required for a
+clean userdata image.
+
+This is not A1/A2 PASS yet. The stock vendor contains only ranchu graphics
+HALs (`hwcomposer.ranchu.so` and ranchu mapper/Vulkan modules). Upstream QEMU
+does not provide Android's goldfish pipe, so hwcomposer aborts and restarts
+SurfaceFlinger/zygote; ADB remains offline and `sys.boot_completed` is not 1.
+
+Next step: obtain/build a Google/AOSP QEMU ranchu runner whose final topology
+omits the invalid HDA device, or make the launcher generate a supported audio
+device. Do not add generic virtio-gpu flags to the upstream path: the installed
+vendor image has no matching DRM/virtio hwcomposer implementation.
+
+The packaged ARM64 core also exposes a direct positional-QEMU path through
+`-fuchsia`. The PoC now uses that supported entry point to start Google
+`ranchu` and gfxstream without the launcher-generated HDA device; it does not
+patch the emulator binary, Android image, or game. The kernel sees the five
+block devices and the GPT `super` partition, but first-stage init currently
+stops at `partition(s) not found: system`. HDA is therefore resolved, while
+A1/A2 remain FAIL until the launcher-equivalent dynamic-partition mapping is
+reproduced and ADB reaches `device` with `sys.boot_completed=1`.
+
+
+### Evidence update — partition ordering fix
+
+AOSP's ARM64 emulator target intentionally emits block images in the order
+`vendor -> encryption -> userdata -> cache -> system`. On ARM/ranchu the
+virtio block naming is reversed, so the fifth device becomes `vda` and holds
+the GPT `super` partition. The stock launcher uses
+`androidboot.boot_devices=a003600.virtio_mmio` for this topology.
+
+The remaining discovery failure was not the block order. A DTB dump proved
+that direct ranchu still exposed an old physical `/firmware/android/fstab`
+entry for `system` and no `/firmware/android/vbmeta` node. First-stage init
+therefore selected the legacy VBoot path and searched for a physical
+`by-name/system`, although Android 11 stores `system`, `vendor`, `product`,
+and `system_ext` as logical partitions inside `super`.
+
+The PoC now mirrors the launcher order and drive indices exactly:
+`vendor(0), encrypt(1), userdata(2), cache(3), system(4)`, retains
+`androidboot.boot_devices=a003600.virtio_mmio`, and generates a small derived
+DTB with logical first-stage fstab and vbmeta nodes. With that DTB the real
+guest discovers `super`, mounts all four logical partitions, configures FBE,
+and reaches zygote/SurfaceFlinger. Unit tests pin the topology and DTB data.
+
+The next blocker is now inside the ARM64 guest rather than storage discovery:
+`app_process64` repeatedly exits with `SIGSEGV` in the static constructor of
+`/system/lib64/libcodec2_vndk.so`. The same failure was reproduced with one
+and four vCPUs, single-thread TCG, and `cortex-a53`, `cortex-a57`, and `max`
+CPU models. These controlled trials rule out the earlier multi-thread/CPU
+feature hypotheses. ADB therefore remains offline and A1/A2 are still FAIL;
+do not classify this runtime as usable or install the game yet.
+
+Next real-host gate: rerun `start --wipe`. PASS requires ADB `device`,
+`sys.boot_completed=1`, ARM64 ABI, no native bridge, and a valid screenshot.
+
+
+### Evidence update — logical partitions and DTB
+
+The real-host comparison established that `androidboot.logical_partitions=1`
+is necessary but not sufficient. With the flag alone, first-stage init still
+selected the physical `system` entry emitted by the base ranchu DTB. Using
+`a003e00.virtio_mmio` also failed at `/dev/block/by-name/super`; restoring
+the launcher value `a003600.virtio_mmio` and supplying the derived DTB is the
+combination that mounted `super` and all logical partitions.
+
+AOSP first-stage mount has an explicit, independent gate for dynamic/logical
+partitions: it enables dm-linear only when the kernel command line contains
+`androidboot.logical_partitions=1`. The build system adds that flag whenever
+logical partitions are enabled. Without it, init can fall back to looking for
+physical partitions such as `system`, even though the backing disk exposes
+`super`.
+
+The DTB is not guessed: the PoC first asks the same ranchu binary to dump its
+generated base tree, then changes only Android fstab/vbmeta properties while
+preserving all ranchu/goldfish hardware nodes.
+
+
+### 2026-09-27 — Codec2 compatibility contract restored
+
+The second-agent baseline isolated the first stable userspace crash to
+`app_process64`/zygote executing inside `libcodec2_vndk.so`. CPU model,
+vCPU count and single-vs-multi-thread TCG did not change the failure, so more
+CPU flag guessing is no longer useful.
+
+AOSP goldfish/ranchu configuration contains a directly relevant compatibility
+contract that our direct launcher had omitted:
+
+- goldfish documents that Codec2 requires an ION path the emulator platform
+  does not provide in this configuration;
+- `init.ranchu.rc` maps `ro.kernel.qemu.media.ccodec` to
+  `debug.stagefright.ccodec`;
+- the supported QEMU override is `-append qemu.media.ccodec=<value>`, with
+  the emulator default being Codec2 off.
+
+The direct Google-ranchu and upstream-control command lines now both include:
+
+```text
+qemu.media.ccodec=0
+```
+
+This is an Android emulator platform compatibility setting, not a game patch
+or detection bypass. The next real-host boot must verify that
+`ro.kernel.qemu.media.ccodec=0` and `debug.stagefright.ccodec=0` are
+visible after startup.
+
+The PoC also now preserves pre-ADB failures in:
+
+```text
+C:\warbot_arm64_runtime\zygote-crash.txt
+C:\warbot_arm64_runtime\boot-diagnostic.json
+```
+
+so if the Codec2 setting is not sufficient, the next failure will carry the
+first relevant SIGSEGV context, PC/LR, fault address, Build ID/backtrace lines
+when present, and boot configuration.
+
+Production startup no longer requires a separately-installed upstream
+`qemu-system-aarch64.exe`; the Google Android Emulator ARM64 binaries are the
+production runtime. Upstream QEMU remains only an optional A/B diagnostic.
+
+
+### 2026-09-27 — real-host ranchu TCG result and machine pivot
+
+The first long integrated verifier run produced an important correction:
+`adb get-state` eventually returned `device`, but Android **did not** reach
+`sys.boot_completed=1`. The old progress helper incorrectly labeled the log
+as `android-boot-complete` because it matched
+`sys.bootstat.first_boot_completed 0` / text saying processes crashed
+"before boot completed". The milestone detector now accepts only the real
+`sys.boot_completed=1` property (or an exact `setprop sys.boot_completed 1`).
+
+The run also proved that `qemu.media.ccodec=0` reached the kernel command
+line, but zygote and several unrelated Android services continued to crash.
+The serial log repeatedly showed zygote SIGSEGV, media/camera failures and
+hwcomposer restarts. This means the remaining failure cannot safely be treated
+as only a Codec2 toggle issue.
+
+Most importantly, the guest kernel reported that CPU1-CPU3 could not be
+started because PSCI was unavailable and only CPU0 was activated. This matches
+AOSP's legacy ARM `ranchu` implementation: PSCI is not provided for TCG
+there.
+
+AOSP later modified the ARM `virt` machine specifically to emulate ranchu:
+it adds the goldfish pipe, framebuffer, address-space and audio devices while
+retaining the maintained virt/PSCI CPU topology. WAR BOT therefore now uses
+Google's Android-modified `virt` machine by default under TCG and retains
+legacy `ranchu` only through:
+
+```text
+WAR_BOT_ARM64_MACHINE=ranchu
+```
+
+The direct runner also supplies explicit `-boot-property` entries so the
+guest qemu-props service receives the host boot-property channel normally
+initialized by the stock launcher.
+
+The DTB remains derived from the selected Google QEMU machine itself and only
+the Android logical-partition/vbmeta properties are patched. Machine-specific
+DTB names prevent a stale ranchu DTB from being reused with virt. A legacy
+ranchu runtime is automatically recreated when the production machine changes
+to virt; PC-side WAR BOT nickname/state files are outside that disposable
+runtime and are not touched.
+
+Next real-host PASS remains strict:
+
+- all requested ARM vCPUs start;
+- ADB = `device`;
+- `sys.boot_completed=1`;
+- ABI = `arm64-v8a`;
+- no x86 ABI and no native bridge;
+- valid screenshot;
+- game installation and stability gate pass.
+
+If boot still fails, the report now also attempts to save the Android crash
+buffer and `/data/tombstones` once adbd is reachable.

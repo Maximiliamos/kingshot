@@ -1,0 +1,155 @@
+"""Fail-closed, non-destructive Kingshot resource-readiness gate.
+
+A positive result means two separate observed frames contain corroborated,
+recognizable *game* controls without an observed resource-error dialog. It
+does not establish CDN reachability and does not guarantee that a subsequent
+app-data clear will retain resources. Never click or reset during this probe.
+"""
+from __future__ import annotations
+
+import time
+from datetime import datetime, timezone
+from typing import Any
+
+import numpy as np
+
+from resource_diagnostics import collect_resource_network_diagnostics
+from game_foreground import collect_foreground_evidence
+
+CONFIRMED_ROLES = frozenset({
+    "battle_reward_claim", "battle_conquer", "source_upgrade",
+    "construction_primary", "construction_upgrade", "resident_add",
+})
+CONFIRMED_PANELS = frozenset({
+    "battle_reward", "battle_conquest", "source_modal", "construction",
+    "resident_assignment",
+})
+
+
+def evaluate_resource_samples(samples: list[dict[str, Any]], *, game_process_present: bool) -> dict[str, Any]:
+    """Pure policy: unknown, black, or error screens may never authorize clear."""
+    confirmed = []
+    for sample in samples:
+        confirmed.append(bool(
+            sample.get("frame_valid")
+            and not sample.get("resource_error")
+            and not sample.get("account_restriction")
+            and sample.get("ocr_available")
+            # PrintWindow may show Kingshot behind Play Store or system overlays.
+            # Only confirmed Android foreground permits a positive UI verdict.
+            and sample.get("foreground_confirmed")
+            # Unverified central dialogs may mask stale construction buttons.
+            and sample.get("panel_kind") not in ("tutorial_dialog", "resource_error", "account_restriction")
+            and sample.get("known_game_ui")
+        ))
+    ready = bool(game_process_present and len(confirmed) >= 2 and all(confirmed))
+    return {
+        "pass": ready,
+        "status": "observed_game_ui_ready" if ready else "resource_readiness_unconfirmed",
+        "samples_confirmed": sum(confirmed),
+        "samples_required": 2,
+    }
+
+
+def _observe(backend: Any) -> dict[str, Any]:
+    import bot
+
+    frame = backend.frame()
+    if frame is None or not isinstance(frame, np.ndarray) or not frame.size:
+        return {"frame_valid": False, "known_game_ui": False, "resource_error": False}
+    phone, _, _ = bot.crop_phone(frame)
+    frame_valid = bool(phone.size and float(np.std(phone)) > 5.0)
+    if not frame_valid:
+        return {"frame_valid": False, "known_game_ui": False, "resource_error": False}
+    # Visible buttons alone do not prove the absence of an account restriction.
+    # The terminal-stop detector depends on OCR, so never authorize readiness
+    # on a host where that independent safety channel cannot run.
+    if not bot.ocr_available():
+        return {
+            "frame_valid": True,
+            "known_game_ui": False,
+            "resource_error": False,
+            "account_restriction": False,
+            "ocr_available": False,
+            "panel_kind": "unverified",
+            "role_count": 0,
+            "tutorial_target_confirmed": False,
+            "block_reason": "ocr_unavailable",
+        }
+    screen = bot.perceive_tutorial_screen(phone, include_ocr=True)
+    normalized_ocr = " ".join(str(line.get("normalized", "")) for line in screen.ocr_lines)
+    resource_error = bool(
+        screen.panel.kind == "resource_error"
+        or "неудалосьзагрузитьресурс" in normalized_ocr
+    )
+    roles = [button.role for button in screen.buttons if button.enabled and button.confidence >= 0.7]
+    # A central tutorial_dialog is not independent proof that loading succeeded:
+    # resource-error overlays may also be labeled tutorial_dialog if OCR misses
+    # the message, while buttons from the background receive false roles.
+    unverified_dialog = screen.panel.kind == "tutorial_dialog"
+    known_game_ui = bool(not unverified_dialog and (
+        any(role in CONFIRMED_ROLES for role in roles)
+        or (screen.panel.kind in CONFIRMED_PANELS and screen.panel.confidence >= 0.8)
+        or (screen.tutorial_target is not None and screen.tutorial_target.confidence >= 0.85)
+    ))
+    return {
+        "frame_valid": frame_valid,
+        "known_game_ui": known_game_ui,
+        "resource_error": resource_error,
+        "account_restriction": bool(bot.detect_stop_reason(phone)),
+        "ocr_available": True,
+        "panel_kind": screen.panel.kind,
+        "block_reason": "unverified_dialog" if unverified_dialog else "",
+        "role_count": len([role for role in roles if role in CONFIRMED_ROLES]),
+        "tutorial_target_confirmed": bool(
+            screen.tutorial_target is not None and screen.tutorial_target.confidence >= 0.85
+        ),
+    }
+
+
+def probe_resource_readiness(
+    backend: Any, *, run_id: str = "", head: str = "", interval_seconds: float = 2.0
+) -> dict[str, Any]:
+    """Read-only: inspect device state and two separated production frames."""
+    backend.require_ready()
+    diag = collect_resource_network_diagnostics(backend, run_id=run_id, head=head)
+    samples: list[dict[str, Any]] = []
+    for index in range(2):
+        if index:
+            time.sleep(max(0.0, interval_seconds))
+        try:
+            # Focus is sampled immediately before the frame; a running PID
+            # does not prove this HWND shows the unobscured Android game.
+            foreground = collect_foreground_evidence(backend)
+            observation = _observe(backend)
+            observation.update(foreground)
+            if not foreground["foreground_confirmed"] and not observation.get("block_reason"):
+                observation["block_reason"] = "game_foreground_unconfirmed"
+            samples.append(observation)
+        except Exception as exc:
+            # Never leak OCR, command output, URLs or account information.
+            samples.append({"frame_valid": False, "known_game_ui": False,
+                            "resource_error": False, "probe_error": type(exc).__name__})
+    verdict = evaluate_resource_samples(
+        samples,
+        game_process_present=bool(diag["signals"].get("game_process_present")),
+    )
+    return {
+        "schema": 1,
+        "kind": "kingshot-resource-readiness",
+        "head": head,
+        "run_id": run_id,
+        "captured_at_utc": datetime.now(timezone.utc).isoformat(),
+        "non_destructive": True,
+        "game_cdn_reachable": None,
+        "diagnostic_status": diag["status"],
+        "signals": diag["signals"],
+        "probe_errors": diag["probe_errors"],
+        "samples": samples,
+        **verdict,
+        "note": (
+            "This proves only currently visible game UI. It does not prove "
+            "resource CDN access after clearing app data. On failure, retain "
+            "app data and collect operator evidence; never increase retry budget."
+        ),
+    }

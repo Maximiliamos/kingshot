@@ -1,0 +1,418 @@
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, patch
+
+import native_arm64_poc as arm64
+
+
+class NativeArm64PocTests(unittest.TestCase):
+    def test_target_package_is_verified_game(self):
+        self.assertEqual(arm64.PACKAGE, "com.got.globalru")
+        self.assertEqual(
+            arm64.ACTIVITY,
+            "com.unity3d.player.MyMainPlayerActivity",
+        )
+
+    def test_default_image_is_arm64_android_11(self):
+        self.assertEqual(
+            arm64.DEFAULT_SYSTEM_IMAGE,
+            "system-images;android-30;google_apis;arm64-v8a",
+        )
+
+    def test_native_gate_accepts_arm64_without_bridge(self):
+        self.assertTrue(arm64.is_native_arm64({
+            "abi": "arm64-v8a",
+            "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+            "native_bridge": "",
+        }))
+
+    def test_native_gate_rejects_x86_or_bridge(self):
+        self.assertFalse(arm64.is_native_arm64({
+            "abi": "arm64-v8a",
+            "abilist": "x86_64,arm64-v8a",
+            "native_bridge": "libhoudini.so",
+        }))
+        self.assertFalse(arm64.is_native_arm64({
+            "abi": "x86_64",
+            "abilist": "x86_64,arm64-v8a",
+            "native_bridge": "libndk_translation.so",
+        }))
+
+
+
+    def test_qemu_environment_prepends_emulator_library_dirs(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            qemu = root / "emulator" / "qemu" / "windows-x86_64"
+            lib64 = root / "emulator" / "lib64"
+            qemu.mkdir(parents=True)
+            lib64.mkdir(parents=True)
+            with patch("native_arm64_poc.SDK_ROOT", root), \
+                 patch("native_arm64_poc.QEMU_DIR", qemu), \
+                 patch.dict("os.environ", {"PATH": r"C:\Windows\System32"}, clear=False):
+                env = arm64.qemu_environment()
+        self.assertIn(str(qemu), env["PATH"])
+        self.assertIn(str(lib64), env["PATH"])
+        self.assertTrue(env["PATH"].endswith(r"C:\Windows\System32"))
+
+    def test_qemu_machine_probe_parses_stderr(self):
+        result = type("Result", (), {
+            "stdout": "",
+            "stderr": "Supported machines are:\nranchu Android Emulator\nvirt ARM Virtual Machine\n",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result):
+            upstream.is_file.return_value = False
+            qemu.is_file.return_value = True
+            probe = arm64.qemu_machine_probe()
+        self.assertEqual(probe["returncode"], 0)
+        self.assertEqual(probe["names"][:2], ["ranchu", "virt"])
+
+
+    def test_qemu_machine_probe_ignores_launcher_noise(self):
+        result = type("Result", (), {
+            "stdout": (
+                "INFO         | qt_main: arg: help\n"
+                "Supported machines are:\n"
+                "ranchu Android/ARM ranchu (default)\n"
+                "virt QEMU ARM Virtual Machine\n"
+                "WARNING      | QEMU main loop exits abnormally\n"
+                "Use -machine help to list supported machines\n"
+            ),
+            "stderr": "",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result):
+            upstream.is_file.return_value = False
+            qemu.is_file.return_value = True
+            qemu.__str__.return_value = r"C:\Android\Sdk\emulator\qemu\windows-x86_64\qemu-system-aarch64.exe"
+            probe = arm64.qemu_machine_probe()
+        self.assertEqual(probe["names"], ["ranchu", "virt"])
+
+    def test_qemu_probe_enters_passthrough_mode(self):
+        result = type("Result", (), {
+            "stdout": "Supported machines are:\\nvirt ARM Virtual Machine\\n",
+            "stderr": "",
+            "returncode": 0,
+        })()
+        with patch("native_arm64_poc.UPSTREAM_QEMU_ARM64") as upstream, \
+             patch("native_arm64_poc.QEMU_ARM64") as qemu, \
+             patch("native_arm64_poc.run", return_value=result) as run:
+            upstream.is_file.return_value = False
+            qemu.is_file.return_value = True
+            arm64.qemu_machine_probe()
+        args = run.call_args.args[0]
+        self.assertEqual(args[1:4], ["-qemu", "-machine", "help"])
+
+    def test_choose_machine_prefers_ranchu(self):
+        self.assertEqual(arm64.choose_machine(["virt", "ranchu"]), "ranchu")
+        self.assertEqual(arm64.choose_machine(["virt"]), "virt")
+        self.assertEqual(arm64.choose_machine(["virt-8.2", "virt-8.1"]), "virt-8.2")
+        self.assertEqual(arm64.choose_machine(["foo"], strict=False), "")
+
+    def test_inventory_finds_arm64_image_files(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            for name in ("kernel-ranchu", "ramdisk.img", "system.img", "userdata.img"):
+                (root / name).write_bytes(b"x")
+            inv = arm64.image_inventory(root)
+        self.assertTrue(inv["kernel"].endswith("kernel-ranchu"))
+        self.assertTrue(inv["system"].endswith("system.img"))
+
+    def test_userdata_disables_ext4_feature_unsupported_by_android_11(self):
+        inv = {
+            "userdata": r"C:\image\userdata.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+        }
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            paths = {
+                "userdata": root / "userdata-qemu.img",
+                "cache": root / "cache-qemu.qcow2",
+                "encryptionkey": root / "encryptionkey-qemu.qcow2",
+                "hw": root / "hardware-qemu.ini",
+            }
+            with patch("native_arm64_poc.validate_tools"), \
+                 patch("native_arm64_poc.RUNTIME_ROOT", root), \
+                 patch("native_arm64_poc.image_inventory", return_value=inv), \
+                 patch("native_arm64_poc.runtime_paths", return_value=paths), \
+                 patch("native_arm64_poc.write_hw_ini"), \
+                 patch("native_arm64_poc.run") as run:
+                arm64.prepare_runtime(wipe=True)
+        mke2fs_args = run.call_args_list[1].args[0]
+        self.assertIn("^orphan_file", mke2fs_args)
+        self.assertEqual(mke2fs_args[-1], arm64.DATA_SIZE_BYTES // 4096)
+
+    def test_critical_log_extracts_architecture_failure(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "INFO boot\n"
+                "PANIC: Avd's CPU Architecture 'arm64' is not supported by QEMU2 emulator on x86_64 host.\n"
+                "INFO end\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                critical = arm64._qemu_critical_lines()
+        self.assertIn("arm64", critical)
+        self.assertIn("x86_64", critical)
+        self.assertIn("PANIC", critical)
+
+    def test_collect_boot_crash_extracts_zygote_codec2_tombstone(self):
+        sample = """01-01 00:00:01.000 263 263 F DEBUG   : Cmdline: zygote64
+01-01 00:00:01.001 263 263 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0
+01-01 00:00:01.002 263 263 F DEBUG   :     x29 0000000000000000
+01-01 00:00:01.003 263 263 F DEBUG   :     lr  0000007f11111111  sp 0000  pc 0000007f22222222  pst 0000
+01-01 00:00:01.004 263 263 F DEBUG   : backtrace:
+01-01 00:00:01.005 263 263 F DEBUG   :       #00 pc 0000000000012345  /system/lib64/libcodec2_vndk.so (SomeSymbol+8) (BuildId: abcdef1234)
+"""
+        with TemporaryDirectory() as td,                 patch.object(arm64, "RUNTIME_ROOT", Path(td)):
+            paths = arm64.runtime_paths()
+            paths["stdout"].write_text(sample, encoding="utf-8")
+            report = arm64.collect_boot_crash()
+
+            self.assertTrue(report["found"])
+            self.assertEqual(report["library"], "libcodec2_vndk.so")
+            self.assertEqual(report["fault_addr"], "0x0")
+            self.assertEqual(report["build_id"], "abcdef1234")
+            self.assertTrue(paths["boot_crash"].is_file())
+            self.assertIn("SomeSymbol", paths["boot_crash"].read_text(encoding="utf-8"))
+
+    def test_guest_status_survives_prezygote_shell_timeout(self):
+        get_state = type("Result", (), {"stdout": "device\n", "stderr": "", "returncode": 0})()
+        timeout = __import__("subprocess").TimeoutExpired(["adb", "shell"], 5)
+
+        def fake_run(args, **kwargs):
+            if "get-state" in [str(x) for x in args]:
+                return get_state
+            raise timeout
+
+        with patch("native_arm64_poc.run", side_effect=fake_run):
+            status = arm64.guest_status()
+
+        self.assertEqual(status["device_state"], "device")
+        self.assertEqual(status["boot_completed"], "")
+        self.assertEqual(status["resolution"], "")
+        self.assertFalse(status["native_arm64"])
+
+    def test_wait_for_boot_fails_fast_if_qemu_exits(self):
+        process = type("Process", (), {"poll": lambda self: 7})()
+        with patch("native_arm64_poc._qemu_log_tail", return_value="boom"):
+            with self.assertRaisesRegex(RuntimeError, "exit_code=7"):
+                arm64.wait_for_boot(timeout=1, process=process)
+
+    def test_gpu_mode_can_be_overridden(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+             patch("native_arm64_poc.choose_machine", return_value="virt"):
+            cmd = arm64.build_direct_qemu_command()
+        self.assertIn("-display none", " ".join(cmd).lower())
+
+    def test_command_uses_aarch64_tcg_not_native_bridge(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+             patch("native_arm64_poc.choose_machine", return_value="virt"):
+            cmd = arm64.build_direct_qemu_command()
+        joined = " ".join(cmd).lower()
+        self.assertIn("qemu-system-aarch64", joined)
+        self.assertIn("-accel tcg,thread=multi", joined)
+        self.assertIn("-machine virt", joined)
+        self.assertIn("virtio-blk-device,drive=userdata", joined)
+        self.assertIn("hostfwd=tcp:127.0.0.1:5561-:5555", joined)
+        self.assertIn("qemu.encrypt=1", joined)
+        self.assertIn("androidboot.logical_partitions=1", joined)
+        self.assertIn("qemu.media.ccodec=0", joined)
+        self.assertNotIn("-qemu ", joined)
+        self.assertNotIn("houdini", joined)
+        self.assertNotIn("ndk_translation", joined)
+
+    def test_google_virt_command_bypasses_launcher_hda_and_initializes_boot_properties(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "virt"):
+            cmd = arm64.build_google_arm64_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-fuchsia", cmd)
+        self.assertIn("-machine type=virt", joined)
+        self.assertIn("-android-ports 5560,5561", joined)
+        self.assertIn("androidboot.boot_devices=a003600.virtio_mmio", joined)
+        self.assertIn("androidboot.logical_partitions=1", joined)
+        self.assertIn("-boot-property qemu.sf.lcd_density=480", joined)
+        self.assertIn("-boot-property qemu.media.ccodec=0", joined)
+        self.assertNotIn("goldfish_pstore", joined)
+        block_devices = [
+            cmd[i + 1]
+            for i, value in enumerate(cmd[:-1])
+            if value == "-device" and str(cmd[i + 1]).startswith("virtio-blk-device,drive=")
+        ]
+        self.assertEqual(
+            block_devices,
+            [
+                "virtio-blk-device,drive=vendor",
+                "virtio-blk-device,drive=encrypt",
+                "virtio-blk-device,drive=userdata",
+                "virtio-blk-device,drive=cache",
+                "virtio-blk-device,drive=system",
+            ],
+        )
+        drive_args = [
+            cmd[i + 1]
+            for i, value in enumerate(cmd[:-1])
+            if value == "-drive" and "id=" in str(cmd[i + 1])
+        ]
+        self.assertTrue(str(drive_args[0]).startswith("index=0,id=vendor,"))
+        self.assertTrue(str(drive_args[1]).startswith("index=1,id=encrypt,"))
+        self.assertTrue(str(drive_args[2]).startswith("index=2,id=userdata,"))
+        self.assertTrue(str(drive_args[3]).startswith("index=3,id=cache,"))
+        self.assertTrue(str(drive_args[4]).startswith("index=4,id=system,"))
+        self.assertNotIn("-soundhw", joined)
+        self.assertNotIn(" hda", joined)
+
+    def test_google_virt_supports_single_thread_tcg_diagnostic_mode(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "virt"), \
+                patch.object(arm64, "TCG_THREAD_MODE", "single"), \
+                patch.object(arm64, "CPU_CORES", 1):
+            cmd = arm64.build_google_arm64_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-accel tcg,thread=single", joined)
+        self.assertIn("-smp cores=1", joined)
+
+    def test_legacy_ranchu_is_explicit_fallback_only(self):
+        inv = {
+            "kernel": r"C:\image\kernel-ranchu",
+            "ramdisk": r"C:\image\ramdisk.img",
+            "system": r"C:\image\system.img",
+            "vendor": r"C:\image\vendor.img",
+            "encryptionkey": r"C:\image\encryptionkey.img",
+            "userdata": r"C:\image\userdata.img",
+        }
+        paths = {
+            "userdata": Path(r"C:\runtime\userdata-qemu.img"),
+            "cache": Path(r"C:\runtime\cache-qemu.qcow2"),
+            "encryptionkey": Path(r"C:\runtime\encryptionkey-qemu.qcow2"),
+            "hw": Path(r"C:\runtime\hardware-qemu.ini"),
+            "pstore": Path(r"C:\runtime\pstore.bin"),
+        }
+        with patch("native_arm64_poc.prepare_runtime", return_value=(inv, paths)), \
+                patch.object(arm64, "GOOGLE_ARM64_MACHINE", "ranchu"):
+            cmd = arm64.build_google_arm64_command()
+        joined = " ".join(str(x) for x in cmd).lower()
+        self.assertIn("-machine type=ranchu", joined)
+        self.assertIn("goldfish_pstore", joined)
+
+    def test_boot_milestone_never_confuses_first_boot_completed_zero(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "init: starting service 'zygote'...\n"
+                "init: starting service 'adbd'...\n"
+                "init: setprop sys.bootstat.first_boot_completed 0\n"
+                "init: updatable process 'zygote' exited 4 times before boot completed\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                self.assertEqual(arm64._boot_milestone(), "zygote+adbd")
+
+    def test_boot_milestone_accepts_only_real_sys_boot_completed_one(self):
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            log = root / "qemu-arm64.log"
+            log.write_text(
+                "init: starting service 'zygote'...\n"
+                "init: setprop sys.boot_completed 1\n",
+                encoding="utf-8",
+            )
+            with patch("native_arm64_poc.runtime_paths", return_value={"stdout": log}):
+                self.assertEqual(arm64._boot_milestone(), "android-boot-complete")
+
+    def test_dynamic_partition_dtb_declares_logical_partitions_and_vbmeta(self):
+        tree = MagicMock()
+        tree.to_dtb.return_value = b"patched-dtb"
+        with TemporaryDirectory() as td:
+            root = Path(td)
+            base = root / "base.dtb"
+            output = root / "patched.dtb"
+            base.write_bytes(b"base-dtb")
+            fdt_module = MagicMock()
+            fdt_module.parse_dtb.return_value = tree
+            with patch.dict("sys.modules", {"fdt": fdt_module}):
+                arm64.build_dynamic_partition_dtb(base, output)
+            self.assertEqual(output.read_bytes(), b"patched-dtb")
+
+        calls = tree.set_property.call_args_list
+        for name in ("system", "vendor", "product", "system_ext"):
+            self.assertIn(
+                (("fsmgr_flags", "wait,logical,first_stage_mount", f"/firmware/android/fstab/{name}"), {}),
+                [(call.args, call.kwargs) for call in calls],
+            )
+        self.assertIn(
+            (("by_name_prefix", "/dev/block/platform/a003600.virtio_mmio/by-name/", "/firmware/android/vbmeta"), {}),
+            [(call.args, call.kwargs) for call in calls],
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

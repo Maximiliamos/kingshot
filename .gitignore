@@ -1,9 +1,16 @@
 # Runtime state
 state.json
 state.json.tmp
+state.previous.json
+state.corrupt.*.json
+control.json
+gui_config.json
+bot.pid
+bot.lock
 logs/
 unknown/
 debug/
+runtime-tools/
 
 # Captures / local diagnostics
 fullscreen.png

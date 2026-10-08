@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "min_positive_cases": 4,
+  "min_negative_cases": 4,
+  "samples": [
+    {
+      "id": "host-construction-list",
+      "origin": "real-host",
+      "kind": "positive",
+      "image": "construction-list.png",
+      "sha256": "dd99913ac848b47a874cd83484af97eb4fe06b8c31b0506b71757e71df086754",
+      "panel": "construction",
+      "ocr": [],
+      "expected_roles": {"construction_primary": [260, 518, 77, 27]}
+    },
+    {
+      "id": "host-construction-return",
+      "origin": "real-host",
+      "kind": "positive",
+      "image": "construction-return.png",
+      "sha256": "da769e4e6d6b7a35ff052ef950b3aff8d687c2a75cb0bbfd7c67ffe8c9ed29f0",
+      "panel": "construction",
+      "ocr": [],
+      "expected_roles": {"construction_primary": [126, 628, 170, 47]}
+    },
+    {
+      "id": "host-resident-source-a",
+      "origin": "real-host",
+      "kind": "positive",
+      "image": "resident-source-a.png",
+      "sha256": "642bd363822539c5d7f7baad70a383aaaf1365613082a7d7b7f0765fda1d59f4",
+      "panel": "source_modal",
+      "ocr": [],
+      "expected_roles": {"source_upgrade": [287, 404, 66, 47]}
+    },
+    {
+      "id": "host-resident-source-b",
+      "origin": "real-host",
+      "kind": "positive",
+      "image": "resident-source-b.png",
+      "sha256": "c1c909e8e3c761a10d7d4c2df0a6ec048c892969023d27382a81d38de8df5cef",
+      "panel": "source_modal",
+      "ocr": [],
+      "expected_roles": {"source_upgrade": [287, 404, 66, 47]}
+    },
+    {
+      "id": "host-resource-error-a",
+      "origin": "real-host",
+      "kind": "negative",
+      "image": "resource-error-a.png",
+      "sha256": "1bb6808d0050def6de8cd8295ba67184af84d0ab8be414f1696a06aad6cc4384",
+      "panel": "resource_error",
+      "ocr": [
+        {"text": "Не удалось загрузить ресурсы", "normalized": "неудалосьзагрузитьресурсы", "loc": [80, 480], "w": 250, "h": 28, "score": 95},
+        {"text": "Связаться с гейм-мастером", "normalized": "связатьсясгейммастером", "loc": [80, 577], "w": 127, "h": 59, "score": 95},
+        {"text": "Повторить попытку", "normalized": "повторитьпопытку", "loc": [216, 573], "w": 128, "h": 59, "score": 95}
+      ],
+      "allowed_roles": ["resource_load_retry"],
+      "forbidden_roles": ["battle_reward_claim", "battle_conquer", "construction_upgrade", "construction_primary", "source_upgrade", "resident_add", "resident_complete"]
+    },
+    {
+      "id": "host-resource-error-b",
+      "origin": "real-host",
+      "kind": "negative",
+      "image": "resource-error-b.png",
+      "sha256": "21eb411496a8aced7a492e510e6dacf3f557994183f9ed9f3abded813537e8f5",
+      "panel": "resource_error",
+      "ocr": [
+        {"text": "Не удалось загрузить ресурсы", "normalized": "неудалосьзагрузитьресурсы", "loc": [80, 480], "w": 250, "h": 28, "score": 95},
+        {"text": "Связаться с гейм-мастером", "normalized": "связатьсясгейммастером", "loc": [80, 577], "w": 127, "h": 59, "score": 95},
+        {"text": "Повторить попытку", "normalized": "повторитьпопытку", "loc": [216, 573], "w": 128, "h": 59, "score": 95}
+      ],
+      "allowed_roles": ["resource_load_retry"],
+      "forbidden_roles": ["battle_reward_claim", "battle_conquer", "construction_upgrade", "construction_primary", "source_upgrade", "resident_add", "resident_complete"]
+    },
+    {
+      "id": "host-resource-error-c",
+      "origin": "real-host",
+      "kind": "negative",
+      "image": "resource-error-c.png",
+      "sha256": "5f0be0478c378759751cedb278d2c6471a946a9605bf5f1d47395d2d17a4e9b7",
+      "panel": "resource_error",
+      "ocr": [
+        {"text": "Не удалось загрузить ресурсы", "normalized": "неудалосьзагрузитьресурсы", "loc": [80, 480], "w": 250, "h": 28, "score": 95},
+        {"text": "Связаться с гейм-мастером", "normalized": "связатьсясгейммастером", "loc": [80, 577], "w": 127, "h": 59, "score": 95},
+        {"text": "Повторить попытку", "normalized": "повторитьпопытку", "loc": [216, 573], "w": 128, "h": 59, "score": 95}
+      ],
+      "allowed_roles": ["resource_load_retry"],
+      "forbidden_roles": ["battle_reward_claim", "battle_conquer", "construction_upgrade", "construction_primary", "source_upgrade", "resident_add", "resident_complete"]
+    },
+    {
+      "id": "host-account-restriction",
+      "origin": "real-host",
+      "kind": "negative",
+      "image": "account-restriction.png",
+      "sha256": "21f90ab75810cc0361e04f9f07a76dc554207dbb31525cbaeb36207e0a9b6cae",
+      "panel": "construction",
+      "ocr": [
+        {"text": "Попробуйте позже", "normalized": "попробуйтепозже", "loc": [40, 350], "w": 220, "h": 28, "score": 95}
+      ],
+      "stop_reason": true,
+      "forbidden_roles": ["battle_reward_claim", "battle_conquer", "construction_upgrade", "construction_primary", "source_upgrade", "resident_add", "resident_complete"]
+    }
+  ]
+}
