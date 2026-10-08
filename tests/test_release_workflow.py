@@ -66,9 +66,19 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("& $PythonExe .\\warbot_cli.py status", MVP)
         self.assertNotIn("& python @args", MVP)
 
+    def test_installer_ships_real_replay_fixtures(self):
+        self.assertIn('tests\\fixtures\\tutorial_replay', INSTALL)
+        self.assertIn('Get-ChildItem -LiteralPath $fixtureSource -File', INSTALL)
+
     def test_copy_installer_ships_hardening_modules(self):
         for name in (
             "tutorial_vision.py",
+            "task_engine.py",
+            "vision_replay.py",
+            "resource_readiness.py",
+            "resource_diagnostics.py",
+            "verify_resource_readiness.ps1",
+            "verify_replay_regression.ps1",
             "frame_stream.py",
             "scrcpy_transport.py",
             "runtime_events.py",
