@@ -230,10 +230,10 @@ if (Test-Path -LiteralPath $fullEvidencePath -PathType Leaf) {
 # Filter to this exact acceptance run, rather than shipping years of appended
 # events. Missing run_id is a failure to attribute data and is never published.
 if ($acceptanceRunId) {
-    $sourceEvents = Join-Path $Root "logs\\events.jsonl"
+    $sourceEvents = Join-Path $Root "logs\events.jsonl"
     $destEvents = Join-Path $stage "events.jsonl"
     if (Test-Path -LiteralPath $sourceEvents -PathType Leaf) {
-        $eventWriter = New-Object System.IO.StreamWriter($destEvents, $false, (New-Object System.Text.UTF8Encoding($false)))
+        $eventWriter = [System.IO.StreamWriter]::new($destEvents, $false, [System.Text.UTF8Encoding]::new($false))
         try {
             foreach ($line in [IO.File]::ReadLines($sourceEvents)) {
                 try { $item = $line | ConvertFrom-Json -ErrorAction Stop }
@@ -241,9 +241,9 @@ if ($acceptanceRunId) {
                 if ([string]$item.run_id -cne $acceptanceRunId) { continue }
                 $safeLine = ConvertTo-Json -InputObject $item -Depth 10 -Compress
                 # Redact common credentials and personal email before upload.
-                $safeLine = [regex]::Replace($safeLine, '(?i)(bearer\\s+)[a-z0-9._~+/-]+', '$1[REDACTED]')
-                $safeLine = [regex]::Replace($safeLine, '(?i)((?:token|password|api[_-]?key)[=:]\\s*)[^\\\\\\s,;\"]+', '$1[REDACTED]')
-                $safeLine = [regex]::Replace($safeLine, '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}', '[REDACTED_EMAIL]')
+                $safeLine = [regex]::Replace($safeLine, '(?i)(bearer\s+)[a-z0-9._~+/-]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '(?i)((?:token|password|api[_-]?key)[=:]\s*)[^\s,;"]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '[REDACTED_EMAIL]')
                 $eventWriter.WriteLine($safeLine)
             }
         }
