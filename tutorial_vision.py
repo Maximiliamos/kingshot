@@ -81,6 +81,7 @@ class UniversalButtonDetector:
     STYLES = {
         "cyan": ((75, 80, 80), (105, 255, 255)),
         "green": ((35, 90, 70), (95, 255, 255)),
+        "orange": ((3, 120, 120), (25, 255, 255)),
         "grey": ((0, 0, 55), (179, 85, 190)),
     }
 
@@ -134,6 +135,27 @@ class PanelDetector:
         ]
         if modal_beige >= 0.42 and len(modal_cyan) == 2:
             return Panel("source_modal", min(1.0, 0.55 + modal_beige * 0.45), ("beige-modal", "two-actions"))
+
+        resource_error = any(
+            "неудалосьзагрузитьресурс" in str(line.get("normalized", ""))
+            for line in ocr
+        )
+        retry = [
+            item for item in buttons
+            if item.style == "cyan"
+            and width * 0.50 <= item.bbox.center[0] <= width * 0.84
+            and height * 0.57 <= item.bbox.center[1] <= height * 0.70
+            and item.bbox.width >= width * 0.20
+        ]
+        companion = [
+            item for item in buttons
+            if item.style == "orange"
+            and width * 0.16 <= item.bbox.center[0] <= width * 0.50
+            and height * 0.57 <= item.bbox.center[1] <= height * 0.70
+            and item.bbox.width >= width * 0.20
+        ]
+        if resource_error and retry and companion and modal_beige >= 0.30:
+            return Panel("resource_error", 0.93, ("resource-error-ocr", "retry-geometry", "support-companion", "dialog"))
 
         # Battle reward is a distinct tutorial dialog: its conquest title,
         # compact chest claim control, and wide bottom continuation control
@@ -434,6 +456,14 @@ class TutorialPerception:
                 and normalized_text.startswith("завое")
             ):
                 role = "battle_conquer"
+            elif (
+                panel.kind == "resource_error"
+                and item.style == "cyan"
+                and frame.shape[1] * 0.50 <= item.bbox.center[0] <= frame.shape[1] * 0.84
+                and frame.shape[0] * 0.57 <= item.bbox.center[1] <= frame.shape[0] * 0.70
+                and "попыт" in normalized_text
+            ):
+                role = "resource_load_retry"
             if panel.kind == "source_modal" and item in source_buttons[:1]:
                 role = "source_upgrade"
             elif (

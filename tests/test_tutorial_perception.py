@@ -83,6 +83,20 @@ class TutorialPerceptionTests(unittest.TestCase):
         self.assertIn('state, "battle_conquer"', source)
         self.assertGreaterEqual(source.count("TUTORIAL_ACTION_POLICY.decide("), 4)
 
+    def test_resource_retry_requires_error_context_and_bound_text(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        cv2.rectangle(frame, (55, 330), (365, 650), (190, 210, 225), -1)
+        cv2.rectangle(frame, (77, 573), (204, 632), (20, 130, 230), -1)
+        cv2.rectangle(frame, (216, 573), (344, 632), (220, 180, 40), -1)
+        lines = [
+            {"text": "Не удалось загрузить ресурсы", "normalized": "неудалосьзагрузитьресурсы", "loc": (65, 400), "w": 280, "h": 50, "score": 90},
+            {"text": "Повторить попытку", "normalized": "повторитьпопытку", "loc": (220, 580), "w": 120, "h": 30, "score": 90},
+        ]
+        model = tv.TutorialPerception().perceive(frame, ocr_lines=lines)
+        self.assertEqual(model.panel.kind, "resource_error")
+        self.assertIsNotNone(model.button("resource_load_retry"))
+        self.assertIsNone(tv.TutorialPerception().perceive(frame, ocr_lines=lines[1:]).button("resource_load_retry"))
+
     def test_novel_guidance_requires_temporal_motion(self):
         detector = tv.TutorialGuidanceDetector()
         candidate = {

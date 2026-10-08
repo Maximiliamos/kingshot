@@ -994,6 +994,42 @@ def ocr_lines(phone):
     return lines
 
 
+def resource_dialog_ocr_lines(phone):
+    """Return corroborating OCR only for the bounded resource-error dialog.
+
+    The normal sparse OCR intentionally misses embossed dialog text.  These
+    two fixed dialog regions are read only after a central tutorial dialog was
+    independently detected; their text is evidence, never a click source.
+    """
+    if not os.path.isfile(TESSERACT):
+        return []
+    height, width = phone.shape[:2]
+    regions = (
+        ("message", 0.14, 0.42, 0.86, 0.59),
+        ("retry", 0.49, 0.60, 0.85, 0.68),
+    )
+    values = {}
+    for name, x0f, y0f, x1f, y1f in regions:
+        x0, x1 = round(width * x0f), round(width * x1f)
+        y0, y1 = round(height * y0f), round(height * y1f)
+        crop = phone[y0:y1, x0:x1]
+        ok, raw = cv2.imencode(".png", cv2.resize(crop, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC))
+        if not ok:
+            return []
+        env = os.environ.copy()
+        env["TESSDATA_PREFIX"] = os.path.join(os.path.dirname(TESSERACT), "tessdata") + os.sep
+        run = subprocess.run([TESSERACT, "stdin", "stdout", "-l", "rus+eng", "--psm", "6"], input=raw.tobytes(), capture_output=True, env=env, check=False, creationflags=WINDOWS_NO_WINDOW)
+        values[name] = run.stdout.decode("utf-8", "ignore") if not run.returncode else ""
+    message = norm_text(values["message"])
+    retry = norm_text(values["retry"])
+    if "неудалосьзагрузитьресурс" not in message or "попыт" not in retry:
+        return []
+    return [
+        {"text": values["message"].strip(), "normalized": message, "score": 80.0, "loc": (round(width*.14), round(height*.42)), "w": round(width*.72), "h": round(height*.17)},
+        {"text": values["retry"].strip(), "normalized": retry, "score": 80.0, "loc": (round(width*.49), round(height*.59)), "w": round(width*.36), "h": round(height*.10)},
+    ]
+
+
 def ocr_action_from_lines(lines):
     for source in lines:
         line = dict(source)
@@ -1268,6 +1304,10 @@ def perceive_tutorial_screen(phone, *, include_ocr=False):
         phone,
         ocr_lines=lines,
     )
+    if collect_ocr and LAST_TUTORIAL_SCREEN_MODEL.panel.kind == "tutorial_dialog":
+        resource_lines = resource_dialog_ocr_lines(phone)
+        if resource_lines:
+            LAST_TUTORIAL_SCREEN_MODEL = TUTORIAL_PERCEPTION.perceive(phone, ocr_lines=lines + resource_lines)
     # Animated glow/motion is the production path.  Two small, background-
     # independent crops remain as a throttled migration fallback; the sixteen
     # historical scene templates stay available for offline regression only.
@@ -2097,6 +2137,21 @@ def handle_tutorial(phone, state):
             return "acted"
         if decision == "exhausted":
             log("Туториал: reward «Получить» не исчез после bounded retry; fail-closed.")
+            return False
+        return "wait"
+
+    resource_retry = _button_hit(screen.button("resource_load_retry"))
+    if resource_retry:
+        retry_box = Box(resource_retry["loc"][0], resource_retry["loc"][1], resource_retry["w"], resource_retry["h"])
+        decision = TUTORIAL_ACTION_POLICY.decide(state, "resource_load_retry", retry_box, phone.shape, retry_after=3.0)
+        if decision in ("act", "retry"):
+            debug(phone, resource_retry, "tutorial_resource_load_retry")
+            log(f"Туториал: подтверждена загрузочная ошибка; retry={decision}.")
+            tap_match(phone, resource_retry)
+            set_step(state, "tutorial_wait_hand_result")
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: ресурсный retry исчерпан; fail-closed.")
             return False
         return "wait"
 
