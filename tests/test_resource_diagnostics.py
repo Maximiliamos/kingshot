@@ -64,6 +64,8 @@ class ResourceFailureTests(unittest.TestCase):
             "acted_at": 1.0,
             "attempts": 2,
         }
+        state["resource_retry_attempts"] = 2
+        state["resource_retry_last_at"] = 1.0
         with patch("bot.perceive_tutorial_screen", return_value=screen), \
              patch("bot.match", return_value=None), \
              patch("bot.match_tutorial_skip", return_value=None), \
@@ -75,6 +77,34 @@ class ResourceFailureTests(unittest.TestCase):
         self.assertIn("GAME_RESOURCE_LOADING_FAILED", state["last_stop_reason"])
         self.assertIn("2", state["last_stop_reason"])
         save.assert_called()
+        tap.assert_not_called()
+
+    def test_moved_retry_button_cannot_reset_resource_budget(self):
+        frame = np.zeros((944, 421, 3), dtype=np.uint8)
+        original = tv.Box(216, 573, 128, 59)
+        moved = tv.Box(220, 590, 125, 60)
+        button = tv.Button(moved, "cyan", True, 0.98, "Повторить попытку", "resource_load_retry")
+        screen = tv.ScreenModel(
+            buttons=[button],
+            panel=tv.Panel("resource_error", 0.93, ("resource-error-ocr",)),
+        )
+        state = dict(bot.DEFAULT_STATE)
+        state["step"] = "tutorial_wait_hand_result"
+        state["resource_retry_attempts"] = 2
+        state["resource_retry_last_at"] = 1.0
+        state["tutorial_action_lock"] = {
+            "signature": tv.BoundedActionPolicy.signature("resource_load_retry", original, frame.shape),
+            "acted_at": 1.0,
+            "attempts": 2,
+        }
+        with patch("bot.perceive_tutorial_screen", return_value=screen), \\
+             patch("bot.match", return_value=None), \\
+             patch("bot.match_tutorial_skip", return_value=None), \\
+             patch("bot.save_state"), patch("bot.log"), \\
+             patch("bot.tap_match") as tap:
+            result = bot.handle_tutorial(frame, state)
+        self.assertEqual(result, "resource_blocked")
+        self.assertEqual(state["resource_retry_attempts"], 2)
         tap.assert_not_called()
 
     def test_read_only_diagnostics_are_sanitized(self):
