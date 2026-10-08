@@ -125,6 +125,34 @@ function Run-Gate {
             Write-Host "GATE FAIL: required evidence file(s) missing:" -ForegroundColor Red
             $missingEvidence | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
         }
+        # A file's existence is not evidence of gate success. During a prior
+        # host run a dynamically scoped PowerShell path silently overwrote
+        # per-gate JSON with intermediate acceptance snapshots. Require the
+        # actual gate result to explicitly say pass=true as well.
+        if ($code -eq 0) {
+            $verifiedGateJson = @(
+                "google-services.json", "preview-production.json",
+                "gui-host-smoke.json", "operator-io-smoke.json",
+                "recovery-smoke.json", "mvp-game-flow-evidence.json",
+                "mvp-soak-evidence.json"
+            )
+            foreach ($gateEvidencePath in @($EvidencePaths)) {
+                if ([IO.Path]::GetFileName($gateEvidencePath) -notin $verifiedGateJson) {
+                    continue
+                }
+                try {
+                    $gateEvidence = Get-Content -LiteralPath $gateEvidencePath -Raw | ConvertFrom-Json
+                    if (-not ($gateEvidence.PSObject.Properties.Name -contains "pass") -or -not [bool]$gateEvidence.pass) {
+                        throw "pass=true missing or false"
+                    }
+                }
+                catch {
+                    $code = 94
+                    Write-Host "GATE FAIL: invalid or non-PASS evidence JSON: $gateEvidencePath ($($_.Exception.Message))" -ForegroundColor Red
+                    break
+                }
+            }
+        }
     }
     $GateResults.Add([ordered]@{
         name = $Name
