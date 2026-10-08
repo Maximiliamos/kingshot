@@ -1,0 +1,35 @@
+{
+  "phase": "tutorial_new_character",
+  "step": "tutorial_wait_hand_result",
+  "target_state": 3,
+  "next_nickname": 1,
+  "pending_nickname": 1,
+  "characters_created": 0,
+  "characters_created_cycle": 0,
+  "characters_per_cycle": 1,
+  "auto_reset_data": true,
+  "repeat_cycles": false,
+  "current_cycle": 1,
+  "tutorial_origin": "initial",
+  "last_stop_reason": "",
+  "step_started_at": 1791424295.9288023,
+  "skip_locked": false,
+  "skip_lock_version": 0,
+  "tutorial_hand_locked": false,
+  "tutorial_primary_locked": false,
+  "ocr_locked_action": "",
+  "ocr_locked_until": 0.0,
+  "ocr_absent_since": 0.0,
+  "ocr_upgrade_hold_ms": 0,
+  "tutorial_action_lock": {
+    "signature": [
+      "resource_load_retry",
+      66,
+      63,
+      30,
+      6
+    ],
+    "acted_at": 1791424295.5021515,
+    "attempts": 2
+  }
+}
