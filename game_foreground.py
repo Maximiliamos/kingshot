@@ -49,8 +49,14 @@ def classify_foreground(window_dump: str, activity_dump: str, package: str) -> d
     focus_conflict = len({_label(s, package) for s in focus_values if _label(s, package) != "unknown"}) > 1
     activity_conflict = len({_label(s, package) for s in resumed_values if _label(s, package) != "unknown"}) > 1
     known = {kind for kind in (window_label, activity_label) if kind != "unknown"}
+    # A published mCurrentFocus=null is an explicit inability to confirm a
+    # foreground window. Do not promote a merely resumed game Activity to a
+    # positive result while Android reports no focused window.
+    explicit_unknown_focus = bool(current) and window_label == "unknown"
     if focus_conflict or activity_conflict or len(known) > 1:
         status = "conflict"
+    elif explicit_unknown_focus:
+        status = "unknown"
     elif known == {"game"}:
         status = "game"
     elif known == {"other"}:
