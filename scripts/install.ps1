@@ -15,6 +15,10 @@ New-Item -ItemType Directory -Force -Path (Join-Path $Target "scripts") | Out-Nu
 $files = @(
     "bot.py",
     "tutorial_vision.py",
+    "task_engine.py",
+    "vision_replay.py",
+    "resource_diagnostics.py",
+    "resource_readiness.py",
     "gui.py",
     "device_backend.py",
     "frame_stream.py",
@@ -59,6 +63,8 @@ foreach ($scriptName in @(
     "verify_operator_io.ps1",
     "verify_recovery.ps1",
     "verify_game_flow.ps1",
+    "verify_resource_readiness.ps1",
+    "verify_replay_regression.ps1",
     "verify_soak.ps1",
     "verify_mvp_full.ps1",
     "provision_scrcpy_server.ps1",
@@ -69,6 +75,19 @@ foreach ($scriptName in @(
     if (Test-Path $scriptPath) {
         Copy-Item $scriptPath (Join-Path $Target "scripts\$scriptName") -Force
     }
+}
+
+# Ship the pinned, reviewed replay manifest and any real screenshot corpus.
+# Do not silently generate dummy fixture images during installation.
+$fixtureSource = Join-Path "$PSScriptRoot\.." "tests\fixtures\tutorial_replay"
+if (Test-Path -LiteralPath $fixtureSource -PathType Container) {
+    $fixtureTarget = Join-Path $Target "tests\fixtures\tutorial_replay"
+    New-Item -ItemType Directory -Force -Path $fixtureTarget | Out-Null
+    Get-ChildItem -LiteralPath $fixtureSource -File |
+        Where-Object { $_.Extension -in @(".json", ".png") } |
+        ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $fixtureTarget $_.Name) -Force
+        }
 }
 
 if (Test-Path "$PSScriptRoot\..\templates") {
