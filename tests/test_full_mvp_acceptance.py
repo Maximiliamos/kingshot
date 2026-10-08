@@ -7,6 +7,15 @@ SOURCE = (ROOT / "scripts" / "verify_mvp_full.ps1").read_text(encoding="utf-8-si
 
 
 class FullMvpAcceptanceScriptTests(unittest.TestCase):
+    def test_acceptance_evidence_writer_cannot_shadow_gate_output_path(self):
+        # PowerShell function lookups are dynamically scoped and
+        # case-insensitive. A local $evidencePath in Run-Gate must never make
+        # Save-AcceptanceEvidence write over gui-host-smoke.json, etc.
+        self.assertIn('$script:EvidencePath', SOURCE)
+        self.assertIn('${script:EvidencePath}.tmp', SOURCE)
+        self.assertIn('foreach ($gateEvidencePath in @($EvidencePaths))', SOURCE)
+        self.assertNotIn('foreach ($evidencePath in @($EvidencePaths))', SOURCE)
+
     def test_master_runs_all_release_gates(self):
         for name in (
             "verify_release.ps1",
