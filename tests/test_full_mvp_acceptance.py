@@ -31,10 +31,23 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
             "verify_gui.ps1",
             "verify_operator_io.ps1",
             "verify_recovery.ps1",
+            "verify_resource_readiness.ps1",
             "verify_game_flow.ps1",
             "verify_soak.ps1",
         ):
             self.assertIn(name, SOURCE)
+
+    def test_resource_readiness_precedes_any_destructive_game_flow(self):
+        self.assertIn("resource-readiness.json", SOURCE)
+        self.assertLess(
+            SOURCE.index('Run-Gate -Name "Non-destructive resource readiness"'),
+            SOURCE.index('Run-Gate -Name "Exact State #3'),
+        )
+        gate = (ROOT / "scripts" / "verify_resource_readiness.ps1").read_text(encoding="utf-8")
+        self.assertIn("resource-readiness", gate)
+        self.assertNotIn("clear-game-data", gate)
+        self.assertNotIn("prepare-mvp-flow", gate)
+        self.assertNotIn("prepare-mvp-soak", gate)
 
     def test_master_is_fail_fast(self):
         self.assertIn("MVP 1.0 HOST ACCEPTANCE FAIL", SOURCE)
@@ -107,7 +120,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn("$code = 93", SOURCE)
 
     def test_destructive_gates_are_disclosed(self):
-        self.assertIn("intentionally clear Kingshot app data", SOURCE)
+        self.assertIn("subsequently clear Kingshot app data", SOURCE)
         self.assertIn("nickname counter is preserved", SOURCE)
 
 
