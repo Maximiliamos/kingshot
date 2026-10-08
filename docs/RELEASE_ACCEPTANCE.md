@@ -70,6 +70,14 @@ If this path is unavailable, game input fails closed rather than silently
 falling back to unfocused ADB taps. The real game-flow gate is the functional
 proof that these inputs are accepted by Kingshot.
 
+### OCR safety prerequisite
+
+The dedicated Windows user must have the configured local Tesseract executable
+available before tutorial automation starts. OCR is the independent terminal
+check for account/character restrictions that can otherwise resemble ordinary
+construction panels. If it is missing or unavailable, tutorial input stops
+with `OCR_UNAVAILABLE`; semantic and legacy construction actions must not run.
+
 ### Exact State #3 and rename
 
 The flow is:

@@ -12,15 +12,17 @@ until a verified exact-SHA, real-Windows-host full acceptance PASS exists.
    `debug/resource-readiness.json`. It does not click, restart the game,
    change networking, or clear application data. `verify_mvp_full.ps1`
    requires this evidence before any destructive character flow.
-2. **Real-frame replay framework**: `vision_replay.py` runs fixture images
-   through `TutorialPerception`, compares panels/roles/target boxes and
-   rejects unsafe actions on negative frames. Missing frames and checksum
-   mismatches fail. A separate release gate requires a minimum reviewed
-   positive and negative corpus.
+2. **Real-frame replay framework**: `vision_replay.py` runs eight reviewed
+   real-host fixture images through `TutorialPerception`, compares
+   panels/roles/target boxes and rejects unsafe actions on negative frames.
+   Account-restriction frames verify the same terminal-stop precedence used
+   by `bot.py`; missing frames and checksum mismatches fail. The strict gate
+   currently covers four positive and four negative cases.
 3. **Declarative Task Engine (incremental)**: `task_engine.py` centralizes
    role-to-panel/action/next-step mapping and delegates retry budgets to
-   `BoundedActionPolicy`. Battle reward/conquer paths now call it.
-   Construction/resident fallbacks are NOT yet fully migrated.
+   `BoundedActionPolicy`. Battle, construction, resident source, resident
+   assignment and resident-completion paths use it when semantic perception
+   is available; legacy image fallbacks remain bounded for older scenes.
 4. **CI main push trigger**: `poc-tests.yml` now has `push.branches: main`,
    parses the new PowerShell verifiers, compiles new modules and runs tests.
    This takes effect for main after integration merge.
@@ -34,11 +36,10 @@ until a verified exact-SHA, real-Windows-host full acceptance PASS exists.
   acceptance `20dce2fc11a943c3a350df1bc35f39da`. CI cannot prove this is
   fixed. The readiness gate proves *visible UI before reset*, not continued
   availability of all resources after `pm clear`.
-- **Real replay corpus is empty**: `tests/fixtures/tutorial_replay/manifest.json`
-  intentionally declares four positive and four negative real-host cases
-  required; no substitute synthetic images are mislabeled as host evidence.
-  Import, review, and checksum real frames before the strict replay gate
-  will pass.
+- **Replay coverage is bounded, not exhaustive**: the strict corpus has four
+  positive and four negative redacted real-host frames. Expand it whenever a
+  new panel/unknown state is observed; do not count synthetic frames as host
+  evidence.
 - **Exact-State #3 → tutorial → rename and two soak cycles**: host-only,
   evidence still missing. Do not modify the release gate to skip these checks.
 - **Full vision/task migration**: special-purpose resident/source/construction

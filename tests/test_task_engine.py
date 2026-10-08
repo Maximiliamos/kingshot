@@ -47,6 +47,14 @@ class TaskEngineTests(unittest.TestCase):
         for forbidden in ("resource_load_retry", "select_state_3", "rename", "account_limit"):
             self.assertNotIn(forbidden, TASK_RULES)
 
+    def test_resident_completion_is_a_bounded_back_action_on_its_exact_panel(self):
+        engine = SemanticTaskEngine()
+        screen = self.model(panel="resident_assignment", role="resident_complete", enabled=False)
+        decision = engine.plan({}, screen, "resident_complete", (944, 421, 3), now=10.0)
+        self.assertIsNotNone(decision)
+        self.assertEqual(decision.rule.action, "key_back")
+        self.assertEqual(decision.rule.postcondition, "resident_assignment_panel_closes")
+
 
 if __name__ == "__main__":
     unittest.main()

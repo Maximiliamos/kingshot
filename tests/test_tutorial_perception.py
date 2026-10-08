@@ -81,7 +81,12 @@ class TutorialPerceptionTests(unittest.TestCase):
         source = inspect.getsource(bot.handle_tutorial)
         self.assertIn('TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_reward_claim"', source)
         self.assertIn('TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_conquer"', source)
-        self.assertGreaterEqual(source.count("TUTORIAL_ACTION_POLICY.decide("), 4)
+        for role in ("source_upgrade", "resident_add", "resident_complete", "construction_upgrade", "construction_primary"):
+            self.assertIn(f'TUTORIAL_TASK_ENGINE.plan(state, screen, "{role}"', source)
+        self.assertGreaterEqual(source.count("TUTORIAL_TASK_ENGINE.plan("), 7)
+        # Legacy fallbacks and the separately capped resource retry remain
+        # explicitly bounded while the semantic paths delegate to the engine.
+        self.assertGreaterEqual(source.count("TUTORIAL_ACTION_POLICY.decide("), 3)
 
     def test_resource_retry_requires_error_context_and_bound_text(self):
         frame = np.zeros((944, 421, 3), dtype=np.uint8)

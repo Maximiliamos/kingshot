@@ -19,6 +19,7 @@ class TaskRule:
     postcondition: str = "recognized_role_disappears"
     minimum_confidence: float = 0.7
     retry_after: float = 3.0
+    requires_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,20 @@ TASK_RULES: dict[str, TaskRule] = {
         "construction_primary", frozenset({"construction"}),
         "tap", "tutorial_wait_construction",
     ),
+    "source_upgrade": TaskRule(
+        "source_upgrade", frozenset({"source_modal"}),
+        "tap", "tutorial_wait_hand_result",
+    ),
+    "resident_add": TaskRule(
+        "resident_add", frozenset({"resident_assignment"}),
+        "tap", "tutorial_wait_hand_result",
+    ),
+    "resident_complete": TaskRule(
+        "resident_complete", frozenset({"resident_assignment"}),
+        "key_back", "tutorial_wait_hand_result",
+        postcondition="resident_assignment_panel_closes",
+        requires_enabled=False,
+    ),
 }
 
 
@@ -65,7 +80,8 @@ class SemanticTaskEngine:
         if rule is None or screen.panel.kind not in rule.panels:
             return None
         button = screen.button(role)
-        if button is None or not button.enabled or button.confidence < rule.minimum_confidence:
+        if (button is None or (rule.requires_enabled and not button.enabled)
+                or button.confidence < rule.minimum_confidence):
             return None
         box = button.bbox
         if (box.width <= 0 or box.height <= 0 or box.x < 0 or box.y < 0

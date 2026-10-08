@@ -67,6 +67,7 @@ class ResourceFailureTests(unittest.TestCase):
         state["resource_retry_attempts"] = 2
         state["resource_retry_last_at"] = 1.0
         with patch("bot.perceive_tutorial_screen", return_value=screen), \
+             patch("bot.ocr_available", return_value=True), \
              patch("bot.match", return_value=None), \
              patch("bot.match_tutorial_skip", return_value=None), \
              patch("bot.save_state") as save, \
@@ -98,6 +99,7 @@ class ResourceFailureTests(unittest.TestCase):
             "attempts": 2,
         }
         with patch("bot.perceive_tutorial_screen", return_value=screen), \
+             patch("bot.ocr_available", return_value=True), \
              patch("bot.match", return_value=None), \
              patch("bot.match_tutorial_skip", return_value=None), \
              patch("bot.save_state"), patch("bot.log"), \

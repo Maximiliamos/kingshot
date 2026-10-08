@@ -20,6 +20,7 @@ class TutorialVisionTests(unittest.TestCase):
         )
         screen = ScreenModel(tutorial_target=target)
         with patch("bot.match", return_value=None), \
+                patch("bot.ocr_available", return_value=True), \
                 patch("bot.perceive_tutorial_screen", return_value=screen), \
                 patch("bot.debug"), patch("bot.tap_match") as tap_target, \
                 patch("bot.set_step", side_effect=lambda s, step: s.update(step=step)):

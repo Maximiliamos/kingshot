@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import cv2
+import numpy as np
 
 from tutorial_vision import TutorialPerception
 from task_engine import TASK_RULES
@@ -25,6 +26,19 @@ ACTION_ROLES = frozenset(TASK_RULES) | frozenset({
 
 class ReplayError(ValueError):
     pass
+
+
+def _stop_reason(ocr_lines: list[dict[str, Any]]) -> bool:
+    """Use the same terminal safety check that precedes bot actions.
+
+    Account-restriction dialogs can share beige/cyan geometry with ordinary
+    game panels. The live bot checks this terminal condition before planning
+    any action, so replay exercises the identical pure policy with reviewed
+    OCR labels rather than depending on host Tesseract installation.
+    """
+    import bot
+
+    return bool(bot.stop_reason_from_ocr_lines(ocr_lines))
 
 
 def box_iou(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> float:
@@ -60,7 +74,11 @@ def replay_manifest(manifest_path: str | Path, *, require_real_coverage: bool = 
         sha = hashlib.sha256(target.read_bytes()).hexdigest()
         if sha != case.get("sha256"):
             raise ReplayError(f"{name}: screenshot hash mismatch")
-        frame = cv2.imread(str(target), cv2.IMREAD_COLOR)
+        # OpenCV's Windows path handling is unreliable for a workspace below
+        # a non-ASCII account name. Decode bytes so fixtures remain portable
+        # on the dedicated Russian-language host account.
+        encoded = np.fromfile(str(target), dtype=np.uint8)
+        frame = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
         if frame is None or not frame.size:
             raise ReplayError(f"{name}: image is unreadable")
         model = TutorialPerception().perceive(frame, ocr_lines=case.get("ocr", []))
@@ -68,11 +86,23 @@ def replay_manifest(manifest_path: str | Path, *, require_real_coverage: bool = 
             item.role: item for item in model.buttons
             if item.enabled and item.role in ACTION_ROLES
         }
+        expected_panel = case.get("panel")
+        if expected_panel and model.panel.kind != expected_panel:
+            failures.append(f"{name}: expected panel {expected_panel}, got {model.panel.kind}")
+        stop_expected = case.get("stop_reason")
+        if stop_expected is not None:
+            stopped = _stop_reason(case.get("ocr", []))
+            if stopped != bool(stop_expected):
+                failures.append(f"{name}: expected stop_reason={bool(stop_expected)}, got {stopped}")
+            # Terminal stop detection runs before Task Engine planning in bot.py.
+            if stopped:
+                observed = {}
         if kind == "positive":
             positives += 1
-            if model.panel.kind != case.get("panel"):
-                failures.append(f"{name}: expected panel {case.get('panel')}, got {model.panel.kind}")
-            for role, box in case.get("expected_roles", {}).items():
+            expected_roles = case.get("expected_roles")
+            if not isinstance(expected_roles, dict) or not expected_roles:
+                raise ReplayError(f"{name}: positive cases require expected_roles")
+            for role, box in expected_roles.items():
                 item = observed.get(role)
                 if item is None or box_iou(
                     (item.bbox.x, item.bbox.y, item.bbox.width, item.bbox.height),
@@ -81,8 +111,12 @@ def replay_manifest(manifest_path: str | Path, *, require_real_coverage: bool = 
                     failures.append(f"{name}: missing/misplaced role {role}")
         else:
             negatives += 1
-            forbidden = set(case.get("forbidden_roles", ACTION_ROLES))
-            triggered = set(observed) & forbidden
+            forbidden_raw = case.get("forbidden_roles")
+            if not isinstance(forbidden_raw, list) or not forbidden_raw:
+                raise ReplayError(f"{name}: negative cases require explicit forbidden_roles")
+            forbidden = set(forbidden_raw)
+            allowed = set(case.get("allowed_roles", []))
+            triggered = (set(observed) - allowed) & forbidden
             if triggered:
                 false_positives += len(triggered)
                 failures.append(f"{name}: unsafe false-positive roles {sorted(triggered)}")

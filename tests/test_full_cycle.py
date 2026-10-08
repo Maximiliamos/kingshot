@@ -178,6 +178,21 @@ class FullCycleTests(unittest.TestCase):
         self.assertIn('emit_event(\n                        "account_restriction"', source)
         self.assertIn('state["last_stop_reason"] = stop_reason', source)
 
+    def test_stop_reason_policy_is_available_without_host_tesseract(self):
+        lines = [{"normalized": "попробуйтепозже"}]
+        self.assertIn("ограничение", bot.stop_reason_from_ocr_lines(lines).lower())
+
+    def test_missing_ocr_blocks_tutorial_before_any_perception_or_input(self):
+        state = {"step": "tutorial_wait_hand_result"}
+        phone = np.zeros((944, 421, 3), dtype=np.uint8)
+        with patch("bot.ocr_available", return_value=False), patch("bot.save_state") as save, patch(
+            "bot.perceive_tutorial_screen"
+        ) as perceive:
+            self.assertEqual(bot.handle_tutorial(phone, state), "ocr_unavailable")
+        save.assert_called_once_with(state)
+        perceive.assert_not_called()
+        self.assertIn("OCR_UNAVAILABLE", state["last_stop_reason"])
+
 
 if __name__ == "__main__":
     unittest.main()

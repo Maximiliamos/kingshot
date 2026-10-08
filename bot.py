@@ -722,14 +722,23 @@ STOP_OCR_PHRASES = (
 )
 
 
-def detect_stop_reason(phone):
-    """Recognise only stop conditions; never use OCR here to bypass them."""
-    lines = ocr_lines(phone)
+def stop_reason_from_ocr_lines(lines):
+    """Pure terminal-stop policy shared by live and replay perception."""
     normalized = "".join(line.get("normalized", "") for line in lines)
     for phrase in STOP_OCR_PHRASES:
         if phrase in normalized:
             return f"Сервер/аккаунт сообщил ограничение: {phrase}"
     return ""
+
+
+def ocr_available():
+    """Whether the required local OCR executable is available for safety gates."""
+    return bool(TESSERACT and os.path.isfile(TESSERACT))
+
+
+def detect_stop_reason(phone):
+    """Recognise only stop conditions; never use OCR here to bypass them."""
+    return stop_reason_from_ocr_lines(ocr_lines(phone))
 
 
 def get_device_backend():
@@ -2055,6 +2064,17 @@ def handle_rename_governor(phone, state):
 
 
 def handle_tutorial(phone, state):
+    # Account-limit dialogs can visually resemble construction panels. Without
+    # the local OCR safety channel there is no independent way to distinguish
+    # them, so never let either semantic or legacy perception authorize input.
+    if not ocr_available():
+        state["last_stop_reason"] = (
+            "OCR_UNAVAILABLE: terminal account/restriction checks cannot run; "
+            "tutorial input is blocked fail-closed."
+        )
+        save_state(state)
+        log("STOP: " + state["last_stop_reason"])
+        return "ocr_unavailable"
     step = state["step"]
     screen = perceive_tutorial_screen(phone)
 
@@ -2199,8 +2219,20 @@ def handle_tutorial(phone, state):
         return "wait"
 
     resident_source = _button_hit(screen.button("source_upgrade"))
-    if not resident_source:
-        resident_source = find_resident_source_upgrade_button(phone)
+    if resident_source:
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "source_upgrade", phone.shape)
+        decision = task.status if task else "wait"
+        if decision in ("act", "retry"):
+            debug(phone, resident_source, "tutorial_resident_source_upgrade")
+            log(f"Туториал: подтверждено окно источников жителей; action={decision}.")
+            tap_match(phone, resident_source)
+            set_step(state, task.rule.next_step)
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: источник жителей не изменился после bounded retry; fail-closed.")
+            return False
+        return "wait"
+    resident_source = find_resident_source_upgrade_button(phone)
     if resident_source:
         debug(phone, resident_source, "tutorial_resident_source_upgrade")
         log("Туториал: подтверждено окно источников жителей; выбираю верхнее «Улучшить дом».")
@@ -2209,8 +2241,22 @@ def handle_tutorial(phone, state):
         return "acted"
 
     resident_plus = _button_hit(screen.button("resident_add"))
-    if not resident_plus:
-        resident_plus = find_resident_assignment_plus(phone)
+    if resident_plus:
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "resident_add", phone.shape)
+        decision = task.status if task else "wait"
+        if decision in ("act", "retry"):
+            debug(phone, resident_plus, "tutorial_assign_resident_plus")
+            log(f"Туториал: подтверждена панель жителей каменоломни; action={decision}.")
+            tap_match(phone, resident_plus)
+            state["action_change_threshold"] = 0.2
+            state["action_change_roi"] = _expanded_action_roi(phone, resident_plus, 2.5)
+            set_step(state, task.rule.next_step)
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: назначение жителя не изменило экран после bounded retry; fail-closed.")
+            return False
+        return "wait"
+    resident_plus = find_resident_assignment_plus(phone)
     if resident_plus:
         debug(phone, resident_plus, "tutorial_assign_resident_plus")
         log("Туториал: подтверждена панель жителей каменоломни; назначаю рабочего кнопкой +.")
@@ -2224,8 +2270,20 @@ def handle_tutorial(phone, state):
         return "acted"
 
     resident_complete = _button_hit(screen.button("resident_complete"))
-    if not resident_complete:
-        resident_complete = find_completed_resident_assignment(phone)
+    if resident_complete:
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "resident_complete", phone.shape)
+        decision = task.status if task else "wait"
+        if decision in ("act", "retry"):
+            debug(phone, resident_complete, "tutorial_resident_assignment_complete")
+            log(f"Туториал: панель жителей заполнена; action={decision}, закрываю Android Back.")
+            key(4)
+            set_step(state, task.rule.next_step)
+            return "acted"
+        if decision == "exhausted":
+            log("Туториал: панель жителей не закрылась после bounded retry; fail-closed.")
+            return False
+        return "wait"
+    resident_complete = find_completed_resident_assignment(phone)
     if resident_complete:
         debug(phone, resident_complete, "tutorial_resident_assignment_complete")
         log("Туториал: панель жителей заполнена; закрываю подтверждённую панель Android Back.")
@@ -2236,16 +2294,14 @@ def handle_tutorial(phone, state):
     upgrade_button = screen.button("construction_upgrade")
     upgrade = _button_hit(upgrade_button)
     if upgrade:
-        upgrade_box = Box(upgrade["loc"][0], upgrade["loc"][1], upgrade["w"], upgrade["h"])
-        decision = TUTORIAL_ACTION_POLICY.decide(
-            state, "construction_upgrade", upgrade_box, phone.shape, retry_after=3.0
-        )
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "construction_upgrade", phone.shape)
+        decision = task.status if task else "wait"
         if decision in ("act", "retry"):
             debug(phone, upgrade, "tutorial_construction_upgrade")
             log(f"Туториал: подтверждено «Улучшить»; hold {UPGRADE_HOLD_MS} ms action={decision}.")
             hold_match(phone, upgrade, UPGRADE_HOLD_MS)
             state["ocr_upgrade_hold_ms"] = UPGRADE_HOLD_MS
-            set_step(state, "tutorial_wait_scroll")
+            set_step(state, task.rule.next_step)
             return "held"
         if decision == "exhausted":
             log("Туториал: upgrade-кнопка осталась после bounded hold retry; fail-closed.")
@@ -2257,19 +2313,26 @@ def handle_tutorial(phone, state):
 
     primary_button = screen.button("construction_primary")
     primary = _button_hit(primary_button)
+    primary_from_semantic_model = primary is not None
     if not primary:
         primary = find_tutorial_primary_button(phone)
     if primary and (screen.panel.kind == "construction" or is_construction_panel(phone)):
-        primary_box = Box(primary["loc"][0], primary["loc"][1], primary["w"], primary["h"])
-        decision = TUTORIAL_ACTION_POLICY.decide(
-            state, "construction_primary", primary_box, phone.shape, retry_after=3.0
-        )
+        if primary_from_semantic_model:
+            task = TUTORIAL_TASK_ENGINE.plan(state, screen, "construction_primary", phone.shape)
+            decision = task.status if task else "wait"
+            next_step = task.rule.next_step if task else "tutorial_wait_construction"
+        else:
+            primary_box = Box(primary["loc"][0], primary["loc"][1], primary["w"], primary["h"])
+            decision = TUTORIAL_ACTION_POLICY.decide(
+                state, "construction_primary", primary_box, phone.shape, retry_after=3.0
+            )
+            next_step = "tutorial_wait_construction"
         if decision in ("act", "retry"):
             debug(phone, primary, "tutorial_primary_button")
             log(f"Туториал: панель строительства подтверждена; action={decision}.")
             tap_match(phone, primary)
             state["tutorial_primary_locked"] = True
-            set_step(state, "tutorial_wait_construction")
+            set_step(state, next_step)
             return "acted"
         if decision == "exhausted":
             log("Туториал: кнопка строительства осталась после bounded retry; fail-closed.")
@@ -2752,6 +2815,17 @@ def main():
                         f"FAIL-CLOSED external Kingshot resources: "
                         f"{state['last_stop_reason']} | {bundle}"
                     )
+                    break
+                elif tutorial_result == "ocr_unavailable":
+                    screenshot = os.path.join(DEBUG_DIR, f"ocr_unavailable_{fs()}.png")
+                    save_img(screenshot, phone)
+                    emit_event(
+                        "ocr_unavailable",
+                        terminal=True,
+                        reason=state["last_stop_reason"],
+                        evidence_screenshot=screenshot,
+                    )
+                    log("FAIL-CLOSED tutorial OCR prerequisite unavailable.")
                     break
 
             if acted:

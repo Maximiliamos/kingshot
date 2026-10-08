@@ -2,9 +2,9 @@
 
 The release target requires actual labeled host frames, **not synthetic screenshots**
 and not screenshot paths pointing to the mutable `runtime-reports` branch.
-No frames were silently copied from published reports: the existing connector
-cannot reliably fetch the binary PNG blobs. The corpus below is intentionally
-empty and not release-ready.
+The checked-in corpus contains four positive and four negative reviewed
+real-host frames with SHA-256 checksums. It passes the strict coverage gate;
+the corpus remains intentionally small and must grow with newly observed UI.
 
 ## Sources to curate
 
@@ -19,9 +19,10 @@ for example:
   — confirmed resource-loading error dialog.
 
 These are examples to **review and label**, not prevalidated fixtures or assumed
-positive labels. Add at least four true positives (multiple gameplay panels,
-including a known button bbox) and four negatives (resource-error, unclear OCR,
-similar-looking non-game buttons, disabled or shifted controls).
+positive labels. Maintain at least four true positives (multiple gameplay panels,
+including a known button bbox) and four negatives (resource-error, account
+restriction, unclear OCR, similar-looking non-game buttons, disabled or shifted
+controls).
 
 Do not commit images containing personal account details, private tokens,
 emails or private conversations. Crop/redact outside relevant UI and ensure
@@ -64,12 +65,11 @@ python .\vision_replay.py
 python .\vision_replay.py --require-real-coverage
 ```
 
-The first two commands test replay machinery and whatever fixtures exist.
+The first two commands test replay machinery and the checked-in fixtures.
 **Only the final strict command** verifies that the minimum real-frame coverage
 is present. Hosted CI runs the ordinary manifest replay on every PR (including
 strict failure for malformed/missing existing cases); the exact-host MVP
-acceptance additionally runs the strict real-coverage mode. Until the corpus
-exists, the strict command intentionally returns failure.
+acceptance additionally runs the strict real-coverage mode.
 
 The corpus should be expanded with each new unknown scene; keep negative
 examples especially for false-positive state-changing actions.

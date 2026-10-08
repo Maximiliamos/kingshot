@@ -80,6 +80,34 @@ class ReplayHarnessTests(unittest.TestCase):
             self.assertFalse(replay_manifest(p)["coverage_ready"])
             self.assertFalse(replay_manifest(p, require_real_coverage=True)["pass"])
 
+    def test_account_restriction_stop_precedes_task_roles(self):
+        with tempfile.TemporaryDirectory() as temp:
+            p = self.create_case(Path(temp), kind="negative")
+            data = json.loads(p.read_text(encoding="utf-8"))
+            data["samples"][0]["stop_reason"] = True
+            data["samples"][0]["forbidden_roles"] = ["battle_reward_claim"]
+            p.write_text(json.dumps(data), encoding="utf-8")
+            with patch("vision_replay.TutorialPerception") as perceive, patch(
+                "vision_replay._stop_reason", return_value=True
+            ):
+                perceive.return_value.perceive.return_value = self.positive_model()
+                result = replay_manifest(p)
+            self.assertTrue(result["pass"])
+
+    def test_real_cases_cannot_omit_required_labels(self):
+        with tempfile.TemporaryDirectory() as temp:
+            p = self.create_case(Path(temp), kind="positive")
+            data = json.loads(p.read_text(encoding="utf-8"))
+            data["samples"][0]["expected_roles"] = {}
+            p.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ReplayError, "require expected_roles"):
+                replay_manifest(p)
+            data["samples"][0]["kind"] = "negative"
+            data["samples"][0]["forbidden_roles"] = []
+            p.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ReplayError, "explicit forbidden_roles"):
+                replay_manifest(p)
+
     def test_path_traversal_is_refused(self):
         with tempfile.TemporaryDirectory() as temp:
             p = self.create_case(Path(temp), kind="positive")
