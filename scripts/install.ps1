@@ -18,6 +18,7 @@ $files = @(
     "task_engine.py",
     "vision_replay.py",
     "resource_diagnostics.py",
+    "game_foreground.py",
     "resource_readiness.py",
     "gui.py",
     "device_backend.py",

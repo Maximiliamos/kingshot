@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 
 from resource_diagnostics import collect_resource_network_diagnostics
+from game_foreground import collect_foreground_evidence
 
 CONFIRMED_ROLES = frozenset({
     "battle_reward_claim", "battle_conquer", "source_upgrade",
@@ -34,6 +35,9 @@ def evaluate_resource_samples(samples: list[dict[str, Any]], *, game_process_pre
             and not sample.get("resource_error")
             and not sample.get("account_restriction")
             and sample.get("ocr_available")
+            # PrintWindow may show Kingshot behind Play Store or system overlays.
+            # Only confirmed Android foreground permits a positive UI verdict.
+            and sample.get("foreground_confirmed")
             # Unverified central dialogs may mask stale construction buttons.
             and sample.get("panel_kind") not in ("tutorial_dialog", "resource_error", "account_restriction")
             and sample.get("known_game_ui")
@@ -114,7 +118,14 @@ def probe_resource_readiness(
         if index:
             time.sleep(max(0.0, interval_seconds))
         try:
-            samples.append(_observe(backend))
+            # Focus is sampled immediately before the frame; a running PID
+            # does not prove this HWND shows the unobscured Android game.
+            foreground = collect_foreground_evidence(backend)
+            observation = _observe(backend)
+            observation.update(foreground)
+            if not foreground["foreground_confirmed"] and not observation.get("block_reason"):
+                observation["block_reason"] = "game_foreground_unconfirmed"
+            samples.append(observation)
         except Exception as exc:
             # Never leak OCR, command output, URLs or account information.
             samples.append({"frame_valid": False, "known_game_ui": False,

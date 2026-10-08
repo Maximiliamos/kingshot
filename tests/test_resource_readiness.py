@@ -10,7 +10,8 @@ from resource_readiness import evaluate_resource_samples, probe_resource_readine
 class ResourceReadinessTests(unittest.TestCase):
     def good(self):
         return {"frame_valid": True, "known_game_ui": True, "resource_error": False,
-                "account_restriction": False, "ocr_available": True}
+                "account_restriction": False, "ocr_available": True,
+                "foreground_confirmed": True}
 
     def test_two_game_frames_and_game_pid_are_required(self):
         result = evaluate_resource_samples([self.good(), self.good()], game_process_present=True)
@@ -64,6 +65,8 @@ class ResourceReadinessTests(unittest.TestCase):
         with patch("resource_readiness.collect_resource_network_diagnostics", return_value={
             "status": "unresolved",
             "signals": {"game_process_present": True}, "probe_errors": {},
+        }), patch("resource_readiness.collect_foreground_evidence", return_value={
+            "foreground_state": "game", "foreground_confirmed": True,
         }), patch("resource_readiness._observe", side_effect=[
             self.good(), {**self.good(), "ocr_available": False},
         ]), patch("resource_readiness.time.sleep"):
@@ -109,11 +112,48 @@ class ResourceReadinessTests(unittest.TestCase):
             [sample, sample], game_process_present=True,
         )["pass"])
 
+    def test_missing_foreground_proof_blocks_two_healthy_frames(self):
+        not_front = {**self.good(), "foreground_confirmed": False}
+        result = evaluate_resource_samples(
+            [not_front, not_front], game_process_present=True
+        )
+        self.assertFalse(result["pass"])
+        self.assertEqual(result["samples_confirmed"], 0)
+        old_format = {k: v for k, v in self.good().items() if k != "foreground_confirmed"}
+        self.assertFalse(evaluate_resource_samples(
+            [old_format, old_format], game_process_present=True
+        )["pass"])
+
+    def test_probe_rejects_play_store_overlay_even_with_game_buttons(self):
+        backend = MagicMock()
+        external = {
+            "foreground_state": "other", "foreground_confirmed": False,
+            "window_focus_kind": "other", "resumed_activity_kind": "other",
+            "foreground_probe_errors": {},
+        }
+        with patch("resource_readiness.collect_resource_network_diagnostics", return_value={
+            "status": "unresolved", "signals": {"game_process_present": True},
+            "probe_errors": {},
+        }), patch("resource_readiness.collect_foreground_evidence", return_value=external), \
+             patch("resource_readiness._observe", side_effect=[
+                 self.good(), self.good(),
+             ]), patch("resource_readiness.time.sleep"):
+            report = probe_resource_readiness(backend)
+        self.assertFalse(report["pass"])
+        self.assertEqual(report["samples_confirmed"], 0)
+        self.assertEqual(report["samples"][0]["block_reason"], "game_foreground_unconfirmed")
+        self.assertEqual(report["samples"][0]["foreground_state"], "other")
+        backend.tap.assert_not_called()
+        backend.clear_app_data.assert_not_called()
+        backend.launch_app.assert_not_called()
+
     def test_probe_never_mutates_backend(self):
         backend = MagicMock()
         with patch("resource_readiness.collect_resource_network_diagnostics", return_value={
             "status": "external_resource_loading_unresolved",
             "signals": {"game_process_present": True}, "probe_errors": {},
+        }), patch("resource_readiness.collect_foreground_evidence", return_value={
+            "foreground_state": "game", "foreground_confirmed": True,
         }), patch("resource_readiness._observe", side_effect=[self.good(), self.good()]), \
              patch("resource_readiness.time.sleep"):
             report = probe_resource_readiness(backend, run_id="one", head="abc")
