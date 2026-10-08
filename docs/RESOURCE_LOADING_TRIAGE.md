@@ -23,8 +23,15 @@ of a broken PrintWindow capture. The exact network reason is still unknown.
 2. Inspect the exact-run `runtime-reports/<run-id>/` report, especially
    `mvp-full-acceptance.json`, `state.json`, `events.jsonl`,
    `tutorial-perception-failure.json` and its three screenshots.
-3. On versions containing this change, inspect the extra
-   `game-resource-network-diagnostics.json`:
+3. Run a **non-destructive** probe in the same Windows user/session
+   (this does not click, clear data or relaunch Kingshot):
+
+   ```powershell
+   cd C:\warbot_git
+   & "C:\warbot_wsa\tugarin-venv\Scripts\python.exe" .\warbot_cli.py resource-diagnostics --backend wsa --serial 127.0.0.1:58526
+   ```
+
+   Inspect `debug/game-resource-network-diagnostics.json`:
    - `private_dns_mode`, proxy and VPN *presence indicators*;
    - whether Android connectivity mentions VALIDATED (not proof of game CDN);
    - **counts only** of selected process-scoped logcat network error classes.
