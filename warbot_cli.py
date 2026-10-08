@@ -486,6 +486,7 @@ def collect_mvp_flow_evidence() -> dict:
                 "nickname_committed",
                 "cycle_reset",
                 "runtime_probe",
+                "game_resource_blocked",
             }:
                 evidence_events.append(event)
 
