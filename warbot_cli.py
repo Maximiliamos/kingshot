@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
             "restriction-check",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
             "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
-            "operator-io-smoke", "resource-diagnostics", "tap", "swipe", "ui-dump",
+            "operator-io-smoke", "resource-diagnostics", "resource-readiness", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -805,6 +805,22 @@ def main(argv=None) -> int:
         save_resource_network_diagnostics(output, report)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
+
+    if args.action == "resource-readiness":
+        # Two read-only game UI observations are required before destructive
+        # acceptance. A successful network probe alone is never enough.
+        from resource_readiness import probe_resource_readiness
+        from resource_diagnostics import save_resource_network_diagnostics
+        report = probe_resource_readiness(
+            backend,
+            run_id=os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", ""),
+            head=os.environ.get("TUGARIN_ACCEPTANCE_HEAD", ""),
+        )
+        save_resource_network_diagnostics(
+            Path("debug") / "resource-readiness.json", report,
+        )
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["pass"] else 51
 
     if args.action == "restriction-check":
         backend.require_ready(native_arm64=isinstance(backend, NativeArm64Backend))
