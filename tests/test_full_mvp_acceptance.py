@@ -32,6 +32,7 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
             "verify_operator_io.ps1",
             "verify_recovery.ps1",
             "verify_resource_readiness.ps1",
+            "verify_replay_regression.ps1",
             "verify_game_flow.ps1",
             "verify_soak.ps1",
         ):
@@ -48,6 +49,15 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertNotIn("clear-game-data", gate)
         self.assertNotIn("prepare-mvp-flow", gate)
         self.assertNotIn("prepare-mvp-soak", gate)
+
+    def test_real_frame_replay_is_a_blocking_release_gate(self):
+        self.assertIn("replay-regression.json", SOURCE)
+        self.assertLess(
+            SOURCE.index('Run-Gate -Name "Real-frame tutorial replay regression"'),
+            SOURCE.index('Run-Gate -Name "Exact State #3'),
+        )
+        gate = (ROOT / "scripts" / "verify_replay_regression.ps1").read_text(encoding="utf-8")
+        self.assertIn("--require-real-coverage", gate)
 
     def test_master_is_fail_fast(self):
         self.assertIn("MVP 1.0 HOST ACCEPTANCE FAIL", SOURCE)
