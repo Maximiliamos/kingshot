@@ -11,6 +11,11 @@ WORKFLOW = (ROOT / ".github" / "workflows" / "poc-tests.yml").read_text(encoding
 
 
 class ReleaseWorkflowTests(unittest.TestCase):
+    def test_ci_runs_on_main_push_and_checks_readiness(self):
+        self.assertIn("      - main", WORKFLOW)
+        self.assertIn("resource_readiness.py", WORKFLOW)
+        self.assertIn("verify_resource_readiness.ps1", WORKFLOW)
+
     def test_process_audit_fails_stale_project_processes_and_setup_tasks(self):
         self.assertIn('"python", "pythonw", "cmd", "powershell", "pwsh", "conhost", "adb", "ffmpeg"', AUDIT)
         self.assertIn('"python", "pythonw", "ffmpeg"', AUDIT)
