@@ -43,6 +43,22 @@ On the dedicated Windows/WSA host:
    the existing data and record an explicit external/update blocker. Do not
    proceed to destructive acceptance.
 
+## App identity and version source of truth
+
+The host targets Android package `com.got.globalru`, which the official
+[Google Play listing](https://play.google.com/store/apps/details?id=com.got.globalru)
+identifies as **«Война за трон» by Echofun Interactive Limited**. It must not
+be confused with the different [Kingshot Google Play app](https://play.google.com/store/apps/details?id=com.run.tower.defense)
+published by Century Games at package `com.run.tower.defense`.
+
+The Android package `com.got.globalru` reports `versionName=1.12.10` and
+`versionCode=163`, the same version shown in available public catalog
+listings as of 2026-10-08. The official Play Store on the WSA host did **not**
+offer an update. This does not establish the globally latest version or
+explain the resource failure; it removes the assumption that the installed
+package is definitely obsolete. Never switch packages or game accounts
+during diagnostics without a separate product decision.
+
 ## Latest host evidence and focus isolation (2026-10-08)
 
 [Host report `20261008-133320-4c0d34e`](https://github.com/Maximiliamos/kingshot/blob/runtime-reports/runtime-reports/20261008-133320-4c0d34e/README.md)
