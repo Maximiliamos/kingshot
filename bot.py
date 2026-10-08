@@ -24,6 +24,9 @@ from runtime_events import emit_event
 from runtime_recovery import RecoveryController
 from runtime_watchdog import RuntimeHeartbeat
 from tutorial_vision import BoundedActionPolicy, Box, TutorialPerception
+from resource_diagnostics import (
+    collect_resource_network_diagnostics, save_resource_network_diagnostics,
+)
 
 
 WINDOWS_NO_WINDOW = (
@@ -2151,8 +2154,17 @@ def handle_tutorial(phone, state):
             set_step(state, "tutorial_wait_hand_result")
             return "acted"
         if decision == "exhausted":
-            log("Туториал: ресурсный retry исчерпан; fail-closed.")
-            return False
+            # This is a known external loading error, NOT an unknown screen.
+            # Stop immediately without allowing the generic watchdog to erase
+            # the diagnosis or sending any more game UI actions.
+            attempts = int((state.get("tutorial_action_lock") or {}).get("attempts", 0))
+            state["last_stop_reason"] = (
+                "GAME_RESOURCE_LOADING_FAILED: Kingshot не загрузил ресурсы "
+                f"после {attempts} подтверждённых попыток; дальнейшие нажатия запрещены."
+            )
+            save_state(state)
+            log("STOP: " + state["last_stop_reason"])
+            return "resource_blocked"
         return "wait"
 
     battle_conquer = _button_hit(screen.button("battle_conquer"))
@@ -2685,6 +2697,50 @@ def main():
                     unknown_since = None
                     time.sleep(1.5)
                     continue
+                elif tutorial_result == "resource_blocked":
+                    # Preserve a distinct terminal outcome for this run; the
+                    # 75-second unknown-screen watchdog must not overwrite it.
+                    screenshot = os.path.join(
+                        DEBUG_DIR,
+                        f"game_resource_blocked_{fs()}.png",
+                    )
+                    save_img(screenshot, phone)
+                    bundle = save_tutorial_perception_bundle(
+                        frame, phone, state, screenshot,
+                    )
+                    diagnostic_path = os.path.join(
+                        DEBUG_DIR, "game-resource-network-diagnostics.json",
+                    )
+                    attempts = int(
+                        (state.get("tutorial_action_lock") or {}).get("attempts", 0)
+                    )
+                    try:
+                        diagnostic = collect_resource_network_diagnostics(
+                            backend,
+                            run_id=os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", ""),
+                            head=os.environ.get("TUGARIN_ACCEPTANCE_HEAD", ""),
+                            phase=str(state.get("phase", "")),
+                            step=str(state.get("step", "")),
+                            attempts=attempts,
+                        )
+                        save_resource_network_diagnostics(diagnostic_path, diagnostic)
+                    except Exception as exc:
+                        # Diagnostics cannot obscure the original terminal cause.
+                        log("Resource diagnostic unavailable: " + type(exc).__name__)
+                    emit_event(
+                        "game_resource_blocked",
+                        terminal=True,
+                        reason=state["last_stop_reason"],
+                        confirmed_retries=attempts,
+                        evidence_screenshot=screenshot,
+                        perception_bundle=bundle,
+                        network_diagnostics=diagnostic_path,
+                    )
+                    log(
+                        f"FAIL-CLOSED external Kingshot resources: "
+                        f"{state['last_stop_reason']} | {bundle}"
+                    )
+                    break
 
             if acted:
                 heartbeat.mark_action()
