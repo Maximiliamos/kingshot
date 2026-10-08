@@ -79,8 +79,8 @@ class TutorialPerceptionTests(unittest.TestCase):
 
     def test_battle_actions_use_bounded_policy(self):
         source = inspect.getsource(bot.handle_tutorial)
-        self.assertIn('state, "battle_reward_claim"', source)
-        self.assertIn('state, "battle_conquer"', source)
+        self.assertIn('TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_reward_claim"', source)
+        self.assertIn('TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_conquer"', source)
         self.assertGreaterEqual(source.count("TUTORIAL_ACTION_POLICY.decide("), 4)
 
     def test_resource_retry_requires_error_context_and_bound_text(self):
