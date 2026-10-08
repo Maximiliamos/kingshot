@@ -1,5 +1,12 @@
 # TUGARIN BOTS progress
 
+## 2026-10-08 — external resource-loading incident
+
+- Exact real-host run `20dce2fc11a943c3a350df1bc35f39da` at `752a89c6a6ae626fecfb32b0424fdea286069190`: CI both green; WSA, Google, PrintWindow, GUI, I/O, recovery pass; **game-flow fail** on persistent Kingshot resource-loading dialog after two verified retries.
+- Fail-closed behaviour retained. Added explicit terminal error `GAME_RESOURCE_LOADING_FAILED`, run-scoped event/evidence and privacy-preserving, read-only Android network/logcat *signal counts*; `docs/RESOURCE_LOADING_TRIAGE.md` describes next investigation.
+- State #3, nickname and soak remain unproven. No release until game resource-loading is independently resolved and the exact-head full acceptance passes.
+
+
 Updated: 2026-10-06
 
 ## Source of truth
