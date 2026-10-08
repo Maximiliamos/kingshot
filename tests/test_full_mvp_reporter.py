@@ -59,6 +59,7 @@ class FullMvpReporterTests(unittest.TestCase):
             "tutorial-perception-failure.json",
             "game-resource-network-diagnostics.json",
             "resource-readiness.json",
+            "replay-regression.json",
             "events.jsonl",
         ):
             self.assertIn(name, SOURCE)
