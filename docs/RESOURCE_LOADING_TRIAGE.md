@@ -43,6 +43,46 @@ On the dedicated Windows/WSA host:
    the existing data and record an explicit external/update blocker. Do not
    proceed to destructive acceptance.
 
+## Latest host evidence and focus isolation (2026-10-08)
+
+[Host report `20261008-133320-4c0d34e`](https://github.com/Maximiliamos/kingshot/blob/runtime-reports/runtime-reports/20261008-133320-4c0d34e/README.md)
+confirmed installed package `com.got.globalru` at `versionName=1.12.10`,
+`versionCode=163` and in-game `1.12.10.1`. The official Google Play
+listing for that device/account showed **Play / Uninstall** but **no Update**.
+Do not conclude that all regions/devices run this same release.
+
+The game resource-error dialog was visibly present before the store check.
+After returning from Play Store, the captured desktop frame could still
+include both game and external-store UI. Therefore a running game process
+is **not** evidence of a clean Kingshot foreground.
+
+The read-only `game_foreground.py` gate classifies Android window focus and
+top resumed activity as `game`, `other`, `conflict` or `unknown`. It
+stores **only these categories**, never foreground package names, raw
+window titles or Android dumps, and requires positive game foreground
+confirmation alongside safe game UI frames. A stale Play Store overlay,
+ambiguous/unsupported Android focus output or missing OCR blocks readiness.
+It does not assert that visible desktop pixels are unoccluded: the
+independent image-based gate must still verify a safe game panel.
+
+Local agent after green exact-head CI:
+
+1. Preserve the installed game data, cache, WSA and account. Close/leave
+   Play Store through **normal manual user interaction**, without any bot
+   keyevents or unverified Android input.
+2. Observe a clean dedicated Kingshot window without a Play Store overlay.
+   Run the read-only resource diagnostic and readiness script on the exact
+   integration SHA; preserve `debug/resource-readiness.json`.
+3. Report `foreground_state`, `window_focus_kind`,
+   `resumed_activity_kind`, `foreground_probe_errors`, `panel_kind`
+   and `block_reason` for each of the two frames. Never publish raw
+   `dumpsys`, logcat, game image or another app's package name.
+4. If game is confirmed foreground but the loading error persists, mark
+   external resource-loading cause **unresolved**. Distinguish verified
+   network errors from zero counted messages, and consider official
+   game support with privately submitted, redacted evidence. No data reset,
+   APK sideload or destructive game-flow acceptance.
+
 ## Safe diagnostic workflow
 
 1. **Do not rerun destructive full acceptance immediately.** Each game-flow
