@@ -34,6 +34,8 @@ def evaluate_resource_samples(samples: list[dict[str, Any]], *, game_process_pre
             and not sample.get("resource_error")
             and not sample.get("account_restriction")
             and sample.get("ocr_available")
+            # Unverified central dialogs may mask stale construction buttons.
+            and sample.get("panel_kind") not in ("tutorial_dialog", "resource_error", "account_restriction")
             and sample.get("known_game_ui")
         ))
     ready = bool(game_process_present and len(confirmed) >= 2 and all(confirmed))
@@ -77,11 +79,15 @@ def _observe(backend: Any) -> dict[str, Any]:
         or "неудалосьзагрузитьресурс" in normalized_ocr
     )
     roles = [button.role for button in screen.buttons if button.enabled and button.confidence >= 0.7]
-    known_game_ui = bool(
+    # A central tutorial_dialog is not independent proof that loading succeeded:
+    # resource-error overlays may also be labeled tutorial_dialog if OCR misses
+    # the message, while buttons from the background receive false roles.
+    unverified_dialog = screen.panel.kind == "tutorial_dialog"
+    known_game_ui = bool(not unverified_dialog and (
         any(role in CONFIRMED_ROLES for role in roles)
         or (screen.panel.kind in CONFIRMED_PANELS and screen.panel.confidence >= 0.8)
         or (screen.tutorial_target is not None and screen.tutorial_target.confidence >= 0.85)
-    )
+    ))
     return {
         "frame_valid": frame_valid,
         "known_game_ui": known_game_ui,
@@ -89,6 +95,7 @@ def _observe(backend: Any) -> dict[str, Any]:
         "account_restriction": bool(bot.detect_stop_reason(phone)),
         "ocr_available": True,
         "panel_kind": screen.panel.kind,
+        "block_reason": "unverified_dialog" if unverified_dialog else "",
         "role_count": len([role for role in roles if role in CONFIRMED_ROLES]),
         "tutorial_target_confirmed": bool(
             screen.tutorial_target is not None and screen.tutorial_target.confidence >= 0.85
