@@ -133,7 +133,7 @@ function Run-Gate {
             $verifiedGateJson = @(
                 "google-services.json", "preview-production.json",
                 "gui-host-smoke.json", "operator-io-smoke.json",
-                "recovery-smoke.json", "resource-readiness.json", "mvp-game-flow-evidence.json",
+                "recovery-smoke.json", "resource-readiness.json", "replay-regression.json", "mvp-game-flow-evidence.json",
                 "mvp-soak-evidence.json"
             )
             foreach ($gateEvidencePath in @($EvidencePaths)) {
@@ -288,6 +288,11 @@ Run-Gate -Name "Bounded game + ADB recovery" `
 Run-Gate -Name "Non-destructive resource readiness" `
     -Script (Join-Path $Root "scripts\\verify_resource_readiness.ps1") `
     -EvidencePaths @((Join-Path $Root "debug\\resource-readiness.json"))
+# Genuine positive/negative Kingshot screenshots are mandatory for MVP.
+# An empty replay manifest explicitly fails release acceptance.
+Run-Gate -Name "Real-frame tutorial replay regression" `
+    -Script (Join-Path $Root "scripts\\verify_replay_regression.ps1") `
+    -EvidencePaths @((Join-Path $Root "debug\\replay-regression.json"))
 Run-Gate -Name "Exact State #3 -> tutorial -> Tugarin<N>" `
     -Script (Join-Path $Root "scripts\verify_game_flow.ps1") `
     -Arguments @("-TimeoutMinutes", [string]$FlowTimeoutMinutes) `
