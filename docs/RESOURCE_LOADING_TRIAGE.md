@@ -15,6 +15,34 @@ This is a **confirmed in-game resource-error dialog**, not proof that the
 game's CDN is down, not an Android network acceptance failure, and not evidence
 of a broken PrintWindow capture. The exact network reason is still unknown.
 
+## Check the installed Kingshot version before changing app data
+
+On 2026-10-08 the operator reported that a newer official Kingshot version
+exists than the one currently installed. The screenshot of the blocked host
+session shows in-game version `1.12.10.1`. This is a **plausible** explanation
+for the resource-loading failure, not a confirmed root cause.
+
+On the dedicated Windows/WSA host:
+
+1. Record the displayed game version and installed Android package
+   `versionName` / `versionCode` using the known Kingshot package identifier
+   and read-only package inspection. Do not assume the displayed number is
+   identical to the Android package version.
+2. Compare with the version offered by the **official** store for this
+   specific Android installation, region and account. Do not invent a latest
+   version number or use unverified APK mirrors.
+3. If the official store offers an update, perform a standard **in-place
+   update**, without uninstalling, clearing app data, resetting the account,
+   or changing the WSA instance. Obtain operator consent before the update
+   if it interrupts a live game session.
+4. Save redacted before/after version evidence and a normal-launch game
+   screenshot. If an update succeeds, rerun read-only resource diagnostics
+   and the readiness probe; the game's visible successful resource load,
+   not the store update alone, is the required evidence.
+5. If no supported update is offered or the official update fails, retain
+   the existing data and record an explicit external/update blocker. Do not
+   proceed to destructive acceptance.
+
 ## Safe diagnostic workflow
 
 1. **Do not rerun destructive full acceptance immediately.** Each game-flow
