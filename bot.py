@@ -24,6 +24,7 @@ from runtime_events import emit_event
 from runtime_recovery import RecoveryController
 from runtime_watchdog import RuntimeHeartbeat
 from tutorial_vision import BoundedActionPolicy, Box, TutorialPerception
+from task_engine import SemanticTaskEngine
 from resource_diagnostics import (
     collect_resource_network_diagnostics, save_resource_network_diagnostics,
 )
@@ -407,6 +408,7 @@ DEFAULT_STATE = {
 
 TUTORIAL_PERCEPTION = TutorialPerception()
 TUTORIAL_ACTION_POLICY = BoundedActionPolicy()
+TUTORIAL_TASK_ENGINE = SemanticTaskEngine(TUTORIAL_ACTION_POLICY)
 LAST_TUTORIAL_SCREEN_MODEL = None
 
 
@@ -2132,9 +2134,8 @@ def handle_tutorial(phone, state):
     reward_claim = _button_hit(screen.button("battle_reward_claim"))
     if reward_claim:
         claim_box = Box(reward_claim["loc"][0], reward_claim["loc"][1], reward_claim["w"], reward_claim["h"])
-        decision = TUTORIAL_ACTION_POLICY.decide(
-            state, "battle_reward_claim", claim_box, phone.shape, retry_after=3.0
-        )
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_reward_claim", phone.shape)
+        decision = task.status if task else "wait"
         if decision in ("act", "retry"):
             debug(phone, reward_claim, "tutorial_battle_reward_claim")
             log(f"Туториал: подтверждён reward «Получить»; action={decision}.")
@@ -2184,9 +2185,8 @@ def handle_tutorial(phone, state):
     battle_conquer = _button_hit(screen.button("battle_conquer"))
     if battle_conquer:
         conquer_box = Box(battle_conquer["loc"][0], battle_conquer["loc"][1], battle_conquer["w"], battle_conquer["h"])
-        decision = TUTORIAL_ACTION_POLICY.decide(
-            state, "battle_conquer", conquer_box, phone.shape, retry_after=3.0
-        )
+        task = TUTORIAL_TASK_ENGINE.plan(state, screen, "battle_conquer", phone.shape)
+        decision = task.status if task else "wait"
         if decision in ("act", "retry"):
             debug(phone, battle_conquer, "tutorial_battle_conquer")
             log(f"Туториал: подтверждённое действие «Завоевать»; action={decision}.")
