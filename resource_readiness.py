@@ -33,6 +33,7 @@ def evaluate_resource_samples(samples: list[dict[str, Any]], *, game_process_pre
             sample.get("frame_valid")
             and not sample.get("resource_error")
             and not sample.get("account_restriction")
+            and sample.get("ocr_available")
             and sample.get("known_game_ui")
         ))
     ready = bool(game_process_present and len(confirmed) >= 2 and all(confirmed))
@@ -54,6 +55,21 @@ def _observe(backend: Any) -> dict[str, Any]:
     frame_valid = bool(phone.size and float(np.std(phone)) > 5.0)
     if not frame_valid:
         return {"frame_valid": False, "known_game_ui": False, "resource_error": False}
+    # Visible buttons alone do not prove the absence of an account restriction.
+    # The terminal-stop detector depends on OCR, so never authorize readiness
+    # on a host where that independent safety channel cannot run.
+    if not bot.ocr_available():
+        return {
+            "frame_valid": True,
+            "known_game_ui": False,
+            "resource_error": False,
+            "account_restriction": False,
+            "ocr_available": False,
+            "panel_kind": "unverified",
+            "role_count": 0,
+            "tutorial_target_confirmed": False,
+            "block_reason": "ocr_unavailable",
+        }
     screen = bot.perceive_tutorial_screen(phone, include_ocr=True)
     normalized_ocr = " ".join(str(line.get("normalized", "")) for line in screen.ocr_lines)
     resource_error = bool(
@@ -71,6 +87,7 @@ def _observe(backend: Any) -> dict[str, Any]:
         "known_game_ui": known_game_ui,
         "resource_error": resource_error,
         "account_restriction": bool(bot.detect_stop_reason(phone)),
+        "ocr_available": True,
         "panel_kind": screen.panel.kind,
         "role_count": len([role for role in roles if role in CONFIRMED_ROLES]),
         "tutorial_target_confirmed": bool(
