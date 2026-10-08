@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
             "restriction-check",
             "clear-game-data", "clean-start", "prepare-mvp-flow", "flow-evidence",
             "prepare-mvp-soak", "soak-evidence", "recovery-smoke",
-            "operator-io-smoke", "tap", "swipe", "ui-dump",
+            "operator-io-smoke", "resource-diagnostics", "tap", "swipe", "ui-dump",
             "start-runtime", "stop-runtime",
         ),
     )
@@ -787,6 +787,23 @@ def main(argv=None) -> int:
 
     if args.action == "status":
         print(json.dumps(backend.health().to_dict(), ensure_ascii=False, indent=2))
+        return 0
+
+    if args.action == "resource-diagnostics":
+        # Non-destructive diagnostic path: no game reset, UI input or guessed
+        # private game-CDN probes. Exit zero means diagnostic written, NOT that
+        # the Kingshot resource service is working.
+        from resource_diagnostics import (
+            collect_resource_network_diagnostics, save_resource_network_diagnostics,
+        )
+        report = collect_resource_network_diagnostics(
+            backend,
+            run_id=os.environ.get("TUGARIN_ACCEPTANCE_RUN_ID", ""),
+            head=os.environ.get("TUGARIN_ACCEPTANCE_HEAD", ""),
+        )
+        output = Path("debug") / "game-resource-network-diagnostics.json"
+        save_resource_network_diagnostics(output, report)
+        print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
 
     if args.action == "restriction-check":
