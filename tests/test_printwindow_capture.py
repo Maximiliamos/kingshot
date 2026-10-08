@@ -61,6 +61,11 @@ class PrintWindowCaptureTests(unittest.TestCase):
             )
         )
 
+    def test_minimized_exact_game_window_is_restored_before_printwindow(self):
+        source = bot.WsaGameWindowCapture._refresh_rect.__code__.co_names
+        self.assertIn("IsIconic", source)
+        self.assertIn("ShowWindow", source)
+
     def _capture(self):
         capture = bot.WsaGameWindowCapture()
         capture.hwnd = 77

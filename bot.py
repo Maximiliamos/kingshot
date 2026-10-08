@@ -219,6 +219,12 @@ class WsaGameWindowCapture(ScrcpyCapture):
                 "найдено: " + titles
             )
         self.hwnd, title = candidates[0]
+        # WSA can leave the exact game HWND minimized after a prior launcher
+        # or diagnostics run. Restore that same HWND before PrintWindow; never
+        # substitute desktop pixels or a different capture transport.
+        if user32.IsIconic(self.hwnd):
+            user32.ShowWindow(self.hwnd, 9)  # SW_RESTORE
+            time.sleep(0.20)
         rect = wintypes.RECT()
         point = wintypes.POINT(0, 0)
         if not user32.GetClientRect(self.hwnd, ctypes.byref(rect)):
