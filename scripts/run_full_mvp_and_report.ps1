@@ -35,7 +35,8 @@ $RunEvidenceNames = @(
     "android-data-free-space.json",
     "tutorial-perception-failure.json",
     "game-resource-network-diagnostics.json",
-    "resource-readiness.json"
+    "resource-readiness.json",
+    "replay-regression.json"
 )
 
 function Clear-PreviousRunEvidence {
