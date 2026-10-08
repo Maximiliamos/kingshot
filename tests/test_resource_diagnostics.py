@@ -97,10 +97,10 @@ class ResourceFailureTests(unittest.TestCase):
             "acted_at": 1.0,
             "attempts": 2,
         }
-        with patch("bot.perceive_tutorial_screen", return_value=screen), \\
-             patch("bot.match", return_value=None), \\
-             patch("bot.match_tutorial_skip", return_value=None), \\
-             patch("bot.save_state"), patch("bot.log"), \\
+        with patch("bot.perceive_tutorial_screen", return_value=screen), \
+             patch("bot.match", return_value=None), \
+             patch("bot.match_tutorial_skip", return_value=None), \
+             patch("bot.save_state"), patch("bot.log"), \
              patch("bot.tap_match") as tap:
             result = bot.handle_tutorial(frame, state)
         self.assertEqual(result, "resource_blocked")
