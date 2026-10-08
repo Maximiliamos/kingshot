@@ -58,6 +58,7 @@ class FullMvpReporterTests(unittest.TestCase):
             "android-data-free-space.json",
             "tutorial-perception-failure.json",
             "game-resource-network-diagnostics.json",
+            "resource-readiness.json",
             "events.jsonl",
         ):
             self.assertIn(name, SOURCE)
@@ -82,6 +83,14 @@ class FullMvpReporterTests(unittest.TestCase):
         self.assertIn("acceptance_run_id = $acceptanceRunId", SOURCE)
         self.assertIn("acceptance_head = $acceptanceHead", SOURCE)
         self.assertIn("does not prove PASS for current HEAD/run_id", SOURCE)
+
+    def test_events_are_current_run_only_and_bot_log_is_not_leaked(self):
+        self.assertIn('if ($acceptanceRunId)', SOURCE)
+        self.assertIn('[string]$item.run_id -cne $acceptanceRunId', SOURCE)
+        self.assertIn('event_log_scope = "exact_acceptance_run_id_only"', SOURCE)
+        self.assertIn('cumulative_bot_log_exported = $false', SOURCE)
+        self.assertIn('[REDACTED_EMAIL]', SOURCE)
+        self.assertNotIn('Copy-IfExists -Source (Join-Path $Root "logs\\\\bot.log")', SOURCE)
 
     def test_runner_hashes_collected_evidence(self):
         self.assertIn("Get-FileHash", SOURCE)
