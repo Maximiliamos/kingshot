@@ -72,6 +72,43 @@ class ResourceReadinessTests(unittest.TestCase):
         self.assertTrue(report["non_destructive"])
         backend.clear_app_data.assert_not_called()
 
+    def test_unverified_dialog_rejects_false_construction_roles(self):
+        # A resource error can be misclassified as a generic tutorial dialog
+        # while background buttons still resemble construction controls.
+        ambiguous = {**self.good(), "panel_kind": "tutorial_dialog"}
+        self.assertFalse(evaluate_resource_samples(
+            [ambiguous, ambiguous], game_process_present=True,
+        )["pass"])
+
+    def test_observe_blocks_background_roles_under_tutorial_dialog(self):
+        from resource_readiness import _observe
+
+        frame = np.zeros((100, 80, 3), dtype=np.uint8)
+        frame[:] = [20, 80, 155]
+        backend = MagicMock()
+        backend.frame.return_value = frame
+        button = MagicMock()
+        button.role = "construction_primary"
+        button.enabled = True
+        button.confidence = 0.99
+        screen = MagicMock()
+        screen.panel.kind = "tutorial_dialog"
+        screen.panel.confidence = 0.99
+        screen.buttons = [button]
+        screen.ocr_lines = []
+        screen.tutorial_target = None
+        with patch("bot.crop_phone", return_value=(frame, 0, 0)), \
+             patch("bot.ocr_available", return_value=True), \
+             patch("bot.perceive_tutorial_screen", return_value=screen), \
+             patch("bot.detect_stop_reason", return_value=""):
+            sample = _observe(backend)
+        self.assertFalse(sample["known_game_ui"])
+        self.assertEqual(sample["role_count"], 1)
+        self.assertEqual(sample["block_reason"], "unverified_dialog")
+        self.assertFalse(evaluate_resource_samples(
+            [sample, sample], game_process_present=True,
+        )["pass"])
+
     def test_probe_never_mutates_backend(self):
         backend = MagicMock()
         with patch("resource_readiness.collect_resource_network_diagnostics", return_value={
