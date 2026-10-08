@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "min_positive_cases": 4,
+  "min_negative_cases": 4,
+  "samples": []
+}
