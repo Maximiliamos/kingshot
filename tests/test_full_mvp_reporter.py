@@ -57,6 +57,7 @@ class FullMvpReporterTests(unittest.TestCase):
             "runtime-heartbeat.json",
             "android-data-free-space.json",
             "tutorial-perception-failure.json",
+            "game-resource-network-diagnostics.json",
             "events.jsonl",
         ):
             self.assertIn(name, SOURCE)
