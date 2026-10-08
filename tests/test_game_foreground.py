@@ -35,6 +35,11 @@ class AndroidForegroundTests(unittest.TestCase):
         report = classify_foreground("", GAME_ACTIVITY, PACKAGE)
         self.assertEqual(report["foreground_state"], "game")
 
+    def test_explicit_null_window_focus_overrules_resumed_game(self):
+        report = classify_foreground("mCurrentFocus=null", GAME_ACTIVITY, PACKAGE)
+        self.assertEqual(report["foreground_state"], "unknown")
+        self.assertFalse(report["foreground_confirmed"])
+
     def test_system_window_in_foreground_does_not_authorize_game(self):
         statusbar = "mCurrentFocus=Window{123 u0 StatusBar}"
         report = classify_foreground(statusbar, GAME_ACTIVITY, PACKAGE)
