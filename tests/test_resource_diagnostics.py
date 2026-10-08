@@ -133,6 +133,11 @@ class ResourceFailureTests(unittest.TestCase):
         self.assertEqual(report["probe_errors"]["connectivity"], "TimeoutError")
         self.assertNotIn("Do not persist hostname", json.dumps(report))
 
+    def test_read_only_cli_action_is_available(self):
+        import warbot_cli
+        args = warbot_cli.build_parser().parse_args(["resource-diagnostics"])
+        self.assertEqual(args.action, "resource-diagnostics")
+
     def test_persisted_diagnostic_is_atomic_json(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "resource-network.json"
