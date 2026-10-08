@@ -231,7 +231,94 @@ if (Test-Path -LiteralPath $fullEvidencePath -PathType Leaf) {
 # Filter to this exact acceptance run, rather than shipping years of appended
 # events. Missing run_id is a failure to attribute data and is never published.
 if ($acceptanceRunId) {
+    # Prefer immutable per-run stream; older runtimes fall back to filtered
+    # cumulative events, still selecting only this acceptance ID.
     $sourceEvents = Join-Path $Root "logs\events.jsonl"
+    if ($acceptanceRunId -match '^[A-Za-z0-9_-]{1,64}
+    $destEvents = Join-Path $stage "events.jsonl"
+    if (Test-Path -LiteralPath $sourceEvents -PathType Leaf) {
+        $eventWriter = [System.IO.StreamWriter]::new($destEvents, $false, [System.Text.UTF8Encoding]::new($false))
+        try {
+            foreach ($line in [IO.File]::ReadLines($sourceEvents)) {
+                try { $item = $line | ConvertFrom-Json -ErrorAction Stop }
+                catch { continue }
+                if ([string]$item.run_id -cne $acceptanceRunId) { continue }
+                $safeLine = ConvertTo-Json -InputObject $item -Depth 10 -Compress
+                # Redact common credentials and personal email before upload.
+                $safeLine = [regex]::Replace($safeLine, '(?i)(bearer\s+)[a-z0-9._~+/-]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '(?i)((?:token|password|api[_-]?key)[=:]\s*)[^\s,;"]+', '$1[REDACTED]')
+                $safeLine = [regex]::Replace($safeLine, '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '[REDACTED_EMAIL]')
+                $eventWriter.WriteLine($safeLine)
+            }
+        }
+        finally { $eventWriter.Dispose() }
+    }
+}
+$evidenceInventory = @()
+Get-ChildItem -LiteralPath $stage -File -ErrorAction SilentlyContinue | ForEach-Object {
+    $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $evidenceInventory += [ordered]@{
+        name = $_.Name
+        size_bytes = [int64]$_.Length
+        sha256 = $hash
+    }
+}
+
+$finished = Get-Date
+$manifest = [ordered]@{
+    schema = 1
+    kind = "mvp-full-host"
+    commit = $commit
+    expected_commit = $ExpectedCommit
+    source_branch = (& git branch --show-current).Trim()
+    upstream = $upstream
+    upstream_commit = $upstreamHead
+    started_at = $started.ToString("o")
+    finished_at = $finished.ToString("o")
+    duration_seconds = [int](($finished - $started).TotalSeconds)
+    verify_exit_code = $verifyExit
+    overall = $overall
+    event_log_scope = "exact_acceptance_run_id_only"
+    cumulative_bot_log_exported = $false
+    acceptance_run_id = $acceptanceRunId
+    acceptance_head = $acceptanceHead
+    flow_timeout_minutes = $FlowTimeoutMinutes
+    soak_timeout_minutes = $SoakTimeoutMinutes
+    soak_characters = [Math]::Max(2, $SoakCharacters)
+    evidence_files = @($evidenceInventory)
+}
+$manifest | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $stage "manifest.json")
+
+Write-Host ""
+Write-Host "Uploading full MVP host evidence..."
+$uploadExit = 0
+try {
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "upload_runtime_report.ps1") -ReportSource $stage
+    $uploadExit = [int]$LASTEXITCODE
+}
+catch {
+    $uploadExit = 997
+    Write-Host "REPORT UPLOAD FAILED:"
+    Write-Host ($_ | Out-String)
+}
+
+Write-Host ""
+Write-Host "=== TUGARIN BOTS FULL MVP REPORT COMPLETE ==="
+Write-Host "Commit:             $commit"
+Write-Host "Verifier exit code: $verifyExit"
+Write-Host "Overall:            $overall"
+Write-Host "Upload exit code:   $uploadExit"
+if ($uploadExit -ne 0) {
+    Write-Host "Local report preserved at: $stage"
+    exit 90
+}
+exit $verifyExit
+) {
+        $runEvents = Join-Path $Root ("logs\runs\" + $acceptanceRunId + ".jsonl")
+        if (Test-Path -LiteralPath $runEvents -PathType Leaf) {
+            $sourceEvents = $runEvents
+        }
+    }
     $destEvents = Join-Path $stage "events.jsonl"
     if (Test-Path -LiteralPath $sourceEvents -PathType Leaf) {
         $eventWriter = [System.IO.StreamWriter]::new($destEvents, $false, [System.Text.UTF8Encoding]::new($false))
