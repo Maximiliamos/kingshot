@@ -399,6 +399,9 @@ DEFAULT_STATE = {
     "ocr_locked_until": 0.0,
     "ocr_absent_since": 0.0,
     "ocr_upgrade_hold_ms": 0,
+    # Keep the resource retry budget across modal geometry changes/restarts.
+    "resource_retry_attempts": 0,
+    "resource_retry_last_at": 0.0,
 }
 
 
@@ -2146,18 +2149,29 @@ def handle_tutorial(phone, state):
     resource_retry = _button_hit(screen.button("resource_load_retry"))
     if resource_retry:
         retry_box = Box(resource_retry["loc"][0], resource_retry["loc"][1], resource_retry["w"], resource_retry["h"])
-        decision = TUTORIAL_ACTION_POLICY.decide(state, "resource_load_retry", retry_box, phone.shape, retry_after=3.0)
+        attempts = int(state.get("resource_retry_attempts", 0))
+        last_at = float(state.get("resource_retry_last_at", 0.0))
+        # Signature buckets include geometry. Never allow a resized/reflowed
+        # dialog to silently reset the overall resource retry budget.
+        if attempts >= 2:
+            if time.time() - last_at < 3.0:
+                return "wait"
+            decision = "exhausted"
+        else:
+            decision = TUTORIAL_ACTION_POLICY.decide(
+                state, "resource_load_retry", retry_box, phone.shape, retry_after=3.0
+            )
         if decision in ("act", "retry"):
+            state["resource_retry_attempts"] = attempts + 1
+            state["resource_retry_last_at"] = time.time()
+            save_state(state)
             debug(phone, resource_retry, "tutorial_resource_load_retry")
-            log(f"Туториал: подтверждена загрузочная ошибка; retry={decision}.")
+            log(f"Туториал: подтверждена загрузочная ошибка; retry={decision} ({attempts + 1}/2).")
             tap_match(phone, resource_retry)
             set_step(state, "tutorial_wait_hand_result")
             return "acted"
         if decision == "exhausted":
-            # This is a known external loading error, NOT an unknown screen.
-            # Stop immediately without allowing the generic watchdog to erase
-            # the diagnosis or sending any more game UI actions.
-            attempts = int((state.get("tutorial_action_lock") or {}).get("attempts", 0))
+            # A known external loading error is NOT an unknown screen.
             state["last_stop_reason"] = (
                 "GAME_RESOURCE_LOADING_FAILED: Kingshot не загрузил ресурсы "
                 f"после {attempts} подтверждённых попыток; дальнейшие нажатия запрещены."
@@ -2711,9 +2725,7 @@ def main():
                     diagnostic_path = os.path.join(
                         DEBUG_DIR, "game-resource-network-diagnostics.json",
                     )
-                    attempts = int(
-                        (state.get("tutorial_action_lock") or {}).get("attempts", 0)
-                    )
+                    attempts = int(state.get("resource_retry_attempts", 0))
                     try:
                         diagnostic = collect_resource_network_diagnostics(
                             backend,
