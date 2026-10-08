@@ -16,6 +16,13 @@ class FullMvpAcceptanceScriptTests(unittest.TestCase):
         self.assertIn('foreach ($gateEvidencePath in @($EvidencePaths))', SOURCE)
         self.assertNotIn('foreach ($evidencePath in @($EvidencePaths))', SOURCE)
 
+    def test_gate_requires_parsed_per_gate_success_evidence(self):
+        self.assertIn('$verifiedGateJson', SOURCE)
+        self.assertIn('[bool]$gateEvidence.pass', SOURCE)
+        self.assertIn('pass=true missing or false', SOURCE)
+        self.assertIn('invalid or non-PASS evidence JSON', SOURCE)
+        self.assertIn('$code = 94', SOURCE)
+
     def test_master_runs_all_release_gates(self):
         for name in (
             "verify_release.ps1",
