@@ -133,7 +133,7 @@ function Run-Gate {
             $verifiedGateJson = @(
                 "google-services.json", "preview-production.json",
                 "gui-host-smoke.json", "operator-io-smoke.json",
-                "recovery-smoke.json", "mvp-game-flow-evidence.json",
+                "recovery-smoke.json", "resource-readiness.json", "mvp-game-flow-evidence.json",
                 "mvp-soak-evidence.json"
             )
             foreach ($gateEvidencePath in @($EvidencePaths)) {
@@ -253,7 +253,7 @@ $GateResults.Add([ordered]@{
 })
 Save-AcceptanceEvidence
 Write-Host ""
-Write-Host "IMPORTANT: game-flow and soak gates intentionally clear Kingshot app data."
+Write-Host "IMPORTANT: readiness probes game UI without clearing data; game-flow and soak subsequently clear Kingshot app data."
 Write-Host "The PC-side Tugarin nickname counter is preserved."
 
 if (-not $SkipInfrastructure) {
@@ -283,6 +283,11 @@ Run-Gate -Name "Operator Unicode/UI/audio channel" `
 Run-Gate -Name "Bounded game + ADB recovery" `
     -Script (Join-Path $Root "scripts\verify_recovery.ps1") `
     -EvidencePaths @((Join-Path $Root "debug\recovery-smoke.json"))
+# Mandatory non-destructive positive game UI verification immediately before
+# any acceptance step that clears Kingshot app data. Network PASS is not proof.
+Run-Gate -Name "Non-destructive resource readiness" `
+    -Script (Join-Path $Root "scripts\\verify_resource_readiness.ps1") `
+    -EvidencePaths @((Join-Path $Root "debug\\resource-readiness.json"))
 Run-Gate -Name "Exact State #3 -> tutorial -> Tugarin<N>" `
     -Script (Join-Path $Root "scripts\verify_game_flow.ps1") `
     -Arguments @("-TimeoutMinutes", [string]$FlowTimeoutMinutes) `
